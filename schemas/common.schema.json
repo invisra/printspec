@@ -1,0 +1,390 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.invisra.com/printspec/0.1.0/common.schema.json",
+  "$defs": {
+    "Dimension": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 10000
+    },
+    "Point2D": {
+      "type": "object",
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Point3D": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Countersink": {
+      "type": "object",
+      "required": [
+        "diameter",
+        "angle"
+      ],
+      "properties": {
+        "diameter": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "angle": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 179
+        }
+      },
+      "additionalProperties": false
+    },
+    "Counterbore": {
+      "type": "object",
+      "required": [
+        "diameter",
+        "depth"
+      ],
+      "properties": {
+        "diameter": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "depth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        }
+      },
+      "additionalProperties": false
+    },
+    "Hole": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "diameter",
+        "depth"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "diameter": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "depth": {
+          "oneOf": [
+            {
+              "const": "through"
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 10000
+            }
+          ]
+        },
+        "axis": {
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ],
+          "default": "z"
+        },
+        "countersink": {
+          "$ref": "#/$defs/Countersink"
+        },
+        "counterbore": {
+          "$ref": "#/$defs/Counterbore"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Slot": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "length",
+        "width",
+        "depth",
+        "axis"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "depth": {
+          "oneOf": [
+            {
+              "const": "through"
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 10000
+            }
+          ]
+        },
+        "axis": {
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Fillet": {
+      "type": "object",
+      "required": [
+        "radius"
+      ],
+      "properties": {
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Chamfer": {
+      "type": "object",
+      "required": [
+        "distance"
+      ],
+      "properties": {
+        "distance": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Pattern": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "countX",
+            "countY",
+            "spacingX",
+            "spacingY"
+          ],
+          "properties": {
+            "type": {
+              "const": "rectangular"
+            },
+            "countX": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "countY": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "spacingX": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 10000
+            },
+            "spacingY": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 10000
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "count",
+            "spacing"
+          ],
+          "properties": {
+            "type": {
+              "const": "linear"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "spacing": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 10000
+            },
+            "axis": {
+              "enum": [
+                "x",
+                "y",
+                "z"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "count",
+            "radius"
+          ],
+          "properties": {
+            "type": {
+              "const": "radial"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 10000
+            },
+            "startAngle": {
+              "type": "number"
+            },
+            "sweepAngle": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "SupplierReference": {
+      "type": "object",
+      "required": [
+        "supplier",
+        "partNumber"
+      ],
+      "properties": {
+        "supplier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partNumber": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "HardwareItem": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "quantity"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "standard": {
+          "type": "string"
+        },
+        "size": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "role": {
+          "type": "string"
+        },
+        "supplierReferences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SupplierReference"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

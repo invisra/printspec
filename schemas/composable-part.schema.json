@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "type",
+    "label",
+    "components"
+  ],
+  "properties": {
+    "type": {
+      "const": "composable_part"
+    },
+    "label": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "operation",
+          "dimensions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "box",
+              "rounded_box",
+              "cylinder",
+              "tube",
+              "plate",
+              "tab",
+              "boss",
+              "rib",
+              "wedge"
+            ]
+          },
+          "operation": {
+            "enum": [
+              "add",
+              "subtract"
+            ]
+          },
+          "dimensions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "position": {
+            "$ref": "common.schema.json#/$defs/Point3D"
+          },
+          "relation": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "enum": [
+                  "absolute",
+                  "on_top_of",
+                  "attached_to_face",
+                  "centered_on",
+                  "aligned_with",
+                  "offset_from",
+                  "mirrored_from"
+                ]
+              },
+              "target": {
+                "type": "string"
+              },
+              "face": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          },
+          "pattern": {
+            "$ref": "common.schema.json#/$defs/Pattern"
+          },
+          "materialRole": {
+            "enum": [
+              "body",
+              "mount",
+              "support",
+              "cutout",
+              "reference"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "target"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "hole",
+              "slot",
+              "counterbore",
+              "countersink",
+              "fillet",
+              "chamfer",
+              "text"
+            ]
+          },
+          "target": {
+            "type": "string"
+          },
+          "position": {
+            "$ref": "common.schema.json#/$defs/Point3D"
+          },
+          "relation": {
+            "type": "object"
+          },
+          "pattern": {
+            "$ref": "common.schema.json#/$defs/Pattern"
+          },
+          "parameters": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "hardware": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/HardwareItem"
+      }
+    }
+  },
+  "additionalProperties": false
+}

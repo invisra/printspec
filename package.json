@@ -1,0 +1,15 @@
+{
+  "name": "printspec-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/typescript"
+  ],
+  "scripts": {
+    "test": "npm --workspace @invisra/printspec test",
+    "build": "npm --workspace @invisra/printspec run build",
+    "test:schema": "python tests/schema/test_examples.py"
+  },
+  "devDependencies": {},
+  "type": "module"
+}

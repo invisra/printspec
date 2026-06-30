@@ -1,0 +1,12 @@
+name: bug report
+description: Open a bug report issue
+title: "[bug_report]: "
+labels: [proposal]
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Describe the request, use case, examples, and safety considerations.
+    validations:
+      required: true

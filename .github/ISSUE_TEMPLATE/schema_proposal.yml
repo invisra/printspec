@@ -1,0 +1,12 @@
+name: schema proposal
+description: Open a schema proposal issue
+title: "[schema_proposal]: "
+labels: [proposal]
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Describe the request, use case, examples, and safety considerations.
+    validations:
+      required: true

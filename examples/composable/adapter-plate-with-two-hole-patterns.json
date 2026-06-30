@@ -1,0 +1,40 @@
+{
+  "printspecVersion": "0.1.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Adapter Plate With Two Hole Patterns",
+    "components": [
+      {
+        "id": "plate",
+        "kind": "rounded_box",
+        "operation": "add",
+        "dimensions": {
+          "length": 100,
+          "width": 50,
+          "height": 4,
+          "radius": 4
+        }
+      }
+    ],
+    "features": [
+      {
+        "id": "mount_hole",
+        "kind": "hole",
+        "target": "plate",
+        "parameters": {
+          "diameter": 3.2
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}
