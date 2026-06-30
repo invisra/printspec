@@ -5,11 +5,13 @@
   "workspaces": [
     "packages/typescript"
   ],
+  "type": "module",
   "scripts": {
-    "test": "npm --workspace @invisra/printspec test",
     "build": "npm --workspace @invisra/printspec run build",
-    "test:schema": "python tests/schema/test_examples.py"
-  },
-  "devDependencies": {},
-  "type": "module"
+    "test": "npm run test:ts",
+    "test:ts": "npm --workspace @invisra/printspec test",
+    "test:python": "pytest tests/python tests/schema",
+    "test:schema": "python -m pytest tests/schema",
+    "lint": "npm --workspace @invisra/printspec run build"
+  }
 }

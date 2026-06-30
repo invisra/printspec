@@ -1,0 +1,51 @@
+{
+  "printspecVersion": "0.1.0",
+  "units": "mm",
+  "part": {
+    "type": "rounded_rectangular_plate",
+    "label": "Basic rounded plate",
+    "parameters": {
+      "length": 80,
+      "width": 50,
+      "thickness": 3,
+      "cornerRadius": 5,
+      "holes": [
+        {
+          "x": -25,
+          "y": -15,
+          "diameter": 3.2,
+          "depth": "through"
+        },
+        {
+          "x": 25,
+          "y": 15,
+          "diameter": 3.2,
+          "depth": "through"
+        }
+      ]
+    }
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  },
+  "hardware": [
+    {
+      "id": "h",
+      "kind": "screw",
+      "quantity": 1,
+      "supplierReferences": [
+        {
+          "supplier": "x",
+          "partNumber": "p",
+          "url": "not a url"
+        }
+      ]
+    }
+  ]
+}
