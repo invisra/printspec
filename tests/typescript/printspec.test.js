@@ -1,7 +1,11 @@
-import test from 'node:test'; import assert from 'node:assert/strict'; import fs from 'node:fs';
-import {validatePrintSpec,extractBom,bomToMarkdown,bomToCsv,bomToSupplierOrderList,generateOpenScad,generateCadQuery} from '../../packages/typescript/dist/index.js';
-const spec=JSON.parse(fs.readFileSync('../../examples/part-families/rounded-rectangular-plate.basic.json','utf8'));
-const project=JSON.parse(fs.readFileSync('../../examples/projects/simple-enclosure-project.json','utf8'));
-test('validation works',()=>assert.equal(validatePrintSpec(spec).valid,true));
+import test from 'node:test'; import assert from 'node:assert/strict'; import fs from 'node:fs'; import path from 'node:path';
+import {validatePrintSpec,extractBom,bomToMarkdown,bomToCsv,bomToSupplierOrderList,generateOpenScad,generateCadQuery,normalizePrintSpec} from '../../packages/typescript/dist/index.js';
+const root=path.resolve('../..');
+const read=p=>JSON.parse(fs.readFileSync(path.join(root,p),'utf8'));
+const spec=read('examples/part-families/rounded-rectangular-plate.basic.json');
+const project=read('examples/projects/simple-enclosure-project.json');
+test('shared valid fixtures pass',()=>{for(const f of fs.readdirSync(path.join(root,'tests/fixtures/valid')).filter(f=>f.endsWith('.json'))){const r=validatePrintSpec(read('tests/fixtures/valid/'+f)); assert.equal(r.valid,true,`${f}: ${r.errors.join('; ')}`)}});
+test('shared invalid fixtures fail',()=>{for(const f of fs.readdirSync(path.join(root,'tests/fixtures/invalid')).filter(f=>f.endsWith('.json'))){assert.equal(validatePrintSpec(read('tests/fixtures/invalid/'+f)).valid,false,f)}});
+test('normalization does not mutate and defaults holes',()=>{const input=structuredClone(spec); const out=normalizePrintSpec(input); assert.deepEqual(input,spec); assert.equal(out.units,'mm');});
 test('bom helpers work',()=>{const bom=extractBom(project); assert.equal(bom[0].quantity,4); assert.match(bomToMarkdown(bom),/lid_screws/); assert.match(bomToCsv(bom),/91292A112/); assert.match(bomToSupplierOrderList(bom),/mcmaster/);});
-test('generators work',()=>{assert.match(generateOpenScad(spec).code,/difference/); const cq=generateCadQuery(spec).code; assert.match(cq,/part =/); assert.doesNotMatch(cq,/export/); const bad=structuredClone(spec); bad.part.type='round_spacer'; assert.equal(generateOpenScad(bad).supported,false); assert.match(generateOpenScad(bad).message,/Unsupported/);});
+test('generators validate and emit safe deterministic code',()=>{assert.match(generateOpenScad(spec).code,/difference/); const cq=generateCadQuery(spec).code; assert.match(cq,/part =/); assert.doesNotMatch(cq,/export|subprocess|os\.|open\(/); const bad=structuredClone(spec); bad.part.parameters.cornerRadius=999; const res=generateOpenScad(bad); assert.equal(res.supported,false); assert.match(res.message,/Validation failed/);});
