@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "type",
+    "label",
+    "parts"
+  ],
+  "properties": {
+    "type": {
+      "const": "project"
+    },
+    "label": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "parts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "spec": {
+            "$ref": "printspec.schema.json"
+          },
+          "specPath": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "spec"
+            ]
+          },
+          {
+            "required": [
+              "specPath"
+            ]
+          }
+        ],
+        "additionalProperties": false
+      }
+    },
+    "hardware": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/HardwareItem"
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "partA"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "mates_with",
+              "fastens",
+              "inserts_into",
+              "aligns_with"
+            ]
+          },
+          "partA": {
+            "type": "string"
+          },
+          "partB": {
+            "type": "string"
+          },
+          "hardware": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "package": {
+      "type": "object"
+    },
+    "partcad": {
+      "type": "object",
+      "properties": {
+        "packageName": {
+          "type": "string"
+        },
+        "packageVersion": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

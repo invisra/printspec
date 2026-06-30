@@ -1,0 +1,12 @@
+name: part family request
+description: Open a part family request issue
+title: "[part_family_request]: "
+labels: [proposal]
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Describe the request, use case, examples, and safety considerations.
+    validations:
+      required: true

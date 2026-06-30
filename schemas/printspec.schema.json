@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.invisra.com/printspec/0.1.0/printspec.schema.json",
+  "type": "object",
+  "required": [
+    "printspecVersion",
+    "units"
+  ],
+  "properties": {
+    "printspecVersion": {
+      "const": "0.1.0"
+    },
+    "units": {
+      "const": "mm"
+    },
+    "part": {
+      "oneOf": [
+        {
+          "$ref": "part-family.schema.json"
+        },
+        {
+          "$ref": "composable-part.schema.json"
+        }
+      ]
+    },
+    "project": {
+      "$ref": "project.schema.json"
+    },
+    "print": {
+      "type": "object",
+      "properties": {
+        "intendedMaterial": {
+          "type": "string"
+        },
+        "recommendedOrientation": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "hardware": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/HardwareItem"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "part"
+      ]
+    },
+    {
+      "required": [
+        "project"
+      ]
+    }
+  ],
+  "additionalProperties": false
+}

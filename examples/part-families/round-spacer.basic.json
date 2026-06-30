@@ -1,0 +1,22 @@
+{
+  "printspecVersion": "0.1.0",
+  "units": "mm",
+  "part": {
+    "type": "round_spacer",
+    "label": "Round spacer",
+    "parameters": {
+      "outerDiameter": 12,
+      "innerDiameter": 3.4,
+      "height": 8
+    }
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

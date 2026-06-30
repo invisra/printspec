@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.invisra.com/printspec/0.1.0/electronics-standoff.schema.json",
+  "type": "object",
+  "required": [
+    "type",
+    "label",
+    "parameters"
+  ],
+  "properties": {
+    "type": {
+      "const": "electronics_standoff"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "object",
+      "required": [
+        "outerDiameter",
+        "height",
+        "holeDiameter"
+      ],
+      "properties": {
+        "outerDiameter": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "holeDiameter": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "baseDiameter": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "baseHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Hole"
+          }
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Slot"
+          }
+        },
+        "chamfer": {
+          "$ref": "common.schema.json#/$defs/Chamfer"
+        },
+        "fillet": {
+          "$ref": "common.schema.json#/$defs/Fillet"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        }
+      },
+      "additionalProperties": false
+    },
+    "hardware": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/HardwareItem"
+      }
+    }
+  },
+  "additionalProperties": false
+}

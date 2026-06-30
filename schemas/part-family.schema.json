@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "$ref": "rounded-rectangular-plate.schema.json"
+    },
+    {
+      "$ref": "spacer-block.schema.json"
+    },
+    {
+      "$ref": "round-spacer.schema.json"
+    },
+    {
+      "$ref": "electronics-standoff.schema.json"
+    },
+    {
+      "$ref": "l-bracket.schema.json"
+    },
+    {
+      "$ref": "cable-comb.schema.json"
+    },
+    {
+      "$ref": "cable-clip.schema.json"
+    },
+    {
+      "$ref": "drill-guide.schema.json"
+    },
+    {
+      "$ref": "simple-box.schema.json"
+    },
+    {
+      "$ref": "simple-lid.schema.json"
+    }
+  ]
+}
