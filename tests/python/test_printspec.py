@@ -16,6 +16,16 @@ def test_validation_and_models():
     assert validate_printspec(spec)['valid']
     from printspec.models import PrintSpec
     assert PrintSpec(**spec).units == 'mm'
+
+def test_package_local_schema_resources_exist():
+    from importlib.resources import files
+
+    schema_dir = files("printspec").joinpath("schemas")
+    assert schema_dir.is_dir()
+    assert schema_dir.joinpath("printspec.schema.json").is_file()
+    assert schema_dir.joinpath("common.schema.json").is_file()
+    assert validate_printspec(spec)["valid"]
+
 def test_bom_helpers():
     bom=extract_bom(project); assert bom[0]['quantity']==4
     assert 'lid_screws' in bom_to_markdown(bom)

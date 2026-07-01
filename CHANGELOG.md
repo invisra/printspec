@@ -14,6 +14,7 @@ v0.1.0 hardens the initial printspec foundation for public review:
 - Fixed the cable clip schema so its clip sizing `anyOf` constraint is valid Draft 2020-12 and added regression coverage for missing clip sizing fields.
 - Added TypeScript and Python schema meta-validation tests so every `schemas/*.schema.json` file is checked against the Draft 2020-12 meta-schema before fixture validation.
 - Clarified that hosted schema URLs are public references only; TypeScript uses Ajv Draft 2020-12 offline and Python uses `jsonschema`/`referencing` offline.
+- Fixed Python packaging by syncing schema artifacts into `packages/python/printspec/schemas/`, removing brittle `../../schemas` build includes, and adding drift/package-data/wheel smoke coverage.
 - Documentation clarifies v0.1 stability, experimental composable/project support, generator safety, supplier non-goals, and the PartPilot/PartCAD relationship.
 
 No packages are published by this repository workflow without explicit manual release action.
