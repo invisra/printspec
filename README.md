@@ -33,9 +33,13 @@ npm install @invisra/printspec
 pip install printspec
 ```
 
+## Hosted schemas
+
+The canonical schema sources live in `schemas/`. Run `npm run sync:schemas` to copy every `schemas/*.schema.json` file into `public/printspec/0.1.0/` before deployment; the generated `public/` copies must not be edited by hand. Vercel can serve those files at stable public references such as `https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json`. These URLs are useful for documentation and external tooling, but the Python and TypeScript validators bundle/register local schema files and do not require network access during validation.
+
 ## Validation and generation
 
-JSON Schema is the structural source of truth for printspec validation. Semantic validation runs after schema validation and catches cross-reference and geometry sanity issues that schemas should not encode. The v0.1.0 schemas use public-looking `$id` URLs, but Python and TypeScript validators register the local `schemas/` files and resolve references offline; validation does not require network access. If a validator tries to fetch `schemas.invisra.com`, local schema registration is broken. The v0.1.0 schema set remains experimental until 1.0.
+JSON Schema is the structural source of truth for printspec validation. Semantic validation runs after schema validation and catches cross-reference and geometry sanity issues that schemas should not encode. The v0.1.0 schemas use hosted `$id` URLs, but Python and TypeScript validators register the local `schemas/` files and resolve references offline; validation does not require network access. If a validator tries to fetch `schemas.invisra.ai`, local schema registration is broken. The v0.1.0 schema set remains experimental until 1.0.
 
 ```ts
 import { validatePrintSpec, generateOpenScad, generateCadQuery } from "@invisra/printspec";

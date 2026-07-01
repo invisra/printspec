@@ -8,7 +8,7 @@ from referencing import Resource
 from printspec.validate import SCHEMAS, _REGISTRY, validate_printspec
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_BASE_URI = "https://schemas.invisra.com/printspec/0.1.0/"
+SCHEMA_BASE_URI = "https://schemas.invisra.ai/printspec/0.1.0/"
 
 
 def read(path: str):
@@ -35,6 +35,17 @@ def test_all_schemas_have_unique_expected_ids():
         assert schema.get("$id") == f"{SCHEMA_BASE_URI}{path.name}", path.name
         ids.append(schema["$id"])
     assert len(ids) == len(set(ids))
+
+
+def test_hosted_public_schemas_match_sources():
+    public_dir = ROOT / "public" / "printspec" / "0.1.0"
+    source_paths = sorted((ROOT / "schemas").glob("*.schema.json"))
+    public_paths = sorted(public_dir.glob("*.schema.json"))
+
+    assert [path.name for path in public_paths] == [path.name for path in source_paths]
+    for source_path in source_paths:
+        public_path = public_dir / source_path.name
+        assert public_path.read_text(encoding="utf8") == source_path.read_text(encoding="utf8")
 
 
 def test_local_refs_resolve_without_network():

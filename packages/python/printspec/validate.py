@@ -8,7 +8,7 @@ from referencing.jsonschema import DRAFT202012
 
 from .semantic import validate_semantic
 
-_SCHEMA_BASE_URI = "https://schemas.invisra.com/printspec/0.1.0/"
+_SCHEMA_BASE_URI = "https://schemas.invisra.ai/printspec/0.1.0/"
 def _schema_dir() -> Path:
     """Locate root schemas in source checkouts and editable installs.
 
