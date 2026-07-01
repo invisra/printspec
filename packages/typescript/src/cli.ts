@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {validatePrintSpec,generateOpenScad,generateCadQuery,extractBom,bomToMarkdown,bomToCsv,bomToSupplierOrderList} from './index.js';
+import {validatePrintSpec,generateOpenScad,generateCadQuery,extractBom,bomToMarkdown,bomToCsv,bomToSupplierOrderList,getPartFamilyFormMetadata,listPartFamilies} from './index.js';
 
 function fail(msg:string){console.error(msg); return 1;}
 function packageVersion(){
@@ -12,7 +12,7 @@ function packageVersion(){
  }
  return '0.1.0';
 }
-function usage(){return 'usage: printspec <validate|to-openscad|to-cadquery|bom|version> <file> [--output file]\ncommands: validate, to-openscad, to-cadquery, bom, version';}
+function usage(){return 'usage: printspec <validate|to-openscad|to-cadquery|bom|form-metadata|list-part-families|version> [args] [--output file]\ncommands: validate, to-openscad, to-cadquery, bom, form-metadata, list-part-families, version';}
 function load(file:string){
  try{return JSON.parse(fs.readFileSync(file,'utf8'));}
  catch(e:any){
@@ -28,6 +28,8 @@ function main(argv=process.argv.slice(2)){
  if(cmd==='--version'||cmd==='version'){console.log(`printspec ${packageVersion()}`); return 0;}
  if(cmd==='--help'||cmd==='-h') {console.log(usage()); return 0;}
  if(!cmd) return fail(usage());
+ if(cmd==='list-part-families'){write(JSON.stringify(listPartFamilies(), null, rest.includes('--pretty')?2:0)); return 0;}
+ if(cmd==='form-metadata'){if(!file) return fail(usage()); try{write(JSON.stringify(getPartFamilyFormMetadata(file), null, rest.includes('--pretty')?2:0)); return 0;}catch(e:any){return fail(`error: ${e.message}`)}}
  if(!['validate','to-openscad','to-cadquery','bom'].includes(cmd)) return fail(`error: unknown command ${cmd}`);
  if(!file) return fail(usage());
  let spec:any; try{spec=load(file);}catch(e:any){return fail(`error: unable to read JSON: ${e.message}`)}

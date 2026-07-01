@@ -5,7 +5,9 @@
     "Dimension": {
       "type": "number",
       "exclusiveMinimum": 0,
-      "maximum": 10000
+      "maximum": 10000,
+      "title": "Dimension",
+      "description": " dimension parameter."
     },
     "Point2D": {
       "type": "object",
@@ -15,13 +17,19 @@
       ],
       "properties": {
         "x": {
-          "type": "number"
+          "type": "number",
+          "title": "X",
+          "description": "X parameter."
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "title": "Y",
+          "description": "Y parameter."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Point2D",
+      "description": " point2 d parameter."
     },
     "Point3D": {
       "type": "object",
@@ -32,16 +40,24 @@
       ],
       "properties": {
         "x": {
-          "type": "number"
+          "type": "number",
+          "title": "X",
+          "description": "X parameter."
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "title": "Y",
+          "description": "Y parameter."
         },
         "z": {
-          "type": "number"
+          "type": "number",
+          "title": "Z",
+          "description": "Z parameter."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Point3D",
+      "description": " point3 d parameter."
     },
     "Countersink": {
       "type": "object",
@@ -53,15 +69,21 @@
         "diameter": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Diameter",
+          "description": "Diameter in millimeters."
         },
         "angle": {
           "type": "number",
           "minimum": 1,
-          "maximum": 179
+          "maximum": 179,
+          "title": "Angle",
+          "description": "Angle parameter."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Countersink",
+      "description": " countersink for the part."
     },
     "Counterbore": {
       "type": "object",
@@ -73,15 +95,21 @@
         "diameter": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Diameter",
+          "description": "Diameter in millimeters."
         },
         "depth": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Depth",
+          "description": "Depth in millimeters."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Counterbore",
+      "description": " counterbore for the part."
     },
     "Hole": {
       "type": "object",
@@ -93,18 +121,26 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "title": "Id",
+          "description": "Id parameter."
         },
         "x": {
-          "type": "number"
+          "type": "number",
+          "title": "X",
+          "description": "X parameter."
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "title": "Y",
+          "description": "Y parameter."
         },
         "diameter": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Diameter",
+          "description": "Diameter in millimeters."
         },
         "depth": {
           "oneOf": [
@@ -114,7 +150,9 @@
             {
               "type": "number",
               "exclusiveMinimum": 0,
-              "maximum": 10000
+              "maximum": 10000,
+              "title": "OneOf",
+              "description": "One of parameter."
             }
           ]
         },
@@ -124,16 +162,32 @@
             "y",
             "z"
           ],
-          "default": "z"
+          "default": "z",
+          "title": "Axis",
+          "description": "Axis parameter.",
+          "examples": [
+            "z"
+          ],
+          "x-printspec-enumLabels": {
+            "x": "X axis",
+            "y": "Y axis",
+            "z": "Z axis"
+          }
         },
         "countersink": {
-          "$ref": "#/$defs/Countersink"
+          "$ref": "#/$defs/Countersink",
+          "title": "Countersink",
+          "description": "Countersink for the part."
         },
         "counterbore": {
-          "$ref": "#/$defs/Counterbore"
+          "$ref": "#/$defs/Counterbore",
+          "title": "Counterbore",
+          "description": "Counterbore for the part."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Hole",
+      "description": " hole parameter."
     },
     "Slot": {
       "type": "object",
@@ -147,23 +201,33 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "title": "Id",
+          "description": "Id parameter."
         },
         "x": {
-          "type": "number"
+          "type": "number",
+          "title": "X",
+          "description": "X parameter."
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "title": "Y",
+          "description": "Y parameter."
         },
         "length": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Length",
+          "description": "Length in millimeters."
         },
         "width": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Width",
+          "description": "Width in millimeters."
         },
         "depth": {
           "oneOf": [
@@ -173,7 +237,9 @@
             {
               "type": "number",
               "exclusiveMinimum": 0,
-              "maximum": 10000
+              "maximum": 10000,
+              "title": "OneOf",
+              "description": "One of parameter."
             }
           ]
         },
@@ -182,10 +248,23 @@
             "x",
             "y",
             "z"
-          ]
+          ],
+          "title": "Axis",
+          "description": "Axis parameter.",
+          "default": "z",
+          "examples": [
+            "z"
+          ],
+          "x-printspec-enumLabels": {
+            "x": "X axis",
+            "y": "Y axis",
+            "z": "Z axis"
+          }
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Slot",
+      "description": " slot parameter."
     },
     "Fillet": {
       "type": "object",
@@ -196,13 +275,19 @@
         "radius": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Radius",
+          "description": "Radius in millimeters."
         },
         "target": {
-          "type": "string"
+          "type": "string",
+          "title": "Target",
+          "description": "Target parameter."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Fillet",
+      "description": " fillet parameter."
     },
     "Chamfer": {
       "type": "object",
@@ -213,13 +298,19 @@
         "distance": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Distance",
+          "description": "Distance parameter."
         },
         "target": {
-          "type": "string"
+          "type": "string",
+          "title": "Target",
+          "description": "Target parameter."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Chamfer",
+      "description": " chamfer parameter."
     },
     "Pattern": {
       "oneOf": [
@@ -239,25 +330,35 @@
             "countX": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 100
+              "maximum": 100,
+              "title": "CountX",
+              "description": "Count x for the part."
             },
             "countY": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 100
+              "maximum": 100,
+              "title": "CountY",
+              "description": "Count y for the part."
             },
             "spacingX": {
               "type": "number",
               "exclusiveMinimum": 0,
-              "maximum": 10000
+              "maximum": 10000,
+              "title": "SpacingX",
+              "description": "Spacing x in millimeters."
             },
             "spacingY": {
               "type": "number",
               "exclusiveMinimum": 0,
-              "maximum": 10000
+              "maximum": 10000,
+              "title": "SpacingY",
+              "description": "Spacing y in millimeters."
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "title": "OneOf",
+          "description": "One of parameter."
         },
         {
           "type": "object",
@@ -273,22 +374,39 @@
             "count": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 100
+              "maximum": 100,
+              "title": "Count",
+              "description": "Count for the part."
             },
             "spacing": {
               "type": "number",
               "exclusiveMinimum": 0,
-              "maximum": 10000
+              "maximum": 10000,
+              "title": "Spacing",
+              "description": "Spacing in millimeters."
             },
             "axis": {
               "enum": [
                 "x",
                 "y",
                 "z"
-              ]
+              ],
+              "title": "Axis",
+              "description": "Axis parameter.",
+              "default": "z",
+              "examples": [
+                "z"
+              ],
+              "x-printspec-enumLabels": {
+                "x": "X axis",
+                "y": "Y axis",
+                "z": "Z axis"
+              }
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "title": "OneOf",
+          "description": "One of parameter."
         },
         {
           "type": "object",
@@ -304,21 +422,31 @@
             "count": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 100
+              "maximum": 100,
+              "title": "Count",
+              "description": "Count for the part."
             },
             "radius": {
               "type": "number",
               "exclusiveMinimum": 0,
-              "maximum": 10000
+              "maximum": 10000,
+              "title": "Radius",
+              "description": "Radius in millimeters."
             },
             "startAngle": {
-              "type": "number"
+              "type": "number",
+              "title": "StartAngle",
+              "description": "Start angle parameter."
             },
             "sweepAngle": {
-              "type": "number"
+              "type": "number",
+              "title": "SweepAngle",
+              "description": "Sweep angle parameter."
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "title": "OneOf",
+          "description": "One of parameter."
         }
       ]
     },
@@ -331,21 +459,31 @@
       "properties": {
         "supplier": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "title": "Supplier",
+          "description": "Supplier parameter."
         },
         "partNumber": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "title": "PartNumber",
+          "description": "Part number parameter."
         },
         "url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "title": "Url",
+          "description": "Url parameter."
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "title": "Description",
+          "description": "Description parameter."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "SupplierReference",
+      "description": " supplier reference parameter."
     },
     "HardwareItem": {
       "type": "object",
@@ -357,34 +495,54 @@
       "properties": {
         "id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "title": "Id",
+          "description": "Id parameter."
         },
         "kind": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "title": "Kind",
+          "description": "Kind parameter."
         },
         "standard": {
-          "type": "string"
+          "type": "string",
+          "title": "Standard",
+          "description": "Standard parameter."
         },
         "size": {
-          "type": "string"
+          "type": "string",
+          "title": "Size",
+          "description": "Size parameter."
         },
         "quantity": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Quantity",
+          "description": "Quantity parameter."
         },
         "role": {
-          "type": "string"
+          "type": "string",
+          "title": "Role",
+          "description": "Role parameter."
         },
         "supplierReferences": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/SupplierReference"
-          }
+            "$ref": "#/$defs/SupplierReference",
+            "title": "Items",
+            "description": "Items parameter."
+          },
+          "title": "SupplierReferences",
+          "description": "Supplier references parameter."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "HardwareItem",
+      "description": " hardware item parameter."
     }
-  }
+  },
+  "title": "Common Printspec Definitions",
+  "description": "Reusable JSON Schema definitions shared by printspec schemas."
 }

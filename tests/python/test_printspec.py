@@ -46,7 +46,7 @@ def test_warning_behavior():
     s=read(Path('examples/part-families/round-spacer.basic.json')); s['part']['parameters']['fillet']={'radius':0.25}
     assert generate_cadquery(s)['warnings']==['fillet requested but not implemented']
 def test_python_cli_commands():
-    env=None
+    env={**os.environ,'PYTHONPATH':'packages/python'}
     for args in [['validate','examples/part-families/rounded-rectangular-plate.basic.json'],['to-openscad','examples/part-families/round-spacer.basic.json'],['to-cadquery','examples/part-families/electronics-standoff.m3.json'],['bom','examples/projects/simple-enclosure-project.json','--format','markdown']]:
         r=subprocess.run([sys.executable,'-m','printspec.cli',*args],cwd=root,text=True,capture_output=True,env=env)
         assert r.returncode==0, args + [r.stderr]
@@ -65,7 +65,7 @@ def test_python_cli_commands():
 
 def test_python_cli_version_commands():
     for args in [['--version'], ['version']]:
-        r = subprocess.run([sys.executable, '-m', 'printspec.cli', *args], cwd=root, text=True, capture_output=True)
+        r = subprocess.run([sys.executable, '-m', 'printspec.cli', *args], cwd=root, text=True, capture_output=True, env={**os.environ,'PYTHONPATH':'packages/python'})
         assert r.returncode == 0
         assert 'printspec 0.1.0' in r.stdout
 
@@ -94,3 +94,20 @@ def test_python_cli_friendly_user_errors(tmp_path):
     assert 'invalid-json.tmp.json' in invalid.stderr
     assert 'parse error' in invalid.stderr
     assert 'Traceback' not in invalid.stderr
+
+def test_python_form_metadata_helpers_and_cli():
+    from printspec import get_part_family_form_metadata, list_part_families
+    families=list_part_families()
+    assert any(f['type']=='rounded_rectangular_plate' and f['generatorSupported'] for f in families)
+    meta=get_part_family_form_metadata('rounded_rectangular_plate')
+    assert [f['name'] for f in meta['fields'][:4]] == ['length','width','thickness','cornerRadius']
+    assert meta['fields'][0]['unit'] == 'mm'
+    assert get_part_family_form_metadata('spacer_block')['partType'] == 'spacer_block'
+    import pytest
+    with pytest.raises(ValueError): get_part_family_form_metadata('missing')
+    r=subprocess.run([sys.executable,'-m','printspec.cli','form-metadata','rounded_rectangular_plate'],cwd=root,text=True,capture_output=True,env={**os.environ,'PYTHONPATH':'packages/python'})
+    assert r.returncode == 0, r.stderr
+    assert json.loads(r.stdout)['partType'] == 'rounded_rectangular_plate'
+    r=subprocess.run([sys.executable,'-m','printspec.cli','list-part-families'],cwd=root,text=True,capture_output=True,env={**os.environ,'PYTHONPATH':'packages/python'})
+    assert r.returncode == 0, r.stderr
+    assert any(f['type']=='spacer_block' for f in json.loads(r.stdout))

@@ -50,3 +50,8 @@ Generated CAD source should be reviewed before use. The package does not run CAD
 ## Offline schema behavior
 
 Schema files are bundled under `printspec/schemas/`. Validation resolves those package-local schemas offline and does not fetch hosted schema URLs.
+
+## Browser/editor form metadata
+
+Printspec schemas now include `x-printspec-*` browser-editor metadata for parameter ordering, grouping, units, controls, steps, priorities, examples, and documentation-only warnings. See `docs/form-metadata.md` for the convention plus TypeScript, Python, and CLI usage. This metadata helps tools render forms; it is not a web app and does not execute CAD.
+

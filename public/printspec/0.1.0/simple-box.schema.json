@@ -9,14 +9,20 @@
   ],
   "properties": {
     "type": {
-      "const": "simple_box"
+      "const": "simple_box",
+      "title": "Part type",
+      "description": "Stable printspec part family identifier."
     },
     "label": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "title": "Label",
+      "description": "Human-readable name for this part."
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "title": "Description",
+      "description": "Optional human-readable notes for this part."
     },
     "parameters": {
       "type": "object",
@@ -30,60 +36,172 @@
         "outerLength": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Outer length",
+          "description": "Outer length in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary"
         },
         "outerWidth": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Outer width",
+          "description": "Outer width in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary"
         },
         "outerHeight": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Outer height",
+          "description": "Outer height in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary"
         },
         "wallThickness": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Wall thickness",
+          "description": "Wall thickness in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            2
+          ]
         },
         "holes": {
           "type": "array",
           "items": {
             "$ref": "common.schema.json#/$defs/Hole"
-          }
+          },
+          "title": "Holes",
+          "description": "Optional hole features to include in the generated part.",
+          "x-printspec-control": "hole-list",
+          "x-printspec-priority": "advanced",
+          "default": []
         },
         "slots": {
           "type": "array",
           "items": {
             "$ref": "common.schema.json#/$defs/Slot"
-          }
+          },
+          "title": "Slots",
+          "description": "Optional slot features to include in the generated part.",
+          "x-printspec-control": "slot-list",
+          "x-printspec-priority": "advanced",
+          "default": []
         },
         "chamfer": {
-          "$ref": "common.schema.json#/$defs/Chamfer"
+          "$ref": "common.schema.json#/$defs/Chamfer",
+          "title": "Chamfer",
+          "description": "Optional chamfer edge finishing request.",
+          "x-printspec-control": "number",
+          "x-printspec-priority": "advanced"
         },
         "fillet": {
-          "$ref": "common.schema.json#/$defs/Fillet"
+          "$ref": "common.schema.json#/$defs/Fillet",
+          "title": "Fillet",
+          "description": "Optional fillet edge finishing request.",
+          "x-printspec-control": "number",
+          "x-printspec-priority": "advanced"
         },
         "cornerRadius": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Corner radius",
+          "description": "Corner radius in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "advanced",
+          "examples": [
+            4
+          ]
         },
         "mountingBosses": {
           "type": "array",
           "items": {
             "type": "object"
-          }
+          },
+          "title": "Mounting bosses",
+          "description": "Mounting bosses parameter.",
+          "x-printspec-control": "array",
+          "x-printspec-priority": "advanced",
+          "default": []
         },
         "cableCutouts": {
           "type": "array",
           "items": {
             "$ref": "common.schema.json#/$defs/Slot"
-          }
+          },
+          "title": "Cable cutouts",
+          "description": "Cable cutouts parameter.",
+          "x-printspec-control": "array",
+          "x-printspec-priority": "advanced",
+          "default": []
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Parameters",
+      "description": "Editable parameters for Simple Box.",
+      "x-printspec-ui": {
+        "order": [
+          "outerLength",
+          "outerWidth",
+          "outerHeight",
+          "wallThickness",
+          "cornerRadius",
+          "mountingBosses",
+          "cableCutouts",
+          "holes",
+          "slots",
+          "chamfer",
+          "fillet"
+        ],
+        "groups": [
+          {
+            "id": "dimensions",
+            "title": "Dimensions",
+            "fields": [
+              "outerLength",
+              "outerWidth",
+              "outerHeight",
+              "wallThickness",
+              "cornerRadius"
+            ]
+          },
+          {
+            "id": "features",
+            "title": "Features",
+            "fields": [
+              "mountingBosses",
+              "cableCutouts",
+              "holes",
+              "slots"
+            ]
+          },
+          {
+            "id": "finishing",
+            "title": "Finishing",
+            "fields": [
+              "chamfer",
+              "fillet"
+            ]
+          }
+        ]
+      }
     },
     "hardware": {
       "type": "array",
@@ -92,5 +210,7 @@
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "title": "Simple Box",
+  "description": "Open-top box or enclosure body with walls and optional cutouts."
 }

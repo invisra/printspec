@@ -21,3 +21,8 @@ Before a version is released, regenerating the current version directory is expe
 ## Vercel Analytics
 
 Generated HTML pages can include Vercel Web Analytics when `ENABLE_VERCEL_ANALYTICS=1 npm run sync:schemas` is used. Analytics is disabled by default. When enabled, it measures HTML page views only; direct JSON schema or manifest fetches from validators and tools are not counted as Web Analytics page views.
+
+## Browser/editor form metadata
+
+Printspec schemas now include `x-printspec-*` browser-editor metadata for parameter ordering, grouping, units, controls, steps, priorities, examples, and documentation-only warnings. See `docs/form-metadata.md` for the convention plus TypeScript, Python, and CLI usage. This metadata helps tools render forms; it is not a web app and does not execute CAD.
+

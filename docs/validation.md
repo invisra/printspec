@@ -67,3 +67,8 @@ Generators currently emit source code only and do not require or execute OpenSCA
 ## Hosted references and manifests
 
 The public schema site at `https://schemas.invisra.ai` exposes `https://schemas.invisra.ai/printspec/`, `https://schemas.invisra.ai/printspec/0.1.0/`, `https://schemas.invisra.ai/printspec/manifest.json`, and `https://schemas.invisra.ai/printspec/0.1.0/manifest.json`. These files are generated from `schemas/` by `npm run sync:schemas` together with Python and TypeScript package schema data. Validators should continue to resolve schemas offline from bundled/local copies; hosted URLs are public identifiers and references, not a runtime dependency.
+
+## Browser/editor form metadata
+
+Printspec schemas now include `x-printspec-*` browser-editor metadata for parameter ordering, grouping, units, controls, steps, priorities, examples, and documentation-only warnings. See `docs/form-metadata.md` for the convention plus TypeScript, Python, and CLI usage. This metadata helps tools render forms; it is not a web app and does not execute CAD.
+

@@ -9,14 +9,20 @@
   ],
   "properties": {
     "type": {
-      "const": "l_bracket"
+      "const": "l_bracket",
+      "title": "Part type",
+      "description": "Stable printspec part family identifier."
     },
     "label": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "title": "Label",
+      "description": "Human-readable name for this part."
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "title": "Description",
+      "description": "Optional human-readable notes for this part."
     },
     "parameters": {
       "type": "object",
@@ -30,45 +36,102 @@
         "legLengthA": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Leg A length",
+          "description": "Leg A length in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary"
         },
         "legLengthB": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Leg B length",
+          "description": "Leg B length in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary"
         },
         "width": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Width",
+          "description": "Width in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            50
+          ]
         },
         "thickness": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Thickness",
+          "description": "Thickness in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            3
+          ]
         },
         "holes": {
           "type": "array",
           "items": {
             "$ref": "common.schema.json#/$defs/Hole"
-          }
+          },
+          "title": "Holes",
+          "description": "Optional hole features to include in the generated part.",
+          "x-printspec-control": "hole-list",
+          "x-printspec-priority": "advanced",
+          "default": []
         },
         "slots": {
           "type": "array",
           "items": {
             "$ref": "common.schema.json#/$defs/Slot"
-          }
+          },
+          "title": "Slots",
+          "description": "Optional slot features to include in the generated part.",
+          "x-printspec-control": "slot-list",
+          "x-printspec-priority": "advanced",
+          "default": []
         },
         "chamfer": {
-          "$ref": "common.schema.json#/$defs/Chamfer"
+          "$ref": "common.schema.json#/$defs/Chamfer",
+          "title": "Chamfer",
+          "description": "Optional chamfer edge finishing request.",
+          "x-printspec-control": "number",
+          "x-printspec-priority": "advanced"
         },
         "fillet": {
-          "$ref": "common.schema.json#/$defs/Fillet"
+          "$ref": "common.schema.json#/$defs/Fillet",
+          "title": "Fillet",
+          "description": "Optional fillet edge finishing request.",
+          "x-printspec-control": "number",
+          "x-printspec-priority": "advanced"
         },
         "cornerRadius": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Corner radius",
+          "description": "Corner radius in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "advanced",
+          "examples": [
+            4
+          ]
         },
         "rib": {
           "type": "object",
@@ -82,10 +145,48 @@
               "maximum": 10000
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "title": "Rib",
+          "description": "Rib parameter.",
+          "x-printspec-control": "number",
+          "x-printspec-priority": "advanced"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Parameters",
+      "description": "Editable parameters for L Bracket.",
+      "x-printspec-ui": {
+        "order": [
+          "legLengthA",
+          "legLengthB",
+          "width",
+          "thickness",
+          "holes",
+          "slots",
+          "chamfer",
+          "fillet",
+          "cornerRadius",
+          "rib"
+        ],
+        "groups": [
+          {
+            "id": "parameters",
+            "title": "Parameters",
+            "fields": [
+              "legLengthA",
+              "legLengthB",
+              "width",
+              "thickness",
+              "holes",
+              "slots",
+              "chamfer",
+              "fillet",
+              "cornerRadius",
+              "rib"
+            ]
+          }
+        ]
+      }
     },
     "hardware": {
       "type": "array",
@@ -94,5 +195,7 @@
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "title": "L Bracket",
+  "description": "Two-leg right-angle bracket with optional mounting features."
 }
