@@ -14,3 +14,8 @@ This release is experimental. Generated CAD source should be reviewed before pri
 
 Printspec schemas now include `x-printspec-*` browser-editor metadata for parameter ordering, grouping, units, controls, steps, priorities, examples, and documentation-only warnings. See `docs/form-metadata.md` for the convention plus TypeScript, Python, and CLI usage. This metadata helps tools render forms; it is not a web app and does not execute CAD.
 
+
+## Bundle export
+
+- Added deterministic project and part source bundle export in TypeScript and Python.
+- Added directory writers, Python zip writer, CLI `bundle` commands, bundle manifests, README generation, and optional experimental PartCAD stubs.

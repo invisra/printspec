@@ -111,3 +111,29 @@ def test_python_form_metadata_helpers_and_cli():
     r=subprocess.run([sys.executable,'-m','printspec.cli','list-part-families'],cwd=root,text=True,capture_output=True,env={**os.environ,'PYTHONPATH':'packages/python'})
     assert r.returncode == 0, r.stderr
     assert any(f['type']=='spacer_block' for f in json.loads(r.stdout))
+
+def test_python_bundle_helpers_and_zip(tmp_path):
+    from printspec import create_bundle, write_bundle_to_directory, write_bundle_to_zip
+    b=create_bundle(spec, {'includePartCad': True})
+    assert b['supported']
+    paths=[f['path'] for f in b['files']]
+    assert paths == sorted(paths)
+    assert 'printspec.json' in paths and 'cad/model.scad' in paths and 'cad/model.py' in paths
+    assert json.loads(next(f['content'] for f in b['files'] if f['path']=='bundle-manifest.json'))['kind']=='part'
+    out=tmp_path/'bundle'; write_bundle_to_directory(b,out)
+    assert (out/'README.md').exists() and (out/'cad/model.py').exists()
+    import pytest, zipfile
+    with pytest.raises(ValueError): write_bundle_to_directory({'supported':True,'files':[{'path':'../evil','content':'x','mediaType':'text/plain'}],'warnings':[]}, tmp_path/'bad', overwrite=True)
+    z=tmp_path/'bundle.zip'; write_bundle_to_zip(b,z)
+    with zipfile.ZipFile(z) as zz: assert 'bundle-manifest.json' in zz.namelist()
+
+def test_python_project_bundle_and_cli(tmp_path):
+    b=create_bundle(project, {'includePartCad': True})
+    paths=[f['path'] for f in b['files']]
+    assert 'bom/bom.md' in paths and 'partcad.yaml' in paths and 'parts/base/printspec.json' in paths
+    assert len(b['warnings']) >= 2
+    env={**os.environ,'PYTHONPATH':'packages/python'}; out=tmp_path/'cli-bundle'; z=tmp_path/'cli-bundle.zip'
+    r=subprocess.run([sys.executable,'-m','printspec.cli','bundle','examples/part-families/rounded-rectangular-plate.basic.json','--output',str(out),'--zip',str(z),'--overwrite'],cwd=root,text=True,capture_output=True,env=env)
+    assert r.returncode == 0, r.stderr
+    assert (out/'bundle-manifest.json').exists() and z.exists()
+    assert 'wrote' in r.stdout

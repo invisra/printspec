@@ -5,3 +5,5 @@ from .safety import *
 from .generators import generate_openscad, generate_cadquery
 
 from .forms import get_part_family_form_metadata, list_part_families
+
+from .bundle import create_bundle, write_bundle_to_directory, write_bundle_to_zip

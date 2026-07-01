@@ -17,3 +17,7 @@ project/
 ├─ bom.csv
 └─ README.md
 ```
+
+## Bundle stub
+
+Bundle export can generate an experimental `partcad.yaml` with `--partcad` / `includePartCad`. The stub references generated CadQuery source files only and does not claim full PartCAD support.

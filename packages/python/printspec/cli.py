@@ -5,6 +5,7 @@ from .validate import validate_printspec
 from .generators import generate_openscad, generate_cadquery
 from .bom import extract_bom, bom_to_markdown, bom_to_csv, bom_to_supplier_order_list
 from .forms import get_part_family_form_metadata, list_part_families
+from .bundle import create_bundle, write_bundle_to_directory, write_bundle_to_zip
 
 
 def _version():
@@ -71,6 +72,7 @@ def main(argv=None):
     for name in ('to-openscad','to-cadquery'):
         g=sub.add_parser(name, help=f'generate {name.removeprefix("to-")} output'); g.add_argument('file'); g.add_argument('--output')
     b=sub.add_parser('bom', help='extract a bill of materials'); b.add_argument('file'); b.add_argument('--format', choices=['markdown','csv','supplier-list'], default='markdown'); b.add_argument('--output')
+    bu=sub.add_parser('bundle', help='export a deterministic source bundle'); bu.add_argument('file'); bu.add_argument('--output'); bu.add_argument('--overwrite', action='store_true'); bu.add_argument('--no-openscad', action='store_true'); bu.add_argument('--no-cadquery', action='store_true'); bu.add_argument('--no-bom', action='store_true'); bu.add_argument('--partcad', action='store_true'); bu.add_argument('--zip', dest='zip_path')
     fm=sub.add_parser('form-metadata', help='print browser form metadata for a part family'); fm.add_argument('part_type'); fm.add_argument('--pretty', action='store_true'); fm.add_argument('--json', action='store_true')
     lf=sub.add_parser('list-part-families', help='list available part families'); lf.add_argument('--pretty', action='store_true'); lf.add_argument('--json', action='store_true')
     args=p.parse_args(argv)
@@ -80,6 +82,19 @@ def main(argv=None):
     if args.cmd=='to-openscad': return _generate(args, generate_openscad)
     if args.cmd=='to-cadquery': return _generate(args, generate_cadquery)
     if args.cmd=='bom': return _bom(args)
+    if args.cmd=='bundle':
+        if not args.output and not args.zip_path:
+            print('error: bundle requires --output <directory> or --zip <bundle.zip>', file=sys.stderr); return 1
+        spec=_load(args.file); b=create_bundle(spec, {'includeOpenScad':not args.no_openscad,'includeCadQuery':not args.no_cadquery,'includeBom':not args.no_bom,'includePartCad':args.partcad})
+        if not b.get('supported'):
+            print('error: '+(b.get('message') or 'unsupported bundle'), file=sys.stderr); return 1
+        try:
+            if args.output: write_bundle_to_directory(b, args.output, overwrite=args.overwrite)
+            if args.zip_path: write_bundle_to_zip(b, args.zip_path, overwrite=args.overwrite)
+        except Exception as e:
+            print('error: '+str(e), file=sys.stderr); return 1
+        target=args.output or args.zip_path
+        print(f"wrote {len(b['files'])} files to {target}"); print(f"warnings: {len(b['warnings'])}"); return 0
     if args.cmd=='form-metadata':
         try: print(json.dumps(get_part_family_form_metadata(args.part_type), indent=2 if args.pretty else None)); return 0
         except ValueError as e: print('error: '+str(e), file=sys.stderr); return 1
