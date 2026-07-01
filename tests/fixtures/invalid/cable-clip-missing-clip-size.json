@@ -1,0 +1,14 @@
+{
+  "printspecVersion": "0.1.0",
+  "units": "mm",
+  "part": {
+    "type": "cable_clip",
+    "label": "Cable clip missing clip size",
+    "parameters": {
+      "baseLength": 30,
+      "baseWidth": 14,
+      "baseThickness": 3,
+      "clipWallThickness": 2
+    }
+  }
+}

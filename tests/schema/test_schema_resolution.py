@@ -3,6 +3,7 @@ import socket
 from pathlib import Path
 from urllib import request
 
+from jsonschema import Draft202012Validator
 from referencing import Resource
 
 from printspec.validate import SCHEMAS, _REGISTRY, validate_printspec
@@ -26,6 +27,14 @@ def collect_refs(value):
         for item in value:
             yield from collect_refs(item)
 
+
+def test_all_schemas_are_valid_draft_2020_12_schemas():
+    for path in sorted((ROOT / "schemas").glob("*.schema.json")):
+        schema = json.loads(path.read_text(encoding="utf8"))
+        try:
+            Draft202012Validator.check_schema(schema)
+        except Exception as exc:
+            raise AssertionError(f"{path.name} is not a valid Draft 2020-12 schema") from exc
 
 def test_all_schemas_have_unique_expected_ids():
     ids = []
