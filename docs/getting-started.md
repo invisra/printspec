@@ -16,6 +16,9 @@ python -m pip install build
 python -m build packages/python
 ```
 
+`schemas/` is the source of truth. `npm run sync:schemas` updates both `public/printspec/0.1.0/` for hosted references and `packages/python/printspec/schemas/` for bundled Python package data. The Python package validates offline from those bundled schemas; hosted schema URLs are public references only, and validators do not fetch remote schemas.
+
+
 Both packages provide a `printspec` CLI. The Python CLI is available after the editable install; the TypeScript CLI can be run from `packages/typescript/dist/cli.js` after `npm run build`:
 
 ```sh

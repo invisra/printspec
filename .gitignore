@@ -9,3 +9,10 @@ __pycache__/
 *.egg-info/
 build/
 .DS_Store
+
+# Synced schema artifacts committed for static hosting and Python package data.
+!public/printspec/
+!public/printspec/0.1.0/
+!public/printspec/0.1.0/*.schema.json
+!packages/python/printspec/schemas/
+!packages/python/printspec/schemas/*.schema.json

@@ -14,7 +14,7 @@ validate_printspec(spec, semantic=True) # {"valid": bool, "errors": list[str]}
 
 Validation runs in two layers:
 
-1. **JSON Schema validation** checks structural correctness using the local schemas under `schemas/`. TypeScript uses Ajv Draft 2020-12 and Python uses `jsonschema` with `referencing`; both validators register local schemas before validation and do not fetch remote schemas.
+1. **JSON Schema validation** checks structural correctness using local schemas synchronized from `schemas/`. TypeScript uses Ajv Draft 2020-12 and Python uses `jsonschema` with `referencing`; both validators register local schemas before validation and do not fetch remote schemas.
 2. **Semantic validation** runs only after schema validation succeeds, unless disabled with `semantic: false` / `semantic=False`. It catches cross-reference and geometry sanity issues such as duplicate ids, broken feature targets, broken project relationships, oversized rounded-plate corner radii, inner diameters larger than outer diameters, wall thicknesses that are too large, and obvious hole-fit issues where implemented.
 
 The schemas use stable, public-looking `$id` values such as `https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json`. These identifiers are schema resource names, not a network dependency. The Python validator registers every local schema with `jsonschema`/`referencing`, and the TypeScript validator registers every local schema with Ajv 2020, so relative `$ref` values resolve offline.
@@ -23,13 +23,13 @@ Validation must not fetch schemas from `schemas.invisra.ai` or any other remote 
 
 ## Hosted schema references
 
-The repository-level `schemas/` directory is the source of truth. The `public/printspec/0.1.0/` files are synchronized deployment artifacts created by `npm run sync:schemas`; do not manually maintain divergent copies there. Vercel serves the synchronized JSON Schema files from `https://schemas.invisra.ai/printspec/0.1.0/` with schema JSON content-type, permissive CORS, and immutable caching headers.
+The repository-level `schemas/` directory is the source of truth. `npm run sync:schemas` creates synchronized artifacts in `public/printspec/0.1.0/` for static hosting and `packages/python/printspec/schemas/` for Python package data; do not manually maintain divergent copies in either destination. Vercel serves the synchronized JSON Schema files from `https://schemas.invisra.ai/printspec/0.1.0/` with schema JSON content-type, permissive CORS, and immutable caching headers.
 
-Hosted schema URLs are public references for documentation and external JSON Schema tooling. They are not required by printspec's validators: Python and TypeScript validation load and register bundled/local schemas before validation, so normal validation works offline and must not fetch schemas from the network.
+Hosted schema URLs are public references for documentation and external JSON Schema tooling. They are not required by printspec's validators: Python validation uses bundled package schemas and TypeScript validation registers local schemas before validation, so normal validation works offline and must not fetch schemas from the network.
 
 ## Troubleshooting
 
-If validation reports a schema resolution error that tries to fetch `schemas.invisra.ai`, local schema registration is broken. Ensure the package can locate the repository-level `schemas/` directory and that every `*.schema.json` file has the expected unique `$id` value.
+If validation reports a schema resolution error that tries to fetch `schemas.invisra.ai`, local schema registration is broken. Ensure `npm run sync:schemas` has produced `packages/python/printspec/schemas/` for Python installs, or that a source checkout can locate the repository-level `schemas/` directory, and that every `*.schema.json` file has the expected unique `$id` value.
 
 Error text is intentionally compact. TypeScript and Python messages are not guaranteed to be byte-for-byte identical, but they should agree on whether shared examples and fixtures are valid.
 
@@ -48,6 +48,9 @@ pytest
 python -m pip install build
 python -m build packages/python
 ```
+
+The Python package validates offline using bundled schemas copied into `packages/python/printspec/schemas/`; hosted schema URLs are public references only and validators must not fetch them during normal validation.
+
 
 Both packages provide a `printspec` CLI. The Python CLI is available after the editable install; the TypeScript CLI can be run from `packages/typescript/dist/cli.js` after `npm run build`:
 

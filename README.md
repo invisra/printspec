@@ -35,11 +35,11 @@ pip install printspec
 
 ## Hosted schemas
 
-The canonical schema sources live in `schemas/`. Run `npm run sync:schemas` to copy every `schemas/*.schema.json` file into `public/printspec/0.1.0/` before deployment; the generated `public/` copies must not be edited by hand. Vercel can serve those files at stable public references such as `https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json`. These URLs are useful for documentation and external tooling, but the Python and TypeScript validators bundle/register local schema files and do not require network access during validation.
+The canonical schema sources live in `schemas/`. Run `npm run sync:schemas` to copy every `schemas/*.schema.json` file into both `public/printspec/0.1.0/` for static hosting and `packages/python/printspec/schemas/` for Python package data; synced copies must not be edited by hand. Vercel can serve those files at stable public references such as `https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json`. These URLs are useful for documentation and external tooling, but the Python and TypeScript validators bundle/register local schema files and do not require network access during validation.
 
 ## Validation and generation
 
-JSON Schema is the structural source of truth for printspec validation. TypeScript validation uses Ajv Draft 2020-12 with local schema registration, and Python validation uses `jsonschema`/`referencing` with the same offline schema set. Semantic validation runs after schema validation and catches cross-reference and geometry sanity issues that schemas should not encode. The v0.1.0 schemas use hosted `$id` URLs for public reference, but Python and TypeScript validators bundle/load the local `schemas/` files and resolve references offline; validation does not require network access. If a validator tries to fetch `schemas.invisra.ai`, local schema registration is broken. Tests now meta-validate every schema against Draft 2020-12 so invalid schema files fail directly. The v0.1.0 schema set remains experimental until 1.0.
+JSON Schema is the structural source of truth for printspec validation. TypeScript validation uses Ajv Draft 2020-12 with local schema registration, and Python validation uses `jsonschema`/`referencing` with the same offline schema set. Semantic validation runs after schema validation and catches cross-reference and geometry sanity issues that schemas should not encode. The v0.1.0 schemas use hosted `$id` URLs for public reference, but Python validators use bundled `printspec/schemas` package data and TypeScript validators load/register local schema files, resolving references offline; validation does not require network access. If a validator tries to fetch `schemas.invisra.ai`, local schema registration is broken. Tests now meta-validate every schema against Draft 2020-12 so invalid schema files fail directly. The v0.1.0 schema set remains experimental until 1.0.
 
 ```ts
 import { validatePrintSpec, generateOpenScad, generateCadQuery } from "@invisra/printspec";
@@ -94,6 +94,9 @@ pytest
 python -m pip install build
 python -m build packages/python
 ```
+
+The Python package validates offline using bundled schemas copied into `packages/python/printspec/schemas/`; hosted schema URLs are public references only and validators must not fetch them during normal validation.
+
 
 Both packages provide a `printspec` CLI. The Python CLI is available after the editable install; the TypeScript CLI can be run from `packages/typescript/dist/cli.js` after `npm run build`:
 

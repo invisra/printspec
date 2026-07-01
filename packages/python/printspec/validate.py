@@ -10,11 +10,12 @@ from .semantic import validate_semantic
 
 _SCHEMA_BASE_URI = "https://schemas.invisra.ai/printspec/0.1.0/"
 def _schema_dir() -> Path:
-    """Locate root schemas in source checkouts and editable installs.
+    """Locate local schemas without network access.
 
-    The canonical schemas live at the repository root. Walk upward so tests and
-    editable installs do not depend on a fixed package nesting depth. Future
-    wheels can add package-data loading here without changing validation code.
+    Installed wheels and editable installs should use package-local schemas in
+    ``printspec/schemas`` first. Those package data files are synchronized from
+    the repository-level ``schemas/`` source of truth by ``npm run sync:schemas``.
+    Source checkouts can still fall back to the root ``schemas/`` directory.
     """
     packaged = Path(__file__).resolve().parent / "schemas"
     if packaged.is_dir():

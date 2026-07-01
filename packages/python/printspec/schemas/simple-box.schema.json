@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.invisra.ai/printspec/0.1.0/simple-box.schema.json",
+  "type": "object",
+  "required": [
+    "type",
+    "label",
+    "parameters"
+  ],
+  "properties": {
+    "type": {
+      "const": "simple_box"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "object",
+      "required": [
+        "outerLength",
+        "outerWidth",
+        "outerHeight",
+        "wallThickness"
+      ],
+      "properties": {
+        "outerLength": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "outerWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "outerHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "wallThickness": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Hole"
+          }
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Slot"
+          }
+        },
+        "chamfer": {
+          "$ref": "common.schema.json#/$defs/Chamfer"
+        },
+        "fillet": {
+          "$ref": "common.schema.json#/$defs/Fillet"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000
+        },
+        "mountingBosses": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "cableCutouts": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Slot"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "hardware": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/HardwareItem"
+      }
+    }
+  },
+  "additionalProperties": false
+}

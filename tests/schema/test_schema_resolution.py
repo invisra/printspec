@@ -46,15 +46,33 @@ def test_all_schemas_have_unique_expected_ids():
     assert len(ids) == len(set(ids))
 
 
-def test_hosted_public_schemas_match_sources():
-    public_dir = ROOT / "public" / "printspec" / "0.1.0"
+def assert_synced_schema_dir_matches_sources(destination: Path):
     source_paths = sorted((ROOT / "schemas").glob("*.schema.json"))
-    public_paths = sorted(public_dir.glob("*.schema.json"))
+    destination_paths = sorted(destination.glob("*.schema.json"))
+    source_names = [path.name for path in source_paths]
+    destination_names = [path.name for path in destination_paths]
 
-    assert [path.name for path in public_paths] == [path.name for path in source_paths]
+    assert destination_names == source_names, (
+        f"{destination.relative_to(ROOT)} schema filenames differ from schemas/. "
+        f"Run `npm run sync:schemas`. "
+        f"missing={sorted(set(source_names) - set(destination_names))} "
+        f"extra={sorted(set(destination_names) - set(source_names))}"
+    )
     for source_path in source_paths:
-        public_path = public_dir / source_path.name
-        assert public_path.read_text(encoding="utf8") == source_path.read_text(encoding="utf8")
+        destination_path = destination / source_path.name
+        assert destination_path.read_text(encoding="utf8") == source_path.read_text(encoding="utf8"), (
+            f"{destination_path.relative_to(ROOT)} is stale or divergent from "
+            f"schemas/{source_path.name}; run `npm run sync:schemas`"
+        )
+
+
+def test_synced_schema_artifacts_match_sources():
+    destinations = [
+        ROOT / "public" / "printspec" / "0.1.0",
+        ROOT / "packages" / "python" / "printspec" / "schemas",
+    ]
+    for destination in destinations:
+        assert_synced_schema_dir_matches_sources(destination)
 
 
 def test_local_refs_resolve_without_network():
