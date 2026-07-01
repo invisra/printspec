@@ -1,69 +1,91 @@
-try:
-    import json
-    from pathlib import Path
-    from jsonschema import Draft202012Validator, RefResolver, FormatChecker
-except ModuleNotFoundError:  # fallback keeps source-tree tests usable before optional install
-    Draft202012Validator = RefResolver = FormatChecker = None
+import json
+from pathlib import Path
+
+from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema.exceptions import _WrappedReferencingError
+from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT202012
+
 from .semantic import validate_semantic
-TYPES=['rounded_rectangular_plate','spacer_block','round_spacer','electronics_standoff','l_bracket','cable_comb','cable_clip','drill_guide','simple_box','simple_lid']
-REQ={'rounded_rectangular_plate':['length','width','thickness','cornerRadius'],'spacer_block':['length','width','height'],'round_spacer':['outerDiameter','height'],'electronics_standoff':['outerDiameter','height','holeDiameter'],'l_bracket':['legLengthA','legLengthB','width','thickness'],'cable_comb':['length','width','thickness','slotCount','slotWidth','slotSpacing','slotDepth'],'cable_clip':['baseLength','baseWidth','baseThickness','clipWallThickness'],'drill_guide':['length','width','height','holeDiameter','holeCount','holeSpacing'],'simple_box':['outerLength','outerWidth','outerHeight','wallThickness'],'simple_lid':['length','width','thickness']}
-def _dim(v): return isinstance(v,(int,float)) and not isinstance(v,bool) and v>0 and v<=10000
-def _hw(h, errors, p='hardware'):
-    if not h.get('id') or not h.get('kind') or not isinstance(h.get('quantity'), int) or h.get('quantity')<1: errors.append(f'{p}: invalid hardware item')
-    for r in h.get('supplierReferences') or []:
-        if not r.get('supplier') or not r.get('partNumber'): errors.append(f'{p}: invalid supplier reference')
-        if r.get('url') and not str(r['url']).startswith(('http://','https://')): errors.append(f'{p}: invalid supplier reference url')
-def _fallback(schema, data, semantic=False):
-    errors=[]
-    if schema=='part-family.schema.json':
-        part=data
-        if not part or part.get('type') not in TYPES: errors.append('unknown part type')
-        if not part.get('label'): errors.append('missing label')
-        p=part.get('parameters') or {}; 
-        if not p: errors.append('missing parameters')
-        for k in REQ.get(part.get('type'),[]):
-            if not _dim(p.get(k)): errors.append(f'parameters.{k}: invalid dimension')
-        if part.get('type')=='cable_clip' and not (_dim(p.get('clipInnerDiameter')) or _dim(p.get('clipOpeningWidth'))): errors.append('clipInnerDiameter or clipOpeningWidth required')
-        for h in p.get('holes') or []:
-            if not _dim(h.get('diameter')) or not (h.get('depth')=='through' or _dim(h.get('depth'))): errors.append('invalid hole')
-        for h in part.get('hardware') or []: _hw(h, errors, 'part.hardware')
-    elif schema=='composable-part.schema.json':
-        part=data
-        if part.get('type')!='composable_part': errors.append('not composable_part')
-        if not part.get('label'): errors.append('missing label')
-        if not part.get('components'): errors.append('missing components')
-        for h in part.get('hardware') or []: _hw(h, errors, 'part.hardware')
-    elif schema=='project.schema.json':
-        project=data
-        if project.get('type')!='project': errors.append('not project')
-        if not project.get('label'): errors.append('missing label')
-        if not project.get('parts'): errors.append('missing parts')
-        for h in project.get('hardware') or []: _hw(h, errors, 'project.hardware')
-    else:
-        spec=data
-        if spec.get('printspecVersion')!='0.1.0': errors.append('invalid printspecVersion')
-        if spec.get('units')!='mm': errors.append('invalid units')
-        if bool(spec.get('part'))==bool(spec.get('project')): errors.append('expected exactly one of part or project')
-        if spec.get('part'): errors+=_fallback('composable-part.schema.json' if spec['part'].get('type')=='composable_part' else 'part-family.schema.json', spec['part'])['errors']
-        if spec.get('project'): errors+=_fallback('project.schema.json', spec['project'])['errors']
-        for h in spec.get('hardware') or []: _hw(h, errors, 'top-level.hardware')
-    if not errors and semantic: errors.extend(validate_semantic(data))
-    return {'valid': not errors, 'errors': errors}
-if Draft202012Validator:
-    SCHEMA_DIR=Path(__file__).resolve().parents[3]/'schemas'
-    def _load(name): return json.loads((SCHEMA_DIR/name).read_text())
-    STORE={}
-    for p in SCHEMA_DIR.glob('*.schema.json'):
-        d=_load(p.name); STORE[p.name]=d
-        if d.get('$id'): STORE[d['$id']]=d
-    def _validate(schema_name, data, semantic=False):
-        v=Draft202012Validator(STORE[schema_name], resolver=RefResolver.from_schema(STORE[schema_name], store=STORE), format_checker=FormatChecker())
-        errors=[f"/{'/'.join(map(str,e.path))}: {e.message}" for e in sorted(v.iter_errors(data), key=lambda e:list(e.path))]
-        if not errors and semantic: errors.extend(validate_semantic(data))
-        return {'valid': not errors, 'errors': errors}
-else:
-    _validate=_fallback
-def validate_part_family_spec(part): return _validate('part-family.schema.json', part)
-def validate_composable_part_spec(part): return _validate('composable-part.schema.json', part)
-def validate_project_spec(project): return _validate('project.schema.json', project)
-def validate_printspec(spec, semantic=True): return _validate('printspec.schema.json', spec, semantic)
+
+_SCHEMA_BASE_URI = "https://schemas.invisra.com/printspec/0.1.0/"
+def _schema_dir() -> Path:
+    """Locate root schemas in source checkouts and editable installs.
+
+    The canonical schemas live at the repository root. Walk upward so tests and
+    editable installs do not depend on a fixed package nesting depth. Future
+    wheels can add package-data loading here without changing validation code.
+    """
+    packaged = Path(__file__).resolve().parent / "schemas"
+    if packaged.is_dir():
+        return packaged
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "schemas"
+        if candidate.is_dir():
+            return candidate
+    raise RuntimeError("Unable to locate local printspec schemas directory")
+
+
+def _load_schemas() -> dict[str, dict]:
+    schemas: dict[str, dict] = {}
+    for path in sorted(_schema_dir().glob("*.schema.json")):
+        schemas[path.name] = json.loads(path.read_text(encoding="utf8"))
+    return schemas
+
+
+SCHEMAS = _load_schemas()
+
+
+def _build_registry(schemas: dict[str, dict]) -> Registry:
+    registry = Registry()
+    for filename, schema in schemas.items():
+        resource = Resource.from_contents(schema, default_specification=DRAFT202012)
+        aliases = {filename, f"{_SCHEMA_BASE_URI}{filename}"}
+        if schema.get("$id"):
+            aliases.add(schema["$id"])
+        for uri in aliases:
+            registry = registry.with_resource(uri, resource)
+    return registry
+
+
+_REGISTRY = _build_registry(SCHEMAS)
+_FORMAT_CHECKER = FormatChecker()
+
+
+def _format_error(error) -> str:
+    path = "/" + "/".join(str(part) for part in error.path)
+    return f"{path}: {error.message}"
+
+
+def _validate(schema_name: str, data, semantic: bool = False):
+    if schema_name not in SCHEMAS:
+        raise RuntimeError(f"Missing local schema: {schema_name}")
+    validator = Draft202012Validator(
+        SCHEMAS[schema_name], registry=_REGISTRY, format_checker=_FORMAT_CHECKER
+    )
+    try:
+        errors = [
+            _format_error(error)
+            for error in sorted(validator.iter_errors(data), key=lambda e: list(e.path))
+        ]
+    except _WrappedReferencingError as exc:
+        raise RuntimeError(f"Unable to resolve local JSON Schema reference for {schema_name}: {exc}") from exc
+    if not errors and semantic:
+        errors.extend(validate_semantic(data))
+    return {"valid": not errors, "errors": errors}
+
+
+def validate_part_family_spec(part):
+    return _validate("part-family.schema.json", part)
+
+
+def validate_composable_part_spec(part):
+    return _validate("composable-part.schema.json", part)
+
+
+def validate_project_spec(project):
+    return _validate("project.schema.json", project)
+
+
+def validate_printspec(spec, semantic=True):
+    return _validate("printspec.schema.json", spec, semantic)

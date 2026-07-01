@@ -35,6 +35,8 @@ pip install printspec
 
 ## Validation and generation
 
+JSON Schema is the structural source of truth for printspec validation. Semantic validation runs after schema validation and catches cross-reference and geometry sanity issues that schemas should not encode. The v0.1.0 schemas use public-looking `$id` URLs, but Python and TypeScript validators register the local `schemas/` files and resolve references offline; validation does not require network access. If a validator tries to fetch `schemas.invisra.com`, local schema registration is broken. The v0.1.0 schema set remains experimental until 1.0.
+
 ```ts
 import { validatePrintSpec, generateOpenScad, generateCadQuery } from "@invisra/printspec";
 const result = validatePrintSpec(spec);

@@ -31,5 +31,6 @@
     {
       "$ref": "simple-lid.schema.json"
     }
-  ]
+  ],
+  "$id": "https://schemas.invisra.com/printspec/0.1.0/part-family.schema.json"
 }
