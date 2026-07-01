@@ -1,6 +1,6 @@
 # Release process
 
-printspec `v0.1.0` is experimental. Publishing is manual for now; this document is a checklist for preparing release candidates without pushing artifacts to npm or PyPI accidentally.
+printspec schema `v0.1.0` is experimental. Publishing is manual for now; this document is a checklist for preparing release candidates without pushing artifacts to npm or PyPI accidentally.
 
 ## Pre-release checklist
 
@@ -17,8 +17,9 @@ printspec `v0.1.0` is experimental. Publishing is manual for now; this document 
    npm run build
    npm test
    ```
-4. Run npm package smoke tests:
+4. Run npm package content and smoke tests. The package-content check must pass before publishing because npm packages must include built `dist/` artifacts as well as bundled schemas:
    ```sh
+   npm run check:npm-package
    npm --workspace @invisra/printspec pack --dry-run
    npm run smoke:npm
    ```
@@ -31,7 +32,7 @@ printspec `v0.1.0` is experimental. Publishing is manual for now; this document 
 
 ## Version policy
 
-Before `1.0`, breaking changes are possible. Once a versioned schema directory has been published, treat that directory as immutable. After release, use patch or minor versions for schema changes and publish a new versioned directory instead of rewriting an existing one.
+Before `1.0`, breaking changes are possible. Once a versioned schema directory has been published, treat that directory as immutable. Package patch releases may advance independently from the schema version when schemas do not change. For example, npm package `@invisra/printspec@0.1.1` can remain on schema `$id` paths and `printspecVersion` `0.1.0` when the release only fixes package contents. For schema changes, publish a new versioned schema directory instead of rewriting an existing one.
 
 
 ## v0.1.0 schema immutability warning
@@ -40,7 +41,7 @@ Once `v0.1.0` is released, do not casually mutate files under `/printspec/0.1.0/
 
 ## npm publishing future path
 
-The npm package name is `@invisra/printspec`. For now, run `npm --workspace @invisra/printspec pack --dry-run` before any manual publish. Later releases should prefer npm provenance or trusted publishing through GitHub Actions.
+The npm package name is `@invisra/printspec`. For now, run `npm run check:npm-package` and `npm --workspace @invisra/printspec pack --dry-run` before any manual publish, and confirm `dist/index.js`, `dist/index.d.ts`, `dist/cli.js`, and `schemas/printspec.schema.json` are present. Later releases should prefer npm provenance or trusted publishing through GitHub Actions.
 
 ## PyPI publishing future path
 

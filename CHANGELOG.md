@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1 - npm packaging fix
+
+Patch release:
+
+- Fix npm package contents.
+- Include built `dist/` artifacts in the published npm package.
+- Add package-content checks to prevent missing build artifacts.
+- No schema changes. Schema `$id` values and `printspecVersion` remain `0.1.0`.
+
 ## 0.1.0 - Experimental release candidate
 
 - Added package-local JSON Schemas for TypeScript and Python offline validation.

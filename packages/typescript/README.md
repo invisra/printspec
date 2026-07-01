@@ -2,7 +2,7 @@
 
 TypeScript package for printspec JSON Schemas, offline validation, BOM helpers, browser form metadata helpers, CLI commands, deterministic bundle export, and starter OpenSCAD/CadQuery source generation.
 
-**Status: v0.1.0 experimental.** The package is prepared for npm publication. If it is not yet published, install from the repository workspace instead of assuming registry availability.
+**Status: npm package v0.1.1 / schema v0.1.0 experimental.** Version 0.1.1 is a packaging-only patch that includes built `dist/` artifacts; schemas and `printspecVersion` remain 0.1.0.
 
 ## Installation
 
@@ -63,7 +63,7 @@ writeBundleToDirectory(bundle, "bundle", { overwrite: true });
 
 ## Package exports and bundled schemas
 
-The package exports the main ESM API from `@invisra/printspec` and package schema files through `@invisra/printspec/schemas/*`. Schema files are bundled in the npm package under `schemas/`.
+The package exports the main ESM API from `@invisra/printspec` and package schema files through `@invisra/printspec/schemas/*`. Published npm packages must include built TypeScript artifacts under `dist/` (`dist/index.js`, `dist/index.d.ts`, and `dist/cli.js`) and schema files under `schemas/`.
 
 Validation resolves bundled schemas offline. It does not fetch hosted schema URLs during normal validation.
 

@@ -6,6 +6,7 @@ const steps = [
   ['npm', ['run', 'check:versions']],
   ['npm', ['run', 'build']],
   ['npm', ['test']],
+  ['npm', ['run', 'check:npm-package']],
   ['npm', ['--workspace', '@invisra/printspec', 'pack', '--dry-run']],
   ['npm', ['run', 'smoke:npm']],
 ];
