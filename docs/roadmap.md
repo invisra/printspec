@@ -46,3 +46,7 @@ node packages/typescript/dist/cli.js validate examples/part-families/rounded-rec
 ```
 
 Generators currently emit source code only and do not require or execute OpenSCAD, CadQuery, FreeCAD, or any CAD runtime. Supported generator families are `rounded_rectangular_plate`, `spacer_block`, `round_spacer`, and `electronics_standoff`. Validation runs before generation. Valid but unsupported optional generator features, such as spacer chamfers or fillets, produce stable warnings rather than being silently ignored. BOM helpers format local spec hardware data only; printspec does not scrape suppliers or create carts. The v0.1.0 line is experimental and intended for review before manufacturing.
+
+## Hosted schema release readiness
+
+The static schema site now has generated indexes and manifests. Before a release, regenerating the active version directory is expected; after release, published version directories should be treated as immutable. Meaningful schema changes should move to a new path such as `/printspec/0.1.1/`, `/printspec/0.2.0/`, or `/printspec/1.0.0/`. Optional Vercel Analytics, when enabled for generated HTML, tracks HTML page views only and not direct JSON fetches.

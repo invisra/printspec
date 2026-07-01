@@ -26,3 +26,9 @@ No packages are published by this repository workflow without explicit manual re
 - Added deterministic reference generators for `round_spacer` and `electronics_standoff`.
 - Added snapshot-style generator fixtures and CLI tests without executing CAD runtimes.
 - Documented experimental v0.1.0 workflows, unsupported feature warnings, and no supplier scraping/cart automation.
+
+## Unreleased
+
+- Added generated hosted schema indexes and manifests for `https://schemas.invisra.ai`.
+- Documented schema version immutability, offline validator resolution, and optional HTML-only Vercel Analytics.
+- Added CLI version commands for Python and TypeScript.

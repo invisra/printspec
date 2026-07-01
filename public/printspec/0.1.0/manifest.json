@@ -1,0 +1,81 @@
+{
+  "project": "printspec",
+  "version": "0.1.0",
+  "schemas": [
+    {
+      "filename": "printspec.schema.json",
+      "url": "/printspec/0.1.0/printspec.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json"
+    },
+    {
+      "filename": "cable-clip.schema.json",
+      "url": "/printspec/0.1.0/cable-clip.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/cable-clip.schema.json"
+    },
+    {
+      "filename": "cable-comb.schema.json",
+      "url": "/printspec/0.1.0/cable-comb.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/cable-comb.schema.json"
+    },
+    {
+      "filename": "common.schema.json",
+      "url": "/printspec/0.1.0/common.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/common.schema.json"
+    },
+    {
+      "filename": "composable-part.schema.json",
+      "url": "/printspec/0.1.0/composable-part.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/composable-part.schema.json"
+    },
+    {
+      "filename": "drill-guide.schema.json",
+      "url": "/printspec/0.1.0/drill-guide.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/drill-guide.schema.json"
+    },
+    {
+      "filename": "electronics-standoff.schema.json",
+      "url": "/printspec/0.1.0/electronics-standoff.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/electronics-standoff.schema.json"
+    },
+    {
+      "filename": "l-bracket.schema.json",
+      "url": "/printspec/0.1.0/l-bracket.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/l-bracket.schema.json"
+    },
+    {
+      "filename": "part-family.schema.json",
+      "url": "/printspec/0.1.0/part-family.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/part-family.schema.json"
+    },
+    {
+      "filename": "project.schema.json",
+      "url": "/printspec/0.1.0/project.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/project.schema.json"
+    },
+    {
+      "filename": "round-spacer.schema.json",
+      "url": "/printspec/0.1.0/round-spacer.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/round-spacer.schema.json"
+    },
+    {
+      "filename": "rounded-rectangular-plate.schema.json",
+      "url": "/printspec/0.1.0/rounded-rectangular-plate.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/rounded-rectangular-plate.schema.json"
+    },
+    {
+      "filename": "simple-box.schema.json",
+      "url": "/printspec/0.1.0/simple-box.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/simple-box.schema.json"
+    },
+    {
+      "filename": "simple-lid.schema.json",
+      "url": "/printspec/0.1.0/simple-lid.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/simple-lid.schema.json"
+    },
+    {
+      "filename": "spacer-block.schema.json",
+      "url": "/printspec/0.1.0/spacer-block.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/spacer-block.schema.json"
+    }
+  ]
+}
