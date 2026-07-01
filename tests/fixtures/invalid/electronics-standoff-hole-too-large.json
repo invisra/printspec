@@ -1,0 +1,9 @@
+{
+  "printspecVersion": "0.1.0",
+  "units": "mm",
+  "part": {
+    "type": "electronics_standoff",
+    "label": "Invalid standoff",
+    "parameters": {"outerDiameter": 7, "height": 10, "holeDiameter": 7}
+  }
+}

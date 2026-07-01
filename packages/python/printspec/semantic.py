@@ -10,6 +10,10 @@ def _part(part, prefix='part'):
     if part.get('type')=='rounded_rectangular_plate' and p.get('cornerRadius',0)>min(p.get('length',0),p.get('width',0))/2: e.append(f'{prefix}.parameters.cornerRadius exceeds half of min(length,width)')
     if part.get('type')=='simple_box' and p.get('wallThickness',0)>=min(p.get('outerLength',0),p.get('outerWidth',0))/2: e.append(f'{prefix}.parameters.wallThickness must be less than half of outer dimensions')
     if part.get('type')=='round_spacer' and p.get('innerDiameter') is not None and p.get('innerDiameter')>=p.get('outerDiameter',0): e.append(f'{prefix}.parameters.innerDiameter must be less than outerDiameter')
+    if part.get('type')=='electronics_standoff':
+        if p.get('holeDiameter',0)>=p.get('outerDiameter',0): e.append(f'{prefix}.parameters.holeDiameter must be less than outerDiameter')
+        if (p.get('baseDiameter') is None) != (p.get('baseHeight') is None): e.append(f'{prefix}.parameters.baseDiameter and baseHeight must be provided together')
+        if p.get('baseDiameter') is not None and p.get('baseDiameter')<p.get('outerDiameter',0): e.append(f'{prefix}.parameters.baseDiameter must be greater than or equal to outerDiameter')
     maxw=p.get('width') or p.get('outerWidth') or p.get('outerDiameter')
     for h in p.get('holes') or []:
         if maxw and h.get('diameter',0)>maxw: e.append(f'{prefix}.parameters.holes diameter exceeds target width')
