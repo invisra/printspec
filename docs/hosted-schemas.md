@@ -16,7 +16,7 @@ Validators resolve bundled schemas offline during normal validation. Hosted sche
 
 ## Version immutability
 
-Before a version is released, regenerating the current version directory is expected. After release, do not casually mutate old versioned schema paths. For breaking or meaningful schema changes, publish a new version path such as `/printspec/0.1.1/`, `/printspec/0.2.0/`, or `/printspec/1.0.0/`.
+Before a version is released, regenerating the current version directory is expected. After release, do not casually mutate old versioned schema paths. Once `v0.1.0` is released, do not casually mutate `/printspec/0.1.0/` schema contents. For breaking or meaningful schema changes, publish a new version path such as `/printspec/0.1.1/`, `/printspec/0.2.0/`, or `/printspec/1.0.0/`. Package patches may happen, but schema `$id` paths need careful handling.
 
 ## Vercel Analytics
 

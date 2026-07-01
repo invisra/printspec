@@ -33,6 +33,11 @@ printspec `v0.1.0` is experimental. Publishing is manual for now; this document 
 
 Before `1.0`, breaking changes are possible. Once a versioned schema directory has been published, treat that directory as immutable. After release, use patch or minor versions for schema changes and publish a new versioned directory instead of rewriting an existing one.
 
+
+## v0.1.0 schema immutability warning
+
+Once `v0.1.0` is released, do not casually mutate files under `/printspec/0.1.0/`. Versioned schema URLs are intended to be stable references. For schema changes, publish a new versioned path such as `/printspec/0.1.1/` or `/printspec/0.2.0/`. Package patches may happen, but schema `$id` paths and hosted version directories need careful handling so existing consumers are not surprised.
+
 ## npm publishing future path
 
 The npm package name is `@invisra/printspec`. For now, run `npm --workspace @invisra/printspec pack --dry-run` before any manual publish. Later releases should prefer npm provenance or trusted publishing through GitHub Actions.
