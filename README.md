@@ -1,70 +1,179 @@
 # printspec
 
-printspec is an experimental open-source specification and toolkit for practical parametric 3D-printable parts. It provides JSON Schemas, offline validators, BOM helpers, CLI commands, and starter code generators for OpenSCAD and CadQuery source.
+**Practical JSON Schemas and offline tooling for parametric 3D-printable parts.**
 
-**Release status:** `v0.1.0 experimental`. Packages are being prepared for public release; if npm or PyPI packages are not available yet, use this repository directly.
+**Status: v0.1.0 experimental**
 
-## Install
+printspec is an open-source specification and toolkit from Invisra for describing practical, parameterized 3D-printable parts as JSON. The v0.1.0 release focuses on stable schemas, offline TypeScript/Python validation, bundled schema distribution, static hosted schema references, BOM/form helpers, starter source generators, CLI workflows, and deterministic source bundle export—not CAD execution or production manufacturing automation.
+
+## Installation
+
+Packages are being prepared for public release. Until npm/PyPI publication is complete, install from this repository.
 
 ```sh
+# From the repository
+npm install
+python -m pip install -e "packages/python[test]"
+
+# Once published
 npm install @invisra/printspec
 python -m pip install printspec
 ```
 
-From a checkout:
+## CLI quickstart
 
 ```sh
-npm install
-python -m pip install -e "packages/python[test]"
+printspec --version
+printspec validate examples/part-families/rounded-rectangular-plate.basic.json
+printspec list-part-families
+printspec form-metadata rounded_rectangular_plate
+printspec bom examples/projects/simple-enclosure-project.json --format markdown
+printspec to-openscad examples/part-families/round-spacer.basic.json --output round-spacer.scad
+printspec to-cadquery examples/part-families/electronics-standoff.m3.json --output standoff.py
 ```
 
-## Quick validation
+## Schema URL quick links
+
+Hosted schemas are public references for documentation and external tooling. Package validators use bundled schemas offline and should not fetch these URLs during normal validation.
+
+- Base index: <https://schemas.invisra.ai/>
+- Project index: <https://schemas.invisra.ai/printspec/>
+- v0.1.0 index: <https://schemas.invisra.ai/printspec/0.1.0/>
+- Root schema: <https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json>
+- Version manifest: <https://schemas.invisra.ai/printspec/0.1.0/manifest.json>
+
+## Simple JSON example
+
+```json
+{
+  "printspecVersion": "0.1.0",
+  "units": "mm",
+  "part": {
+    "type": "round_spacer",
+    "label": "Smoke spacer",
+    "parameters": {
+      "outerDiameter": 12,
+      "innerDiameter": 4,
+      "height": 8
+    }
+  }
+}
+```
+
+## TypeScript API example
+
+printspec for TypeScript is ESM-only.
 
 ```js
-import { validatePrintSpec } from "@invisra/printspec";
-import spec from "./examples/part-families/rounded-rectangular-plate.basic.json" assert { type: "json" };
+import { validatePrintSpec, generateOpenScad } from "@invisra/printspec";
 
 const result = validatePrintSpec(spec);
-console.log(result.valid, result.errors);
+if (!result.valid) console.error(result.errors);
+
+const generated = generateOpenScad(spec);
+if (generated.supported) console.log(generated.code);
 ```
 
-```sh
-printspec validate examples/part-families/rounded-rectangular-plate.basic.json
-printspec to-openscad examples/part-families/round-spacer.basic.json --output round-spacer.scad
+## Python API example
+
+```python
+from printspec import validate_printspec
+from printspec.generators import generate_openscad
+
+result = validate_printspec(spec)
+print(result["valid"], result["errors"])
+
+generated = generate_openscad(spec)
+if generated["supported"]:
+    print(generated["code"])
 ```
 
-## Hosted and bundled schemas
+## Supported part families
 
-Hosted schemas are intended for public reference:
-
-- Project index: <https://schemas.invisra.ai/printspec/>
-- v0.1.0 schemas: <https://schemas.invisra.ai/printspec/0.1.0/>
-- Manifest: <https://schemas.invisra.ai/printspec/0.1.0/manifest.json>
-
-Validators resolve package-bundled schemas offline and should not fetch hosted schemas during normal validation.
-
-## Supported starter generator families
+v0.1.0 includes practical starter schemas and generator support for:
 
 - `rounded_rectangular_plate`
 - `spacer_block`
 - `round_spacer`
 - `electronics_standoff`
 
-Generated CAD source is a starting point. Review dimensions, clearances, materials, printer settings, and mechanical suitability before printing or using any part.
+## Supported generators
+
+- Starter OpenSCAD source generation.
+- Starter CadQuery source generation.
+
+Generated source is intended as reviewable starting material. printspec does not run OpenSCAD, CadQuery, FreeCAD, slicers, or CAD kernels.
+
+## Bundle export example
+
+Bundles are deterministic source bundles with the original JSON, generated source where supported, BOM files when applicable, a manifest, README, and optional experimental PartCAD stub metadata.
+
+```sh
+printspec bundle examples/part-families/rounded-rectangular-plate.basic.json --output bundle --overwrite
+```
+
+```js
+import { createBundle, writeBundleToDirectory } from "@invisra/printspec";
+
+const bundle = createBundle(spec, { includePartCad: true });
+writeBundleToDirectory(bundle, "bundle", { overwrite: true });
+```
+
+```python
+from printspec import create_bundle, write_bundle_to_directory
+
+bundle = create_bundle(spec, {"includePartCad": True})
+write_bundle_to_directory(bundle, "bundle", overwrite=True)
+```
+
+## Browser metadata example
+
+Schemas include `x-printspec-*` metadata for browser/editor form builders. This metadata is descriptive; it does not add a web app and does not execute CAD.
+
+```sh
+printspec form-metadata rounded_rectangular_plate
+printspec list-part-families
+```
+
+## What v0.1.0 includes
+
+- JSON Schemas for practical parametric 3D-printable parts.
+- Offline TypeScript validation.
+- Offline Python validation.
+- Bundled schemas in both packages.
+- Hosted schemas at `schemas.invisra.ai`.
+- Static schema index pages and manifests.
+- BOM helpers.
+- Browser form metadata helpers.
+- Starter OpenSCAD source generators.
+- Starter CadQuery source generators.
+- CLI commands.
+- Deterministic project/part bundle export.
+- Optional experimental PartCAD stub metadata.
+
+## What v0.1.0 does not include
+
+- STL, STEP, or 3MF export.
+- CAD runtime execution.
+- Slicer integration.
+- Supplier API calls.
+- McMaster-Carr cart creation.
+- PartPilot SaaS app functionality.
+- A full CAD language or constraint solver.
+- Certified engineering validation.
 
 ## Safety and non-goals
 
-printspec is not a CAD runtime, supplier scraper, AI design agent, or purchasing automation tool. It does not execute OpenSCAD, CadQuery, or FreeCAD in CI. Do not use generated designs without engineering review for safety-critical, load-bearing, medical, electrical, or regulated applications.
+printspec is experimental software for describing and generating starter source for 3D-printable parts. Do not use generated designs without appropriate engineering review for safety-critical, load-bearing, medical, electrical, regulated, or production applications. Review dimensions, clearances, materials, printer settings, and mechanical suitability before printing or use.
 
-## Release readiness
+## Release resources
 
-See [docs/release-process.md](docs/release-process.md) for dry-run checks and manual publishing notes.
+- Release process: [docs/release-process.md](docs/release-process.md)
+- Hosted schema documentation: [docs/hosted-schemas.md](docs/hosted-schemas.md)
+- Bundle documentation: [docs/bundles.md](docs/bundles.md)
+- Browser/editor metadata: [docs/form-metadata.md](docs/form-metadata.md)
+- v0.1.0 checklist: [docs/v0.1.0-release-checklist.md](docs/v0.1.0-release-checklist.md)
 
-## Browser/editor form metadata
+## License
 
-Printspec schemas now include `x-printspec-*` browser-editor metadata for parameter ordering, grouping, units, controls, steps, priorities, examples, and documentation-only warnings. See `docs/form-metadata.md` for the convention plus TypeScript, Python, and CLI usage. This metadata helps tools render forms; it is not a web app and does not execute CAD.
-
-
-## Project bundles
-
-printspec can export deterministic source bundles with the original JSON, supported OpenSCAD/CadQuery source, BOM files, a manifest, README, and optional experimental PartCAD metadata. See [docs/bundles.md](docs/bundles.md). Bundles do not execute CAD tools or include STL, STEP, or 3MF outputs.
+Apache-2.0. See package metadata and repository license files for details.

@@ -8,6 +8,10 @@
 - Supported starter generator families: `rounded_rectangular_plate`, `spacer_block`, `round_spacer`, and `electronics_standoff`.
 - Added release-readiness checks for version consistency, npm package smoke tests, and Python wheel smoke tests.
 
+### Version immutability warning
+
+Once `v0.1.0` is released, do not casually mutate `/printspec/0.1.0/` schema contents. Publish `/printspec/0.1.1/` or `/printspec/0.2.0/` for schema changes. Package patches may happen, but schema `$id` paths need careful handling.
+
 This release is experimental. Generated CAD source should be reviewed before printing or use, and publishing to npm/PyPI remains manual until explicitly configured.
 
 ## Browser/editor form metadata

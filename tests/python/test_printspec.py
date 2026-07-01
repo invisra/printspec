@@ -48,15 +48,15 @@ def test_warning_behavior():
 def test_python_cli_commands():
     env={**os.environ,'PYTHONPATH':'packages/python'}
     for args in [['validate','examples/part-families/rounded-rectangular-plate.basic.json'],['to-openscad','examples/part-families/round-spacer.basic.json'],['to-cadquery','examples/part-families/electronics-standoff.m3.json'],['bom','examples/projects/simple-enclosure-project.json','--format','markdown']]:
-        r=subprocess.run([sys.executable,'-m','printspec.cli',*args],cwd=root,text=True,capture_output=True,env=env)
+        r=subprocess.run([sys.executable,'-m','printspec.cli',*args],cwd=root,text=True,capture_output=True,env=env,timeout=20)
         assert r.returncode==0, args + [r.stderr]
         assert r.stdout or r.stderr
-    bad=subprocess.run([sys.executable,'-m','printspec.cli','validate','tests/fixtures/invalid/round-spacer-inner-too-large.json'],cwd=root,text=True,capture_output=True,env=env)
+    bad=subprocess.run([sys.executable,'-m','printspec.cli','validate','tests/fixtures/invalid/round-spacer-inner-too-large.json'],cwd=root,text=True,capture_output=True,env=env,timeout=20)
     assert bad.returncode==1 and 'invalid' in bad.stderr
     malformed = root / 'tests/fixtures/invalid-json.tmp.json'
     malformed.write_text('{bad json')
     try:
-        r=subprocess.run([sys.executable,'-m','printspec.cli','validate',str(malformed)],cwd=root,text=True,capture_output=True,env=env)
+        r=subprocess.run([sys.executable,'-m','printspec.cli','validate',str(malformed)],cwd=root,text=True,capture_output=True,env=env,timeout=20)
         assert r.returncode == 1
         assert 'invalid-json.tmp.json' in r.stderr
         assert 'parse error' in r.stderr
@@ -65,23 +65,23 @@ def test_python_cli_commands():
 
 def test_python_cli_version_commands():
     for args in [['--version'], ['version']]:
-        r = subprocess.run([sys.executable, '-m', 'printspec.cli', *args], cwd=root, text=True, capture_output=True, env={**os.environ,'PYTHONPATH':'packages/python'})
+        r = subprocess.run([sys.executable, '-m', 'printspec.cli', *args], cwd=root, text=True, capture_output=True, env={**os.environ,'PYTHONPATH':'packages/python'}, timeout=20)
         assert r.returncode == 0
         assert 'printspec 0.1.0' in r.stdout
 
 
 def test_python_cli_friendly_user_errors(tmp_path):
     env={**os.environ,'PYTHONPATH':'packages/python'}
-    help_result=subprocess.run([sys.executable,'-m','printspec.cli','--help'],cwd=root,text=True,capture_output=True,env=env)
+    help_result=subprocess.run([sys.executable,'-m','printspec.cli','--help'],cwd=root,text=True,capture_output=True,env=env,timeout=20)
     assert help_result.returncode == 0
     assert 'usage: printspec' in help_result.stdout
 
-    bad_command=subprocess.run([sys.executable,'-m','printspec.cli','wat'],cwd=root,text=True,capture_output=True,env=env)
+    bad_command=subprocess.run([sys.executable,'-m','printspec.cli','wat'],cwd=root,text=True,capture_output=True,env=env,timeout=20)
     assert bad_command.returncode == 1
     assert 'invalid choice' in bad_command.stderr or 'error:' in bad_command.stderr
     assert 'Traceback' not in bad_command.stderr
 
-    missing=subprocess.run([sys.executable,'-m','printspec.cli','validate','does-not-exist.json'],cwd=root,text=True,capture_output=True,env=env)
+    missing=subprocess.run([sys.executable,'-m','printspec.cli','validate','does-not-exist.json'],cwd=root,text=True,capture_output=True,env=env,timeout=20)
     assert missing.returncode == 1
     assert 'does-not-exist.json' in missing.stderr
     assert 'read error' in missing.stderr
@@ -89,7 +89,7 @@ def test_python_cli_friendly_user_errors(tmp_path):
 
     malformed=tmp_path/'invalid-json.tmp.json'
     malformed.write_text('{bad json', encoding='utf8')
-    invalid=subprocess.run([sys.executable,'-m','printspec.cli','validate',str(malformed)],cwd=root,text=True,capture_output=True,env=env)
+    invalid=subprocess.run([sys.executable,'-m','printspec.cli','validate',str(malformed)],cwd=root,text=True,capture_output=True,env=env,timeout=20)
     assert invalid.returncode == 1
     assert 'invalid-json.tmp.json' in invalid.stderr
     assert 'parse error' in invalid.stderr
@@ -105,10 +105,10 @@ def test_python_form_metadata_helpers_and_cli():
     assert get_part_family_form_metadata('spacer_block')['partType'] == 'spacer_block'
     import pytest
     with pytest.raises(ValueError): get_part_family_form_metadata('missing')
-    r=subprocess.run([sys.executable,'-m','printspec.cli','form-metadata','rounded_rectangular_plate'],cwd=root,text=True,capture_output=True,env={**os.environ,'PYTHONPATH':'packages/python'})
+    r=subprocess.run([sys.executable,'-m','printspec.cli','form-metadata','rounded_rectangular_plate'],cwd=root,text=True,capture_output=True,env={**os.environ,'PYTHONPATH':'packages/python'},timeout=20)
     assert r.returncode == 0, r.stderr
     assert json.loads(r.stdout)['partType'] == 'rounded_rectangular_plate'
-    r=subprocess.run([sys.executable,'-m','printspec.cli','list-part-families'],cwd=root,text=True,capture_output=True,env={**os.environ,'PYTHONPATH':'packages/python'})
+    r=subprocess.run([sys.executable,'-m','printspec.cli','list-part-families'],cwd=root,text=True,capture_output=True,env={**os.environ,'PYTHONPATH':'packages/python'},timeout=20)
     assert r.returncode == 0, r.stderr
     assert any(f['type']=='spacer_block' for f in json.loads(r.stdout))
 
@@ -133,7 +133,7 @@ def test_python_project_bundle_and_cli(tmp_path):
     assert 'bom/bom.md' in paths and 'partcad.yaml' in paths and 'parts/base/printspec.json' in paths
     assert len(b['warnings']) >= 2
     env={**os.environ,'PYTHONPATH':'packages/python'}; out=tmp_path/'cli-bundle'; z=tmp_path/'cli-bundle.zip'
-    r=subprocess.run([sys.executable,'-m','printspec.cli','bundle','examples/part-families/rounded-rectangular-plate.basic.json','--output',str(out),'--zip',str(z),'--overwrite'],cwd=root,text=True,capture_output=True,env=env)
+    r=subprocess.run([sys.executable,'-m','printspec.cli','bundle','examples/part-families/rounded-rectangular-plate.basic.json','--output',str(out),'--zip',str(z),'--overwrite'],cwd=root,text=True,capture_output=True,env=env,timeout=20)
     assert r.returncode == 0, r.stderr
     assert (out/'bundle-manifest.json').exists() and z.exists()
     assert 'wrote' in r.stdout
