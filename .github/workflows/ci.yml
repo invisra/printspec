@@ -8,9 +8,14 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '20'}
       - run: npm install
+      - run: npm run sync:schemas
       - run: npm run build
       - run: npm test
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: python -m pip install -e packages/python[test]
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e "packages/python[test]"
       - run: pytest
+      - run: python -m pip install build
+      - run: python -m build packages/python
+      - run: python -m printspec.cli validate examples/part-families/rounded-rectangular-plate.basic.json

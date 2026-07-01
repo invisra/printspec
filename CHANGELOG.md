@@ -17,3 +17,11 @@ v0.1.0 hardens the initial printspec foundation for public review:
 - Documentation clarifies v0.1 stability, experimental composable/project support, generator safety, supplier non-goals, and the PartPilot/PartCAD relationship.
 
 No packages are published by this repository workflow without explicit manual release action.
+
+## 0.1.0 release-candidate iteration
+
+- Improved Python packaging checks for editable installs and wheel builds.
+- Added Python and TypeScript CLIs for validation, OpenSCAD/CadQuery source generation, and BOM formatting.
+- Added deterministic reference generators for `round_spacer` and `electronics_standoff`.
+- Added snapshot-style generator fixtures and CLI tests without executing CAD runtimes.
+- Documented experimental v0.1.0 workflows, unsupported feature warnings, and no supplier scraping/cart automation.
