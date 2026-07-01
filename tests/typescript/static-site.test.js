@@ -8,6 +8,7 @@ const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'))
 const sourceDir=path.join(root,'schemas');
 const publicDir=path.join(root,'public','printspec',version);
 const pythonDir=path.join(root,'packages/python/printspec/schemas');
+const typescriptDir=path.join(root,'packages/typescript/schemas');
 const schemaFiles=fs.readdirSync(sourceDir).filter((f)=>f.endsWith('.schema.json')).sort((a,b)=>a==='printspec.schema.json'?-1:b==='printspec.schema.json'?1:a.localeCompare(b));
 
 test('static schema site files exist',()=>{
@@ -38,10 +39,16 @@ test('manifests include versions and all schemas',()=>{
  }
 });
 
-test('synced schemas match source schemas',()=>{
- for(const file of schemaFiles){
-  const source=fs.readFileSync(path.join(sourceDir,file),'utf8');
-  assert.equal(fs.readFileSync(path.join(publicDir,file),'utf8'),source);
-  assert.equal(fs.readFileSync(path.join(pythonDir,file),'utf8'),source);
+function schemaFileNames(dir){
+ return fs.readdirSync(dir).filter((f)=>f.endsWith('.schema.json')).sort((a,b)=>a==='printspec.schema.json'?-1:b==='printspec.schema.json'?1:a.localeCompare(b));
+}
+
+test('synced schemas match source schemas across all generated destinations',()=>{
+ for(const [label,dir] of [['public hosted schemas',publicDir],['Python package schemas',pythonDir],['TypeScript package schemas',typescriptDir]]){
+  assert.deepEqual(schemaFileNames(dir),schemaFiles,`${label} should contain exactly the source schema filenames`);
+  for(const file of schemaFiles){
+   const source=fs.readFileSync(path.join(sourceDir,file),'utf8');
+   assert.equal(fs.readFileSync(path.join(dir,file),'utf8'),source,`${label}/${file} should match schemas/${file}`);
+  }
  }
 });

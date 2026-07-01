@@ -13,6 +13,8 @@
     "test:python": "npm run sync:schemas && pytest tests/python tests/schema",
     "test:schema": "npm run sync:schemas && python -m pytest tests/schema",
     "lint": "npm run build",
-    "sync:schemas": "node scripts/sync-schemas.mjs"
+    "sync:schemas": "node scripts/sync-schemas.mjs",
+    "pack:ts": "npm run sync:schemas && npm --workspace @invisra/printspec run build && npm --workspace @invisra/printspec pack --dry-run",
+    "smoke:npm": "npm run sync:schemas && npm --workspace @invisra/printspec run build && node scripts/npm-smoke-test.mjs"
   }
 }

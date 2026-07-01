@@ -8,6 +8,7 @@ const PROJECT_DESCRIPTION = 'JSON Schemas for practical parametric 3D-printable 
 const PROJECT_REPO_URL = 'https://github.com/invisra/printspec';
 const SOURCE_SCHEMA_DIR = 'schemas';
 const PYTHON_SCHEMA_DIR = 'packages/python/printspec/schemas';
+const TYPESCRIPT_SCHEMA_DIR = 'packages/typescript/schemas';
 const ENABLE_VERCEL_ANALYTICS = process.env.ENABLE_VERCEL_ANALYTICS === '1';
 
 const packageJson = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
@@ -65,7 +66,7 @@ const schemas = files.map((file) => {
   return {file, schema};
 });
 
-for (const destination of [PUBLIC_SCHEMA_DIR, PYTHON_SCHEMA_DIR]) {
+for (const destination of [PUBLIC_SCHEMA_DIR, PYTHON_SCHEMA_DIR, TYPESCRIPT_SCHEMA_DIR]) {
   const destinationDir = path.join(root, destination);
   mkdirSync(destinationDir, {recursive: true});
 
@@ -118,4 +119,5 @@ writeFileSync(path.join(publicVersionPath, 'index.html'), page(`${PROJECT_NAME} 
 console.log(`Synced ${files.length} schema files`);
 console.log(`Public destination: ${PUBLIC_SCHEMA_DIR}`);
 console.log(`Python package destination: ${PYTHON_SCHEMA_DIR}`);
+console.log(`TypeScript package destination: ${TYPESCRIPT_SCHEMA_DIR}`);
 console.log(`Generated static schema indexes and manifests for ${PROJECT_NAME} ${SCHEMA_VERSION}`);

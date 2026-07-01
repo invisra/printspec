@@ -10,9 +10,9 @@ Useful entry points:
 - Project manifest: `https://schemas.invisra.ai/printspec/manifest.json`
 - Version manifest: `https://schemas.invisra.ai/printspec/0.1.0/manifest.json`
 
-The repository `schemas/` directory is the source of truth. Run `npm run sync:schemas` after editing schema files. The command copies schemas into the public hosted tree, copies them into the Python package data directory, and regenerates static HTML indexes plus machine-readable manifests.
+The repository `schemas/` directory is the source of truth. Run `npm run sync:schemas` after editing schema files. The command copies schemas into the public hosted tree, copies them into the Python and TypeScript package data directories, and regenerates static HTML indexes plus machine-readable manifests.
 
-Validators resolve bundled schemas offline during normal validation. Hosted schema URLs are stable public references for documentation and external tooling; the Python and TypeScript validators should not fetch `schemas.invisra.ai` during ordinary validation.
+Validators resolve bundled schemas offline during normal validation. Hosted schema URLs are stable public references for documentation and external tooling; the Python and TypeScript validators use bundled schemas and should not fetch `schemas.invisra.ai` during ordinary validation.
 
 ## Version immutability
 
