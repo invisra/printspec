@@ -1,4 +1,4 @@
-import json, subprocess, sys
+import json, os, subprocess, sys
 from pathlib import Path
 from printspec import *
 root=Path(__file__).resolve().parents[2]
@@ -68,3 +68,29 @@ def test_python_cli_version_commands():
         r = subprocess.run([sys.executable, '-m', 'printspec.cli', *args], cwd=root, text=True, capture_output=True)
         assert r.returncode == 0
         assert 'printspec 0.1.0' in r.stdout
+
+
+def test_python_cli_friendly_user_errors(tmp_path):
+    env={**os.environ,'PYTHONPATH':'packages/python'}
+    help_result=subprocess.run([sys.executable,'-m','printspec.cli','--help'],cwd=root,text=True,capture_output=True,env=env)
+    assert help_result.returncode == 0
+    assert 'usage: printspec' in help_result.stdout
+
+    bad_command=subprocess.run([sys.executable,'-m','printspec.cli','wat'],cwd=root,text=True,capture_output=True,env=env)
+    assert bad_command.returncode == 1
+    assert 'invalid choice' in bad_command.stderr or 'error:' in bad_command.stderr
+    assert 'Traceback' not in bad_command.stderr
+
+    missing=subprocess.run([sys.executable,'-m','printspec.cli','validate','does-not-exist.json'],cwd=root,text=True,capture_output=True,env=env)
+    assert missing.returncode == 1
+    assert 'does-not-exist.json' in missing.stderr
+    assert 'read error' in missing.stderr
+    assert 'Traceback' not in missing.stderr
+
+    malformed=tmp_path/'invalid-json.tmp.json'
+    malformed.write_text('{bad json', encoding='utf8')
+    invalid=subprocess.run([sys.executable,'-m','printspec.cli','validate',str(malformed)],cwd=root,text=True,capture_output=True,env=env)
+    assert invalid.returncode == 1
+    assert 'invalid-json.tmp.json' in invalid.stderr
+    assert 'parse error' in invalid.stderr
+    assert 'Traceback' not in invalid.stderr

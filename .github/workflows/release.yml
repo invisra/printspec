@@ -1,9 +1,38 @@
 name: Release
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to dry-run, for example 0.1.0'
+        required: true
+        default: '0.1.0'
+      dry_run:
+        description: 'Keep publishing disabled'
+        required: true
+        default: true
+        type: boolean
 jobs:
   dry-run:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Release publishing is intentionally manual for 0.1.x."
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: npm install
+      - run: npm run sync:schemas
+      - run: npm run check:versions
+      - run: npm run build
+      - run: npm test
+      - run: npm run smoke:npm
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e "packages/python[test]"
+      - run: pytest
+      - run: python -m pip install build twine
+      - run: python -m build packages/python
+      - run: python -m twine check packages/python/dist/*
+      - run: npm --workspace @invisra/printspec pack --dry-run
+      - run: echo "Release dry-run complete for ${{ inputs.version }}. Publishing remains manual; dry_run=${{ inputs.dry_run }}."

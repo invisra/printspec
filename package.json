@@ -15,6 +15,8 @@
     "lint": "npm run build",
     "sync:schemas": "node scripts/sync-schemas.mjs",
     "pack:ts": "npm run sync:schemas && npm --workspace @invisra/printspec run build && npm --workspace @invisra/printspec pack --dry-run",
-    "smoke:npm": "npm run sync:schemas && npm --workspace @invisra/printspec run build && node scripts/npm-smoke-test.mjs"
+    "smoke:npm": "npm run sync:schemas && npm --workspace @invisra/printspec run build && node scripts/npm-smoke-test.mjs",
+    "check:versions": "node scripts/check-version-consistency.mjs",
+    "release:smoke": "node scripts/release-smoke-test.mjs"
   }
 }

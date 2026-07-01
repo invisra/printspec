@@ -1,37 +1,11 @@
 # Changelog
 
-## 0.1.0
+## 0.1.0 - Experimental release candidate
 
-v0.1.0 hardens the initial printspec foundation for public review:
+- Added package-local JSON Schemas for TypeScript and Python offline validation.
+- Added hosted static schema output under `public/printspec/0.1.0/`.
+- Added validators, BOM helpers, CLI commands, and starter OpenSCAD/CadQuery generators.
+- Supported starter generator families: `rounded_rectangular_plate`, `spacer_block`, `round_spacer`, and `electronics_standoff`.
+- Added release-readiness checks for version consistency, npm package smoke tests, and Python wheel smoke tests.
 
-- JSON Schema files are the intended source of truth for structural validation, with TypeScript and Python validation APIs exposing matching `{ valid, errors }` result shapes.
-- Added semantic validation for duplicate IDs, broken composable/project references, basic geometry sanity, and BOM supplier/reference sanity.
-- Normalization now deep-clones input, defaults hole axis/depth where documented, and normalizes common supplier names without clamping or silently fixing invalid dimensions.
-- OpenSCAD and CadQuery generators validate before emitting deterministic source and return a structured unsupported result for invalid or unsupported specs.
-- BOM helpers cover top-level, part, project, and nested project hardware, with Markdown, CSV, and supplier order-list output helpers.
-- Added shared valid/invalid fixtures used by both TypeScript and Python tests.
-- Fixed TypeScript Ajv ESM loading for NodeNext/Node 20 compiled output and hardened offline schema registration under `$id`, filename, and hosted URL aliases.
-- Fixed the cable clip schema so its clip sizing `anyOf` constraint is valid Draft 2020-12 and added regression coverage for missing clip sizing fields.
-- Added TypeScript and Python schema meta-validation tests so every `schemas/*.schema.json` file is checked against the Draft 2020-12 meta-schema before fixture validation.
-- Clarified that hosted schema URLs are public references only; TypeScript uses Ajv Draft 2020-12 offline and Python uses `jsonschema`/`referencing` offline.
-- Fixed Python packaging by syncing schema artifacts into `packages/python/printspec/schemas/`, removing brittle `../../schemas` build includes, and adding drift/package-data/wheel smoke coverage.
-- Documentation clarifies v0.1 stability, experimental composable/project support, generator safety, supplier non-goals, and the PartPilot/PartCAD relationship.
-
-No packages are published by this repository workflow without explicit manual release action.
-
-## 0.1.0 release-candidate iteration
-
-- Improved Python packaging checks for editable installs and wheel builds.
-- Added Python and TypeScript CLIs for validation, OpenSCAD/CadQuery source generation, and BOM formatting.
-- Added deterministic reference generators for `round_spacer` and `electronics_standoff`.
-- Added snapshot-style generator fixtures and CLI tests without executing CAD runtimes.
-- Documented experimental v0.1.0 workflows, unsupported feature warnings, and no supplier scraping/cart automation.
-
-## Unreleased
-
-- Bundled synchronized schemas in the TypeScript/NPM package so packed installs validate offline without a repository-level `schemas/` directory.
-- Added NPM pack/install smoke coverage and package drift tests for public, Python, and TypeScript schema destinations.
-
-- Added generated hosted schema indexes and manifests for `https://schemas.invisra.ai`.
-- Documented schema version immutability, offline validator resolution, and optional HTML-only Vercel Analytics.
-- Added CLI version commands for Python and TypeScript.
+This release is experimental. Generated CAD source should be reviewed before printing or use, and publishing to npm/PyPI remains manual until explicitly configured.

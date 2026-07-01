@@ -1,6 +1,6 @@
 # @invisra/printspec
 
-TypeScript validators, BOM helpers, CLI commands, and starter source generators for printspec.
+TypeScript package for printspec JSON Schemas, offline validation, BOM helpers, CLI commands, and starter OpenSCAD/CadQuery generators.
 
 ## Install
 
@@ -8,29 +8,35 @@ TypeScript validators, BOM helpers, CLI commands, and starter source generators 
 npm install @invisra/printspec
 ```
 
-## Validate offline
+## ESM import
 
-The NPM package includes bundled JSON Schemas in `schemas/`. `validatePrintSpec` registers those package-local schemas with Ajv and resolves `$ref` values offline; it does not fetch hosted schema URLs.
-
-```ts
-import { validatePrintSpec } from "@invisra/printspec";
+```js
+import { validatePrintSpec, generateOpenScad } from "@invisra/printspec";
 
 const result = validatePrintSpec(spec);
-if (!result.valid) {
-  console.error(result.errors);
-}
+if (!result.valid) console.error(result.errors);
 ```
 
-## CLI
+## CLI usage
 
 ```sh
-npx printspec validate spec.json
-npx printspec to-openscad spec.json --output model.scad
-npx printspec bom project.json --format markdown
+printspec --version
+printspec validate examples/part-families/rounded-rectangular-plate.basic.json
+printspec bom examples/projects/simple-enclosure-project.json --format markdown
+printspec to-openscad examples/part-families/round-spacer.basic.json --output round-spacer.scad
 ```
 
-The CLI emits source or text artifacts only. It does not execute OpenSCAD, CadQuery, FreeCAD, or any CAD runtime.
+## Generator example
 
-## Development
+```js
+import { generateCadQuery } from "@invisra/printspec";
 
-From a repository checkout, run `npm run sync:schemas` before building or packing. The sync command copies root `schemas/*.schema.json` into the public hosted tree, the Python package, and this TypeScript package, then regenerates static schema indexes and manifests.
+const generated = generateCadQuery(spec);
+if (generated.supported) console.log(generated.code);
+```
+
+Generated CAD source should be reviewed before use. The package does not run CAD runtimes.
+
+## Offline schema behavior
+
+Schema files are bundled in `schemas/` and exported as `@invisra/printspec/schemas/*` for tools that need to inspect them. Validation uses bundled schemas and does not fetch hosted schema URLs.

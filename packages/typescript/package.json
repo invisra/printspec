@@ -1,9 +1,42 @@
 {
   "name": "@invisra/printspec",
   "version": "0.1.0",
+  "description": "JSON schemas, validators, BOM helpers, CLI commands, and starter generators for practical parametric 3D-printable parts.",
+  "license": "Apache-2.0",
+  "author": "Invisra",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invisra/printspec.git",
+    "directory": "packages/typescript"
+  },
+  "homepage": "https://github.com/invisra/printspec#readme",
+  "bugs": {
+    "url": "https://github.com/invisra/printspec/issues"
+  },
+  "keywords": [
+    "3d-printing",
+    "cad",
+    "json-schema",
+    "openscad",
+    "cadquery",
+    "parametric",
+    "bom",
+    "stl",
+    "step",
+    "manufacturing"
+  ],
+  "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schemas/*": "./schemas/*",
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist",
     "schemas",
