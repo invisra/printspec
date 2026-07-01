@@ -85,21 +85,21 @@
           "items": {
             "$ref": "common.schema.json#/$defs/Hole"
           }
-        },
-        "anyOf": [
-          {
-            "required": [
-              "clipInnerDiameter"
-            ]
-          },
-          {
-            "required": [
-              "clipOpeningWidth"
-            ]
-          }
-        ]
+        }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "clipInnerDiameter"
+          ]
+        },
+        {
+          "required": [
+            "clipOpeningWidth"
+          ]
+        }
+      ]
     },
     "hardware": {
       "type": "array",

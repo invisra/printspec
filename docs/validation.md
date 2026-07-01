@@ -14,12 +14,12 @@ validate_printspec(spec, semantic=True) # {"valid": bool, "errors": list[str]}
 
 Validation runs in two layers:
 
-1. **JSON Schema validation** checks structural correctness using the local schemas under `schemas/`.
+1. **JSON Schema validation** checks structural correctness using the local schemas under `schemas/`. TypeScript uses Ajv Draft 2020-12 and Python uses `jsonschema` with `referencing`; both validators register local schemas before validation and do not fetch remote schemas.
 2. **Semantic validation** runs only after schema validation succeeds, unless disabled with `semantic: false` / `semantic=False`. It catches cross-reference and geometry sanity issues such as duplicate ids, broken feature targets, broken project relationships, oversized rounded-plate corner radii, inner diameters larger than outer diameters, wall thicknesses that are too large, and obvious hole-fit issues where implemented.
 
 The schemas use stable, public-looking `$id` values such as `https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json`. These identifiers are schema resource names, not a network dependency. The Python validator registers every local schema with `jsonschema`/`referencing`, and the TypeScript validator registers every local schema with Ajv 2020, so relative `$ref` values resolve offline.
 
-Validation must not fetch schemas from `schemas.invisra.ai` or any other remote host. The v0.1.0 schemas are experimental until printspec 1.0, and the `$id` URLs are served publicly for documentation, tooling, and cross-package references.
+Validation must not fetch schemas from `schemas.invisra.ai` or any other remote host. Schema tests also meta-validate every `schemas/*.schema.json` file against Draft 2020-12 so schema authoring mistakes fail before fixture validation. The v0.1.0 schemas are experimental until printspec 1.0, and the `$id` URLs are served publicly for documentation, tooling, and cross-package references.
 
 ## Hosted schema references
 

@@ -39,7 +39,7 @@ The canonical schema sources live in `schemas/`. Run `npm run sync:schemas` to c
 
 ## Validation and generation
 
-JSON Schema is the structural source of truth for printspec validation. Semantic validation runs after schema validation and catches cross-reference and geometry sanity issues that schemas should not encode. The v0.1.0 schemas use hosted `$id` URLs, but Python and TypeScript validators register the local `schemas/` files and resolve references offline; validation does not require network access. If a validator tries to fetch `schemas.invisra.ai`, local schema registration is broken. The v0.1.0 schema set remains experimental until 1.0.
+JSON Schema is the structural source of truth for printspec validation. TypeScript validation uses Ajv Draft 2020-12 with local schema registration, and Python validation uses `jsonschema`/`referencing` with the same offline schema set. Semantic validation runs after schema validation and catches cross-reference and geometry sanity issues that schemas should not encode. The v0.1.0 schemas use hosted `$id` URLs for public reference, but Python and TypeScript validators bundle/load the local `schemas/` files and resolve references offline; validation does not require network access. If a validator tries to fetch `schemas.invisra.ai`, local schema registration is broken. Tests now meta-validate every schema against Draft 2020-12 so invalid schema files fail directly. The v0.1.0 schema set remains experimental until 1.0.
 
 ```ts
 import { validatePrintSpec, generateOpenScad, generateCadQuery } from "@invisra/printspec";
