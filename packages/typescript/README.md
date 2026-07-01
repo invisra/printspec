@@ -40,3 +40,8 @@ Generated CAD source should be reviewed before use. The package does not run CAD
 ## Offline schema behavior
 
 Schema files are bundled in `schemas/` and exported as `@invisra/printspec/schemas/*` for tools that need to inspect them. Validation uses bundled schemas and does not fetch hosted schema URLs.
+
+## Browser/editor form metadata
+
+Printspec schemas now include `x-printspec-*` browser-editor metadata for parameter ordering, grouping, units, controls, steps, priorities, examples, and documentation-only warnings. See `docs/form-metadata.md` for the convention plus TypeScript, Python, and CLI usage. This metadata helps tools render forms; it is not a web app and does not execute CAD.
+

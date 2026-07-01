@@ -59,3 +59,8 @@ printspec is not a CAD runtime, supplier scraper, AI design agent, or purchasing
 ## Release readiness
 
 See [docs/release-process.md](docs/release-process.md) for dry-run checks and manual publishing notes.
+
+## Browser/editor form metadata
+
+Printspec schemas now include `x-printspec-*` browser-editor metadata for parameter ordering, grouping, units, controls, steps, priorities, examples, and documentation-only warnings. See `docs/form-metadata.md` for the convention plus TypeScript, Python, and CLI usage. This metadata helps tools render forms; it is not a web app and does not execute CAD.
+

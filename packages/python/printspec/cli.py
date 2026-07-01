@@ -4,6 +4,7 @@ from pathlib import Path
 from .validate import validate_printspec
 from .generators import generate_openscad, generate_cadquery
 from .bom import extract_bom, bom_to_markdown, bom_to_csv, bom_to_supplier_order_list
+from .forms import get_part_family_form_metadata, list_part_families
 
 
 def _version():
@@ -70,6 +71,8 @@ def main(argv=None):
     for name in ('to-openscad','to-cadquery'):
         g=sub.add_parser(name, help=f'generate {name.removeprefix("to-")} output'); g.add_argument('file'); g.add_argument('--output')
     b=sub.add_parser('bom', help='extract a bill of materials'); b.add_argument('file'); b.add_argument('--format', choices=['markdown','csv','supplier-list'], default='markdown'); b.add_argument('--output')
+    fm=sub.add_parser('form-metadata', help='print browser form metadata for a part family'); fm.add_argument('part_type'); fm.add_argument('--pretty', action='store_true'); fm.add_argument('--json', action='store_true')
+    lf=sub.add_parser('list-part-families', help='list available part families'); lf.add_argument('--pretty', action='store_true'); lf.add_argument('--json', action='store_true')
     args=p.parse_args(argv)
     if args.version or args.cmd=='version': print(f'printspec {_version()}'); return 0
     if args.cmd is None: p.print_help(); return 1
@@ -77,4 +80,8 @@ def main(argv=None):
     if args.cmd=='to-openscad': return _generate(args, generate_openscad)
     if args.cmd=='to-cadquery': return _generate(args, generate_cadquery)
     if args.cmd=='bom': return _bom(args)
+    if args.cmd=='form-metadata':
+        try: print(json.dumps(get_part_family_form_metadata(args.part_type), indent=2 if args.pretty else None)); return 0
+        except ValueError as e: print('error: '+str(e), file=sys.stderr); return 1
+    if args.cmd=='list-part-families': print(json.dumps(list_part_families(), indent=2 if args.pretty else None)); return 0
 if __name__=='__main__': raise SystemExit(main())

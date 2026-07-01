@@ -67,5 +67,7 @@
       ]
     }
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "title": "Printspec",
+  "description": "Printspec schema for printspec documents."
 }

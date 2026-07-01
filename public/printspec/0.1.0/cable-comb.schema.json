@@ -9,14 +9,20 @@
   ],
   "properties": {
     "type": {
-      "const": "cable_comb"
+      "const": "cable_comb",
+      "title": "Part type",
+      "description": "Stable printspec part family identifier."
     },
     "label": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "title": "Label",
+      "description": "Human-readable name for this part."
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "title": "Description",
+      "description": "Optional human-readable notes for this part."
     },
     "parameters": {
       "type": "object",
@@ -33,63 +39,182 @@
         "length": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Length",
+          "description": "Length in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            100
+          ]
         },
         "width": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Width",
+          "description": "Width in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            50
+          ]
         },
         "thickness": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Thickness",
+          "description": "Thickness in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            3
+          ]
         },
         "slotCount": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 64
+          "maximum": 64,
+          "title": "Slot count",
+          "description": "Slot count for the part.",
+          "x-printspec-control": "integer",
+          "x-printspec-unit": "count",
+          "x-printspec-step": 1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            8
+          ]
         },
         "slotWidth": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Slot width",
+          "description": "Slot width in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary"
         },
         "slotSpacing": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Slot spacing",
+          "description": "Slot spacing in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary"
         },
         "slotDepth": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Slot depth",
+          "description": "Slot depth in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary"
         },
         "holes": {
           "type": "array",
           "items": {
             "$ref": "common.schema.json#/$defs/Hole"
-          }
+          },
+          "title": "Holes",
+          "description": "Optional hole features to include in the generated part.",
+          "x-printspec-control": "hole-list",
+          "x-printspec-priority": "advanced",
+          "default": []
         },
         "slots": {
           "type": "array",
           "items": {
             "$ref": "common.schema.json#/$defs/Slot"
-          }
+          },
+          "title": "Slots",
+          "description": "Optional slot features to include in the generated part.",
+          "x-printspec-control": "slot-list",
+          "x-printspec-priority": "advanced",
+          "default": []
         },
         "chamfer": {
-          "$ref": "common.schema.json#/$defs/Chamfer"
+          "$ref": "common.schema.json#/$defs/Chamfer",
+          "title": "Chamfer",
+          "description": "Optional chamfer edge finishing request.",
+          "x-printspec-control": "number",
+          "x-printspec-priority": "advanced"
         },
         "fillet": {
-          "$ref": "common.schema.json#/$defs/Fillet"
+          "$ref": "common.schema.json#/$defs/Fillet",
+          "title": "Fillet",
+          "description": "Optional fillet edge finishing request.",
+          "x-printspec-control": "number",
+          "x-printspec-priority": "advanced"
         },
         "cornerRadius": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 10000
+          "maximum": 10000,
+          "title": "Corner radius",
+          "description": "Corner radius in millimeters.",
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "advanced",
+          "examples": [
+            4
+          ]
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Parameters",
+      "description": "Editable parameters for Cable Comb.",
+      "x-printspec-ui": {
+        "order": [
+          "length",
+          "width",
+          "thickness",
+          "slotCount",
+          "slotWidth",
+          "slotSpacing",
+          "slotDepth",
+          "holes",
+          "slots",
+          "chamfer",
+          "fillet",
+          "cornerRadius"
+        ],
+        "groups": [
+          {
+            "id": "parameters",
+            "title": "Parameters",
+            "fields": [
+              "length",
+              "width",
+              "thickness",
+              "slotCount",
+              "slotWidth",
+              "slotSpacing",
+              "slotDepth",
+              "holes",
+              "slots",
+              "chamfer",
+              "fillet",
+              "cornerRadius"
+            ]
+          }
+        ]
+      }
     },
     "hardware": {
       "type": "array",
@@ -98,5 +223,7 @@
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "title": "Cable Comb",
+  "description": "Comb-style cable organizer with repeated cable slots."
 }

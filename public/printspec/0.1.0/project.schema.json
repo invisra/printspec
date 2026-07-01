@@ -8,13 +8,19 @@
   ],
   "properties": {
     "type": {
-      "const": "project"
+      "const": "project",
+      "title": "Part type",
+      "description": "Stable printspec part family identifier."
     },
     "label": {
-      "type": "string"
+      "type": "string",
+      "title": "Label",
+      "description": "Human-readable name for this part."
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "title": "Description",
+      "description": "Optional human-readable notes for this part."
     },
     "parts": {
       "type": "array",
@@ -121,5 +127,7 @@
     }
   },
   "additionalProperties": false,
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/project.schema.json"
+  "$id": "https://schemas.invisra.ai/printspec/0.1.0/project.schema.json",
+  "title": "Project",
+  "description": "Project schema for printspec documents."
 }
