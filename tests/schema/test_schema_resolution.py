@@ -70,6 +70,7 @@ def test_synced_schema_artifacts_match_sources():
     destinations = [
         ROOT / "public" / "printspec" / "0.1.0",
         ROOT / "packages" / "python" / "printspec" / "schemas",
+        ROOT / "packages" / "typescript" / "schemas",
     ]
     for destination in destinations:
         assert_synced_schema_dir_matches_sources(destination)
