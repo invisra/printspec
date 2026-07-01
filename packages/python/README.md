@@ -55,3 +55,14 @@ Schema files are bundled under `printspec/schemas/`. Validation resolves those p
 
 Printspec schemas now include `x-printspec-*` browser-editor metadata for parameter ordering, grouping, units, controls, steps, priorities, examples, and documentation-only warnings. See `docs/form-metadata.md` for the convention plus TypeScript, Python, and CLI usage. This metadata helps tools render forms; it is not a web app and does not execute CAD.
 
+
+## Bundle export
+
+```py
+from printspec import create_bundle, write_bundle_to_directory, write_bundle_to_zip
+bundle = create_bundle(spec, {"includePartCad": True})
+write_bundle_to_directory(bundle, "bundle", overwrite=True)
+write_bundle_to_zip(bundle, "bundle.zip", overwrite=True)
+```
+
+CLI: `python -m printspec.cli bundle file.json --output bundle --zip bundle.zip --overwrite`.

@@ -55,3 +55,7 @@ Schemas are bundled in both packages for offline validation. Hosted copies are a
 ## Safety
 
 Do not rely on generated designs for safety-critical, regulated, medical, electrical, or load-bearing use without qualified review. See [safety](safety.md).
+
+## Export a bundle
+
+Use `printspec bundle <file> --output <directory>` to create a deterministic source bundle containing the original JSON, README, manifest, supported CAD source, and BOM files when hardware exists. Add `--partcad` for the experimental PartCAD stub. See [bundles](bundles.md).

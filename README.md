@@ -64,3 +64,7 @@ See [docs/release-process.md](docs/release-process.md) for dry-run checks and ma
 
 Printspec schemas now include `x-printspec-*` browser-editor metadata for parameter ordering, grouping, units, controls, steps, priorities, examples, and documentation-only warnings. See `docs/form-metadata.md` for the convention plus TypeScript, Python, and CLI usage. This metadata helps tools render forms; it is not a web app and does not execute CAD.
 
+
+## Project bundles
+
+printspec can export deterministic source bundles with the original JSON, supported OpenSCAD/CadQuery source, BOM files, a manifest, README, and optional experimental PartCAD metadata. See [docs/bundles.md](docs/bundles.md). Bundles do not execute CAD tools or include STL, STEP, or 3MF outputs.
