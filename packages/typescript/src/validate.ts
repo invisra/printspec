@@ -1,10 +1,56 @@
 import type {ValidationResult} from './types.js';
 import {validateSemantic} from './semantic.js';
-const types=['rounded_rectangular_plate','spacer_block','round_spacer','electronics_standoff','l_bracket','cable_comb','cable_clip','drill_guide','simple_box','simple_lid'];
-const req:Record<string,string[]>={rounded_rectangular_plate:['length','width','thickness','cornerRadius'],spacer_block:['length','width','height'],round_spacer:['outerDiameter','height'],electronics_standoff:['outerDiameter','height','holeDiameter'],l_bracket:['legLengthA','legLengthB','width','thickness'],cable_comb:['length','width','thickness','slotCount','slotWidth','slotSpacing','slotDepth'],cable_clip:['baseLength','baseWidth','baseThickness','clipWallThickness'],drill_guide:['length','width','height','holeDiameter','holeCount','holeSpacing'],simple_box:['outerLength','outerWidth','outerHeight','wallThickness'],simple_lid:['length','width','thickness']};
-function dim(v:any){return typeof v==='number'&&Number.isFinite(v)&&v>0&&v<=10000}
-function hw(h:any,errors:string[],p='hardware'){if(!h.id||!h.kind||!Number.isInteger(h.quantity)||h.quantity<1) errors.push(`${p}: invalid hardware item`); for(const r of h.supplierReferences??[]){if(!r.supplier||!r.partNumber) errors.push(`${p}: invalid supplier reference`); if(r.url){try{new URL(r.url)}catch{errors.push(`${p}: invalid supplier reference url`)}}}}
-export function validatePartFamilySpec(part:any):ValidationResult{const errors:string[]=[]; if(!part||!types.includes(part.type)) errors.push('unknown part type'); if(!part?.label) errors.push('missing label'); const p=part?.parameters; if(!p) errors.push('missing parameters'); for(const k of req[part?.type]??[]) if(!dim(p?.[k])) errors.push(`parameters.${k}: invalid dimension`); if(part?.type==='cable_clip'&&!dim(p?.clipInnerDiameter)&&!dim(p?.clipOpeningWidth)) errors.push('clipInnerDiameter or clipOpeningWidth required'); for(const h of p?.holes??[]) if(!dim(h.diameter)||!(h.depth==='through'||dim(h.depth))) errors.push('invalid hole'); for(const h of part?.hardware??[]) hw(h,errors,'part.hardware'); return {valid:errors.length===0,errors};}
-export function validateComposablePartSpec(part:any):ValidationResult{const errors:string[]=[]; if(part?.type!=='composable_part') errors.push('not composable_part'); if(!part?.label) errors.push('missing label'); if(!Array.isArray(part?.components)||part.components.length<1) errors.push('missing components'); for(const c of part?.components??[]){if(!c.id||!['box','rounded_box','cylinder','tube','plate','tab','boss','rib','wedge'].includes(c.kind)||!['add','subtract'].includes(c.operation))errors.push('invalid component'); for(const v of Object.values(c.dimensions??{})) if(!dim(v)) errors.push('invalid component dimension')} for(const h of part?.hardware??[]) hw(h,errors,'part.hardware'); return {valid:errors.length===0,errors};}
-export function validateProjectSpec(project:any):ValidationResult{const errors:string[]=[]; if(project?.type!=='project') errors.push('not project'); if(!project?.label) errors.push('missing label'); if(!Array.isArray(project?.parts)||project.parts.length<1) errors.push('missing parts'); for(const p of project?.parts??[]){if(!p.id||!p.label) errors.push('invalid project part'); if(p.quantity!=null&&(!Number.isInteger(p.quantity)||p.quantity<1)) errors.push('invalid project quantity'); if(Boolean(p.spec)===Boolean(p.specPath)) errors.push('project part needs exactly one spec or specPath'); if(p.spec){const r=validatePrintSpec(p.spec); errors.push(...r.errors.map(e=>`project.parts.${p.id}: ${e}`));}} for(const h of project?.hardware??[]) hw(h,errors,'project.hardware'); return {valid:errors.length===0,errors};}
-export function validatePrintSpec(spec:any, options:{semantic?:boolean}={}):ValidationResult{const errors:string[]=[]; if(spec?.printspecVersion!=='0.1.0') errors.push('invalid printspecVersion'); if(spec?.units!=='mm') errors.push('invalid units'); if((!!spec?.part)===(!!spec?.project)) errors.push('expected exactly one of part or project'); if(spec?.part){const r=spec.part.type==='composable_part'?validateComposablePartSpec(spec.part):validatePartFamilySpec(spec.part); errors.push(...r.errors)} if(spec?.project) errors.push(...validateProjectSpec(spec.project).errors); for(const h of spec?.hardware??[]) hw(h,errors,'top-level.hardware'); if(errors.length===0 && options.semantic!==false) errors.push(...validateSemantic(spec)); return {valid:errors.length===0,errors};}
+import {createAjv, schemas} from './schemas.js';
+
+type ValidationOptions = {semantic?: boolean};
+
+type ValidatorName = 'printspec.schema.json' | 'part-family.schema.json' | 'composable-part.schema.json' | 'project.schema.json';
+
+const ajv = createAjv();
+const validators = new Map<ValidatorName, any>();
+
+function validatorFor(schemaName: ValidatorName): any {
+  const existing = validators.get(schemaName);
+  if (existing) return existing;
+  const schema = schemas[schemaName];
+  if (!schema) throw new Error(`Missing local schema: ${schemaName}`);
+  const compiled = ajv.compile(schema);
+  validators.set(schemaName, compiled);
+  return compiled;
+}
+
+function formatPath(instancePath: string | undefined): string {
+  return instancePath && instancePath.length > 0 ? instancePath : '/';
+}
+
+function formatAjvErrors(validate: any): string[] {
+  return (validate.errors ?? []).map((error: any) => {
+    const keyword = error.keyword ? ` [${error.keyword}]` : '';
+    const message = error.message ?? 'failed schema validation';
+    return `${formatPath(error.instancePath)}: ${message}${keyword}`;
+  });
+}
+
+function validateWithSchema(schemaName: ValidatorName, value: unknown, semantic = false): ValidationResult {
+  const validate = validatorFor(schemaName);
+  const ok = validate(value);
+  const errors = ok ? [] : formatAjvErrors(validate);
+  if (errors.length === 0 && semantic) errors.push(...validateSemantic(value));
+  return {valid: errors.length === 0, errors};
+}
+
+export function validatePartFamilySpec(part: unknown, _options: ValidationOptions = {}): ValidationResult {
+  return validateWithSchema('part-family.schema.json', part, false);
+}
+
+export function validateComposablePartSpec(part: unknown, _options: ValidationOptions = {}): ValidationResult {
+  return validateWithSchema('composable-part.schema.json', part, false);
+}
+
+export function validateProjectSpec(project: unknown, _options: ValidationOptions = {}): ValidationResult {
+  return validateWithSchema('project.schema.json', project, false);
+}
+
+export function validatePrintSpec(spec: unknown, options: ValidationOptions = {}): ValidationResult {
+  return validateWithSchema('printspec.schema.json', spec, options.semantic !== false);
+}

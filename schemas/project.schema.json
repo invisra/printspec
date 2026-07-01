@@ -120,5 +120,6 @@
       "additionalProperties": false
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$id": "https://schemas.invisra.com/printspec/0.1.0/project.schema.json"
 }
