@@ -74,3 +74,12 @@ test('cable clip requires at least one clip sizing field', () => {
   const invalid = validatePrintSpec(read('tests/fixtures/invalid/cable-clip-missing-clip-size.json'));
   assert.equal(invalid.valid, false);
 });
+
+test('TypeScript package-local schemas are present for packaging', () => {
+  const packageSchemaDir = path.join(root, 'packages/typescript/schemas');
+  for (const required of ['printspec.schema.json', 'common.schema.json']) {
+    assert.ok(fs.existsSync(path.join(packageSchemaDir, required)), `packages/typescript/schemas/${required} should exist`);
+  }
+  const packageSchemaFiles = fs.readdirSync(packageSchemaDir).filter((file) => file.endsWith('.schema.json')).sort();
+  assert.deepEqual(packageSchemaFiles, schemaFiles, 'TypeScript package schemas should contain every root schema and no stale schemas');
+});

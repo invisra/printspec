@@ -35,11 +35,30 @@ pip install printspec
 
 ## Hosted schemas
 
-The canonical schema sources live in `schemas/`. Run `npm run sync:schemas` to copy every `schemas/*.schema.json` file into both `public/printspec/0.1.0/` for static hosting and `packages/python/printspec/schemas/` for Python package data; synced copies must not be edited by hand. Vercel can serve those files at stable public references such as `https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json`. These URLs are useful for documentation and external tooling, but the Python and TypeScript validators bundle/register local schema files and do not require network access during validation.
+The canonical schema sources live in `schemas/`. Run `npm run sync:schemas` to copy every `schemas/*.schema.json` file into `public/printspec/0.1.0/` for static hosting, `packages/python/printspec/schemas/` for Python package data, and `packages/typescript/schemas/` for NPM package data; synced copies must not be edited by hand. Vercel can serve those files at stable public references such as `https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json`. These URLs are useful for documentation and external tooling, but the Python and TypeScript validators bundle/register local schema files and do not require network access during validation.
 
 ## Validation and generation
 
 JSON Schema is the structural source of truth for printspec validation. TypeScript validation uses Ajv Draft 2020-12 with local schema registration, and Python validation uses `jsonschema`/`referencing` with the same offline schema set. Semantic validation runs after schema validation and catches cross-reference and geometry sanity issues that schemas should not encode. The v0.1.0 schemas use hosted `$id` URLs for public reference, but Python validators use bundled `printspec/schemas` package data and TypeScript validators load/register local schema files, resolving references offline; validation does not require network access. If a validator tries to fetch `schemas.invisra.ai`, local schema registration is broken. Tests now meta-validate every schema against Draft 2020-12 so invalid schema files fail directly. The v0.1.0 schema set remains experimental until 1.0.
+
+
+TypeScript package usage:
+
+```sh
+npm install @invisra/printspec
+```
+
+```ts
+import { validatePrintSpec } from "@invisra/printspec";
+
+const result = validatePrintSpec(spec);
+```
+
+```sh
+npx printspec validate spec.json
+npx printspec to-openscad spec.json --output model.scad
+npx printspec bom project.json --format markdown
+```
 
 ```ts
 import { validatePrintSpec, generateOpenScad, generateCadQuery } from "@invisra/printspec";
@@ -95,7 +114,7 @@ python -m pip install build
 python -m build packages/python
 ```
 
-The Python package validates offline using bundled schemas copied into `packages/python/printspec/schemas/`; hosted schema URLs are public references only and validators must not fetch them during normal validation.
+The Python and TypeScript packages validate offline using bundled schemas copied into `packages/python/printspec/schemas/` and `packages/typescript/schemas/`; hosted schema URLs are public references only and validators must not fetch them during normal validation.
 
 
 Both packages provide a `printspec` CLI. The Python CLI is available after the editable install; the TypeScript CLI can be run from `packages/typescript/dist/cli.js` after `npm run build`:
@@ -112,4 +131,4 @@ Generators currently emit source code only and do not require or execute OpenSCA
 
 ## Hosted schema site
 
-The hosted schema site is available at `https://schemas.invisra.ai`, with the printspec index at `https://schemas.invisra.ai/printspec/`, version indexes such as `https://schemas.invisra.ai/printspec/0.1.0/`, and manifests at `https://schemas.invisra.ai/printspec/manifest.json` and `https://schemas.invisra.ai/printspec/0.1.0/manifest.json`. `schemas/` remains the source of truth; `npm run sync:schemas` regenerates public schemas, Python package schemas, static HTML indexes, and manifests. Validators use bundled schemas offline and do not fetch hosted schemas during normal validation. See `docs/hosted-schemas.md` for version immutability and optional Vercel Analytics behavior.
+The hosted schema site is available at `https://schemas.invisra.ai`, with the printspec index at `https://schemas.invisra.ai/printspec/`, version indexes such as `https://schemas.invisra.ai/printspec/0.1.0/`, and manifests at `https://schemas.invisra.ai/printspec/manifest.json` and `https://schemas.invisra.ai/printspec/0.1.0/manifest.json`. `schemas/` remains the source of truth; `npm run sync:schemas` regenerates public schemas, Python package schemas, TypeScript package schemas, static HTML indexes, and manifests. Validators use bundled schemas offline and do not fetch hosted schemas during normal validation. See `docs/hosted-schemas.md` for version immutability and optional Vercel Analytics behavior.

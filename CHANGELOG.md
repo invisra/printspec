@@ -29,6 +29,9 @@ No packages are published by this repository workflow without explicit manual re
 
 ## Unreleased
 
+- Bundled synchronized schemas in the TypeScript/NPM package so packed installs validate offline without a repository-level `schemas/` directory.
+- Added NPM pack/install smoke coverage and package drift tests for public, Python, and TypeScript schema destinations.
+
 - Added generated hosted schema indexes and manifests for `https://schemas.invisra.ai`.
 - Documented schema version immutability, offline validator resolution, and optional HTML-only Vercel Analytics.
 - Added CLI version commands for Python and TypeScript.

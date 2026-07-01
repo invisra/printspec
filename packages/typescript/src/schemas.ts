@@ -6,16 +6,24 @@ import addFormats from 'ajv-formats';
 
 const schemaBaseUri = 'https://schemas.invisra.ai/printspec/0.1.0/';
 
+function isDirectory(candidate: string): boolean {
+  return fs.existsSync(candidate) && fs.statSync(candidate).isDirectory();
+}
+
 function findSchemaDir(): string {
-  // Source checkouts compile to packages/typescript/dist; walk upward to the
-  // repository-level schemas directory so validation stays fully offline.
-  for (let dir = path.dirname(fileURLToPath(import.meta.url)); ; dir = path.dirname(dir)) {
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+  const packageLocalCandidate = path.resolve(moduleDir, '..', 'schemas');
+  if (isDirectory(packageLocalCandidate)) return packageLocalCandidate;
+
+  // Source checkout fallback: walk upward to the repository-level schemas
+  // directory so development builds can still validate fully offline.
+  for (let dir = moduleDir; ; dir = path.dirname(dir)) {
     const candidate = path.join(dir, 'schemas');
-    if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) return candidate;
+    if (isDirectory(candidate)) return candidate;
     const parent = path.dirname(dir);
     if (parent === dir) break;
   }
-  throw new Error('Unable to locate local printspec schemas directory');
+  throw new Error('Unable to locate bundled printspec schemas. Run npm run sync:schemas before building, or reinstall the package.');
 }
 
 export const schemaDir = findSchemaDir();
