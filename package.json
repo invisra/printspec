@@ -7,11 +7,12 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "npm --workspace @invisra/printspec run build",
-    "test": "npm run test:ts",
+    "build": "npm run sync:schemas && npm --workspace @invisra/printspec run build",
+    "test": "npm run sync:schemas && npm run test:ts",
     "test:ts": "npm --workspace @invisra/printspec test",
-    "test:python": "pytest tests/python tests/schema",
-    "test:schema": "python -m pytest tests/schema",
-    "lint": "npm --workspace @invisra/printspec run build"
+    "test:python": "npm run sync:schemas && pytest tests/python tests/schema",
+    "test:schema": "npm run sync:schemas && python -m pytest tests/schema",
+    "lint": "npm run build",
+    "sync:schemas": "node scripts/sync-schemas.mjs"
   }
 }

@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 import Ajv2020 from 'ajv/dist/2020';
 import addFormats from 'ajv-formats';
 
-const schemaBaseUri = 'https://schemas.invisra.com/printspec/0.1.0/';
+const schemaBaseUri = 'https://schemas.invisra.ai/printspec/0.1.0/';
 
 function findSchemaDir(): string {
   // Source checkouts compile to packages/typescript/dist; walk upward to the
