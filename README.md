@@ -109,3 +109,7 @@ node packages/typescript/dist/cli.js validate examples/part-families/rounded-rec
 ```
 
 Generators currently emit source code only and do not require or execute OpenSCAD, CadQuery, FreeCAD, or any CAD runtime. Supported generator families are `rounded_rectangular_plate`, `spacer_block`, `round_spacer`, and `electronics_standoff`. Validation runs before generation. Valid but unsupported optional generator features, such as spacer chamfers or fillets, produce stable warnings rather than being silently ignored. BOM helpers format local spec hardware data only; printspec does not scrape suppliers or create carts. The v0.1.0 line is experimental and intended for review before manufacturing.
+
+## Hosted schema site
+
+The hosted schema site is available at `https://schemas.invisra.ai`, with the printspec index at `https://schemas.invisra.ai/printspec/`, version indexes such as `https://schemas.invisra.ai/printspec/0.1.0/`, and manifests at `https://schemas.invisra.ai/printspec/manifest.json` and `https://schemas.invisra.ai/printspec/0.1.0/manifest.json`. `schemas/` remains the source of truth; `npm run sync:schemas` regenerates public schemas, Python package schemas, static HTML indexes, and manifests. Validators use bundled schemas offline and do not fetch hosted schemas during normal validation. See `docs/hosted-schemas.md` for version immutability and optional Vercel Analytics behavior.

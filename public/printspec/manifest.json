@@ -1,0 +1,11 @@
+{
+  "project": "printspec",
+  "description": "JSON Schemas for practical parametric 3D-printable parts.",
+  "versions": [
+    {
+      "version": "0.1.0",
+      "url": "/printspec/0.1.0/",
+      "manifest": "/printspec/0.1.0/manifest.json"
+    }
+  ]
+}

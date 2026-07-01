@@ -53,3 +53,18 @@ def test_python_cli_commands():
         assert r.stdout or r.stderr
     bad=subprocess.run([sys.executable,'-m','printspec.cli','validate','tests/fixtures/invalid/round-spacer-inner-too-large.json'],cwd=root,text=True,capture_output=True,env=env)
     assert bad.returncode==1 and 'invalid' in bad.stderr
+    malformed = root / 'tests/fixtures/invalid-json.tmp.json'
+    malformed.write_text('{bad json')
+    try:
+        r=subprocess.run([sys.executable,'-m','printspec.cli','validate',str(malformed)],cwd=root,text=True,capture_output=True,env=env)
+        assert r.returncode == 1
+        assert 'invalid-json.tmp.json' in r.stderr
+        assert 'parse error' in r.stderr
+    finally:
+        malformed.unlink(missing_ok=True)
+
+def test_python_cli_version_commands():
+    for args in [['--version'], ['version']]:
+        r = subprocess.run([sys.executable, '-m', 'printspec.cli', *args], cwd=root, text=True, capture_output=True)
+        assert r.returncode == 0
+        assert 'printspec 0.1.0' in r.stdout
