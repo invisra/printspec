@@ -1,4 +1,4 @@
-import {mkdtempSync, rmSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
@@ -19,8 +19,23 @@ try {
   const [{filename}] = JSON.parse(packOutput);
   const tarball = path.join(root, filename);
 
-  writeFileSync(path.join(smokeDir, 'package.json'), JSON.stringify({type: 'module', private: true}, null, 2));
-  run('npm', ['install', '--offline', tarball], {cwd: smokeDir});
+  const runtimeDependencies = ['ajv', 'ajv-formats'];
+  const localRuntimeDependencies = Object.fromEntries(
+    runtimeDependencies.map((dependency) => {
+      const dependencyPath = path.join(root, 'node_modules', dependency);
+      if (!existsSync(dependencyPath)) {
+        throw new Error(`Missing local runtime dependency ${dependency}; run npm install before the smoke test`);
+      }
+      return [dependency, `file:${dependencyPath}`];
+    }),
+  );
+
+  writeFileSync(
+    path.join(smokeDir, 'package.json'),
+    JSON.stringify({type: 'module', private: true, dependencies: localRuntimeDependencies}, null, 2),
+  );
+  run('npm', ['install', '--offline'], {cwd: smokeDir});
+  run('npm', ['install', '--offline', '--no-save', tarball], {cwd: smokeDir});
   rmSync(tarball, {force: true});
 
   run('node', ['--input-type=module', '-'], {
