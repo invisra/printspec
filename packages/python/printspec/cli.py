@@ -16,7 +16,11 @@ def _version():
 def _load(path):
     try:
         return json.loads(Path(path).read_text(encoding='utf8'))
-    except Exception as e:
+    except FileNotFoundError as e:
+        raise SystemExit(f'error: unable to read JSON: {path}: read error: {e}')
+    except OSError as e:
+        raise SystemExit(f'error: unable to read JSON: {path}: read error: {e}')
+    except json.JSONDecodeError as e:
         raise SystemExit(f'error: unable to read JSON: {path}: parse error: {e}')
 
 
@@ -51,8 +55,14 @@ def _bom(args):
     _write(text,args.output); return 0
 
 
+class _Parser(argparse.ArgumentParser):
+    def error(self, message):
+        self.print_usage(sys.stderr)
+        self.exit(1, f'{self.prog}: error: {message}\n')
+
+
 def main(argv=None):
-    p=argparse.ArgumentParser(prog='printspec', description='Validate printspec files and generate OpenSCAD, CadQuery, or BOM output.')
+    p=_Parser(prog='printspec', description='Validate printspec files and generate OpenSCAD, CadQuery, or BOM output.')
     p.add_argument('--version', action='store_true', help='show printspec version and exit')
     sub=p.add_subparsers(dest='cmd')
     sub.add_parser('version', help='show printspec version')

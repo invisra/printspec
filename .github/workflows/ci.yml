@@ -9,6 +9,7 @@ jobs:
         with: {node-version: '20'}
       - run: npm install
       - run: npm run sync:schemas
+      - run: npm run check:versions
       - run: npm run build
       - run: npm test
       - run: npm --workspace @invisra/printspec pack --dry-run
@@ -18,8 +19,9 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e "packages/python[test]"
       - run: pytest
-      - run: python -m pip install build
+      - run: python -m pip install build twine
       - run: python -m build packages/python
+      - run: python -m twine check packages/python/dist/*
       - run: python -m pip install --force-reinstall packages/python/dist/*.whl
       - run: python -m printspec.cli validate examples/part-families/rounded-rectangular-plate.basic.json
       - run: |

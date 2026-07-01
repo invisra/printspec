@@ -1,2 +1,52 @@
-# printspec Python
-Python validators, Pydantic models, BOM helpers, and starter generators.
+# printspec for Python
+
+Python package for printspec JSON Schemas, offline validation, BOM helpers, CLI commands, and starter OpenSCAD/CadQuery generators.
+
+## Install
+
+```sh
+python -m pip install printspec
+```
+
+From a checkout:
+
+```sh
+python -m pip install -e "packages/python[test]"
+```
+
+## CLI usage
+
+```sh
+python -m printspec.cli --version
+python -m printspec.cli validate examples/part-families/rounded-rectangular-plate.basic.json
+python -m printspec.cli bom examples/projects/simple-enclosure-project.json --format markdown
+python -m printspec.cli to-cadquery examples/part-families/electronics-standoff.m3.json
+```
+
+## Validation example
+
+```python
+import json
+from pathlib import Path
+from printspec import validate_printspec
+
+spec = json.loads(Path("examples/part-families/rounded-rectangular-plate.basic.json").read_text())
+result = validate_printspec(spec)
+print(result["valid"], result["errors"])
+```
+
+## Generator example
+
+```python
+from printspec.generators import generate_openscad
+
+generated = generate_openscad(spec)
+if generated["supported"]:
+    print(generated["code"])
+```
+
+Generated CAD source should be reviewed before use. The package does not run CAD runtimes.
+
+## Offline schema behavior
+
+Schema files are bundled under `printspec/schemas/`. Validation resolves those package-local schemas offline and does not fetch hosted schema URLs.

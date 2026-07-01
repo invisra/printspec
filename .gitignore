@@ -1,18 +1,36 @@
+# Dependency directories
 node_modules/
+.venv/
+venv/
+env/
+
+# Build and package artifacts
+packages/typescript/dist/
+packages/python/dist/
 dist/
+build/
+*.egg-info/
+*.tgz
+
+# Caches and local files
 .turbo/
 .next/
-.venv/
 __pycache__/
 **/__pycache__/
 .pytest_cache/
-*.egg-info/
-build/
 .DS_Store
 
-# Synced schema artifacts committed for static hosting and Python package data.
+# Synced schema artifacts committed for static hosting and package data.
+!public/
+!public/index.html
 !public/printspec/
-!public/printspec/0.1.0/
-!public/printspec/0.1.0/*.schema.json
+!public/printspec/index.html
+!public/printspec/manifest.json
+!public/printspec/*/
+!public/printspec/*/index.html
+!public/printspec/**/*.json
+!public/printspec/**/*.schema.json
 !packages/python/printspec/schemas/
 !packages/python/printspec/schemas/*.schema.json
+!packages/typescript/schemas/
+!packages/typescript/schemas/*.schema.json
