@@ -1,6 +1,6 @@
 import type {ValidationResult} from './types.js';
 import {validateSemantic} from './semantic.js';
-import {createAjv, schemas} from './schemas.js';
+import {createAjv, schemas} from './schemas.browser.js';
 import {formatAjvErrors} from './schemas.shared.js';
 
 type ValidationOptions = {semantic?: boolean};

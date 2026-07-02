@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.2
+
+Patch release:
+
+- Add browser-safe entrypoint at `@invisra/printspec/browser`.
+- Embed bundled schemas for browser validation.
+- Keep Node entrypoint and CLI unchanged.
+- No schema changes.
+
 ## 0.1.1 - npm packaging fix
 
 Patch release:
