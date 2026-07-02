@@ -41,6 +41,9 @@ Hosted schemas are public references for documentation and external tooling. Pac
 - v0.1.0 index: <https://schemas.invisra.ai/printspec/0.1.0/>
 - Root schema: <https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json>
 - Version manifest: <https://schemas.invisra.ai/printspec/0.1.0/manifest.json>
+- Online validator: <https://schemas.invisra.ai/printspec/validator/>
+
+The online validator runs locally in your browser; no JSON is uploaded. It is intended for validation and developer debugging only. Manufacturing exports belong in the PartPilot/worker pipeline, not in the static schema-site validator.
 
 ## Simple JSON example
 

@@ -7,8 +7,8 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "npm run sync:schemas && npm --workspace @invisra/printspec run build",
-    "test": "npm run sync:schemas && npm run test:ts && npm run smoke:browser-import-graph",
+    "build": "npm run build:schema-site && npm --workspace @invisra/printspec run build",
+    "test": "npm run build:schema-site && npm run test:ts && npm run smoke:browser-import-graph && node tests/schema-validator.test.mjs",
     "test:ts": "npm --workspace @invisra/printspec test",
     "test:python": "npm run sync:schemas && pytest tests/python tests/schema",
     "test:schema": "npm run sync:schemas && python -m pytest tests/schema",
@@ -22,6 +22,8 @@
     "release:python": "bash scripts/release-smoke-python.sh",
     "release:all": "npm run release:node && npm run release:python",
     "check:npm-package": "node scripts/check-npm-package-contents.mjs",
-    "smoke:browser-import-graph": "node scripts/smoke-browser-import-graph.mjs"
+    "smoke:browser-import-graph": "node scripts/smoke-browser-import-graph.mjs",
+    "build:schema-validator": "node scripts/build-schema-validator.mjs",
+    "build:schema-site": "npm run sync:schemas && npm run build:schema-validator"
   }
 }

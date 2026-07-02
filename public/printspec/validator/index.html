@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PrintSpec Validator</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">schemas.invisra.ai</p>
+      <h1>PrintSpec Validator</h1>
+      <p class="lede">Paste a printspec JSON document or load an example to check it against the bundled browser-safe PrintSpec validator.</p>
+      <p class="privacy">Validation runs entirely in your browser. Your JSON is not uploaded.</p>
+      <nav class="links" aria-label="Schema links">
+        <a href="/printspec/0.1.0/printspec.schema.json">printspec.schema.json</a>
+        <a href="/printspec/0.1.0/">0.1.0 schemas</a>
+        <a href="/printspec/">All printspec schemas</a>
+      </nav>
+    </header>
+
+    <section class="panel controls" aria-labelledby="input-heading">
+      <div class="bar">
+        <div>
+          <h2 id="input-heading">JSON input</h2>
+          <p>Use <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to validate.</p>
+        </div>
+        <label>
+          Example
+          <select id="exampleSelect">
+            <option value="">Choose an example…</option>
+          </select>
+        </label>
+      </div>
+      <textarea id="jsonInput" spellcheck="false" aria-label="PrintSpec JSON input"></textarea>
+      <div class="actions">
+        <button id="validateButton" type="button">Validate</button>
+        <button id="clearButton" type="button" class="secondary">Clear</button>
+      </div>
+    </section>
+
+    <section id="resultPanel" class="panel result neutral" aria-live="polite">
+      <h2>Result</h2>
+      <div id="resultContent">Load an example or paste JSON, then click Validate.</div>
+    </section>
+
+    <section class="panel" aria-labelledby="errors-heading">
+      <h2 id="errors-heading">Errors and warnings</h2>
+      <ul id="errorList" class="messages"></ul>
+    </section>
+  </main>
+  <script type="module" src="./validator.js"></script>
+</body>
+</html>
