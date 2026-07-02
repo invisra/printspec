@@ -2,6 +2,8 @@ import {validatePrintSpec, listPartFamilies, getPartFamilyFormMetadata} from '@i
 
 type Example = {label: string; spec: unknown};
 
+const PRINTSPEC_VALIDATOR_BUNDLE_MARKER = 'printspec-validator-real-browser-api-v1';
+
 export const examples: Record<string, Example> = {
   round_spacer: {label: 'Round spacer', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'round_spacer', label: 'Round spacer', parameters: {outerDiameter: 12, innerDiameter: 4, height: 8}}}},
   spacer_block: {label: 'Spacer block', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'spacer_block', label: 'Spacer block', parameters: {length: 40, width: 20, height: 8, holes: [{x: -10, y: 0, diameter: 3, depth: 'through'}]}}}},
@@ -20,6 +22,8 @@ const $ = <T extends HTMLElement>(id: string): T => {
   if (!element) throw new Error(`Missing element #${id}`);
   return element as T;
 };
+
+document.documentElement.dataset.validatorBundle = PRINTSPEC_VALIDATOR_BUNDLE_MARKER;
 
 const input = $<HTMLTextAreaElement>('jsonInput');
 const exampleSelect = $<HTMLSelectElement>('exampleSelect');

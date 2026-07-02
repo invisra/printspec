@@ -24,9 +24,11 @@ test('schema validator static files are built without Node built-ins', () => {
   assert.ok(existsSync(bundlePath), `${bundlePath} should exist`);
   const bundle = readFileSync(bundlePath, 'utf8');
   for (const pattern of forbidden) assert.equal(bundle.includes(pattern), false, `${pattern} must not be bundled`);
-  assert.match(bundle, /validatePrintSpec/);
-  assert.match(bundle, /listPartFamilies/);
-  assert.match(bundle, /getPartFamilyFormMetadata/);
+  assert.match(bundle, /printspec-validator-real-browser-api-v1/);
+  assert.match(bundle, /round_spacer/);
+  assert.match(bundle, /project_enclosure_tray/);
+  assert.match(bundle, /Valid PrintSpec JSON/);
+  assert.match(bundle, /Invalid PrintSpec JSON/);
 });
 
 test('validator examples validate through browser-safe API', async () => {
