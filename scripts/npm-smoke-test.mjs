@@ -19,24 +19,18 @@ try {
   const [{filename}] = JSON.parse(packOutput);
   const tarball = path.join(root, filename);
 
-  const runtimeDependencies = ['ajv', 'ajv-formats'];
-  const localRuntimeDependencies = Object.fromEntries(
-    runtimeDependencies.map((dependency) => {
-      const dependencyPath = path.join(root, 'node_modules', dependency);
-      if (!existsSync(dependencyPath)) {
-        throw new Error(`Missing local runtime dependency ${dependency}; run npm install before the smoke test`);
-      }
-      return [dependency, `file:${dependencyPath}`];
-    }),
-  );
-
   writeFileSync(
     path.join(smokeDir, 'package.json'),
-    JSON.stringify({type: 'module', private: true, dependencies: localRuntimeDependencies}, null, 2),
+    JSON.stringify({type: 'module', private: true}, null, 2),
   );
-  run('npm', ['install', '--offline'], {cwd: smokeDir});
-  run('npm', ['install', '--offline', '--no-save', tarball], {cwd: smokeDir});
+  run('npm', ['install', '--no-save', tarball], {cwd: smokeDir});
   rmSync(tarball, {force: true});
+
+  for (const dependency of ['ajv', 'ajv-formats']) {
+    if (!existsSync(path.join(smokeDir, 'node_modules', dependency, 'package.json'))) {
+      throw new Error(`Installed package is missing runtime dependency ${dependency}`);
+    }
+  }
 
   const specSource = `const spec = {\n  printspecVersion: "0.1.0",\n  units: "mm",\n  part: {\n    type: "round_spacer",\n    label: "Smoke test spacer",\n    parameters: {\n      outerDiameter: 12,\n      innerDiameter: 4,\n      height: 8\n    }\n  }\n};`;
 

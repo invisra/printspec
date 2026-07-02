@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4
+
+Patch release:
+- Declare `ajv-formats` as a runtime dependency for Node and browser entrypoints.
+- Fix downstream bundling in Next/Vercel when importing `@invisra/printspec/browser`.
+- No schema changes.
+
 ## 0.1.3
 
 Patch release:
