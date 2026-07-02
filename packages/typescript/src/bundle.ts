@@ -1,12 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {validatePrintSpec} from './validate.js';
-import {createBundleWithValidator} from './bundle.core.js';
+import {generateOpenScad} from './generators/openscad.js';
+import {generateCadQuery} from './generators/cadquery.js';
+import {createBundleWithDeps} from './bundle.core.js';
 export type {BundleFile, BundleWarning, BundleResult, BundleOptions, WriteBundleOptions} from './bundle.core.js';
 import type {BundleResult, BundleOptions, WriteBundleOptions} from './bundle.core.js';
 
 export function createBundle(input: unknown, options: BundleOptions = {}): BundleResult {
-  return createBundleWithValidator(validatePrintSpec, input, options);
+  return createBundleWithDeps({validatePrintSpec, generateOpenScad, generateCadQuery}, input, options);
 }
 
 function assertSafe(p:string){if(!p||path.isAbsolute(p)||p.split(/[\/]+/).includes('..')) throw new Error(`Unsafe bundle path: ${p}`);}

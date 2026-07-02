@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.5
+
+Patch release:
+- Make @invisra/printspec/browser fully browser-safe.
+- Add browser-safe generator entrypoints.
+- Ensure browser bundle creation does not import Node schema loading.
+- Add import graph smoke test to prevent node:fs from entering the browser export.
+- No schema changes.
+
 ## 0.1.4
 
 Patch release:

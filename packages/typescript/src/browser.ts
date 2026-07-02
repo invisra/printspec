@@ -13,7 +13,7 @@ export {
   bomToSupplierOrderList,
 } from './bom.js';
 
-export {generateOpenScad} from './generators/openscad.js';
-export {generateCadQuery} from './generators/cadquery.js';
+export {generateOpenScad} from './generators/openscad.browser.js';
+export {generateCadQuery} from './generators/cadquery.browser.js';
 export {createBundle} from './bundle.browser.js';
 export {getPartFamilyFormMetadata, listPartFamilies} from './forms.browser.js';
