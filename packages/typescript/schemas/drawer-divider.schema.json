@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.invisra.ai/printspec/0.1.0/drawer-divider.schema.json",
+  "type": "object",
+  "title": "Drawer divider",
+  "description": "Customizable drawer divider strip with optional interlocking notches.",
+  "required": [
+    "type",
+    "label",
+    "parameters"
+  ],
+  "properties": {
+    "type": {
+      "const": "drawer_divider",
+      "title": "Part type",
+      "description": "Stable printspec part family identifier."
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Label",
+      "description": "Human-readable name."
+    },
+    "description": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "object",
+      "title": "Drawer divider parameters",
+      "description": "Customizable drawer divider strip with optional interlocking notches.",
+      "required": [
+        "length",
+        "height",
+        "thickness"
+      ],
+      "properties": {
+        "length": {
+          "type": "number",
+          "title": "Length",
+          "description": "Length parameter.",
+          "default": 120,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            120
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "height": {
+          "type": "number",
+          "title": "Height",
+          "description": "Height parameter.",
+          "default": 40,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            40
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "thickness": {
+          "type": "number",
+          "title": "Thickness",
+          "description": "Thickness parameter.",
+          "default": 3,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            3
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "notchCount": {
+          "type": "integer",
+          "title": "Notch count",
+          "description": "Notch count parameter.",
+          "default": 0,
+          "x-printspec-control": "integer",
+          "x-printspec-unit": "count",
+          "x-printspec-step": 1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            0
+          ],
+          "minimum": 0,
+          "maximum": 12
+        },
+        "notchWidth": {
+          "type": "number",
+          "title": "Notch width",
+          "description": "Notch width parameter.",
+          "default": 3,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            3
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "notchDepth": {
+          "type": "number",
+          "title": "Notch depth",
+          "description": "Notch depth parameter.",
+          "default": 10,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            10
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "endTab": {
+          "type": "boolean",
+          "title": "End tabs",
+          "description": "Add small end tabs.",
+          "default": false,
+          "x-printspec-control": "checkbox",
+          "x-printspec-priority": "advanced"
+        }
+      },
+      "additionalProperties": false,
+      "x-printspec-ui": {
+        "order": [
+          "length",
+          "height",
+          "thickness",
+          "notchCount",
+          "notchWidth",
+          "notchDepth",
+          "endTab"
+        ],
+        "groups": [
+          {
+            "id": "parameters",
+            "title": "Parameters",
+            "fields": [
+              "length",
+              "height",
+              "thickness",
+              "notchCount",
+              "notchWidth",
+              "notchDepth",
+              "endTab"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

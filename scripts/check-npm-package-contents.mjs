@@ -10,6 +10,10 @@ const requiredFiles = [
   'package/dist/index.d.ts',
   'package/dist/browser.js',
   'package/dist/browser.d.ts',
+  'package/dist/preview/index.js',
+  'package/dist/preview/index.d.ts',
+  'package/dist/three.js',
+  'package/dist/three.d.ts',
   'package/dist/bundle.browser.js',
   'package/dist/generators/openscad.browser.js',
   'package/dist/generators/cadquery.browser.js',
@@ -18,6 +22,9 @@ const requiredFiles = [
   'package/README.md',
   'package/schemas/printspec.schema.json',
   'package/schemas/common.schema.json',
+  'package/schemas/wall-mount-bracket.schema.json',
+  'package/schemas/drawer-divider.schema.json',
+  'package/schemas/project-enclosure-tray.schema.json',
 ];
 
 const result = spawnSync('npm', ['--workspace', '@invisra/printspec', 'pack', '--json'], {

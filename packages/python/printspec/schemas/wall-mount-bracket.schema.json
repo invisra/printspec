@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.invisra.ai/printspec/0.1.0/wall-mount-bracket.schema.json",
+  "type": "object",
+  "title": "Wall mount bracket",
+  "description": "Simple flat wall bracket with a light-duty shelf/tab.",
+  "required": [
+    "type",
+    "label",
+    "parameters"
+  ],
+  "properties": {
+    "type": {
+      "const": "wall_mount_bracket",
+      "title": "Part type",
+      "description": "Stable printspec part family identifier."
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Label",
+      "description": "Human-readable name."
+    },
+    "description": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "object",
+      "title": "Wall mount bracket parameters",
+      "description": "Simple flat wall bracket with a light-duty shelf/tab.",
+      "required": [
+        "width",
+        "height",
+        "thickness",
+        "tabDepth",
+        "screwHoleDiameter",
+        "screwHoleSpacing"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "title": "Width",
+          "description": "Width parameter.",
+          "default": 40,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            40
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "height": {
+          "type": "number",
+          "title": "Height",
+          "description": "Height parameter.",
+          "default": 60,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            60
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "thickness": {
+          "type": "number",
+          "title": "Thickness",
+          "description": "Thickness parameter.",
+          "default": 4,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            4
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "tabDepth": {
+          "type": "number",
+          "title": "Tab depth",
+          "description": "Tab depth parameter.",
+          "default": 20,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            20
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "screwHoleDiameter": {
+          "type": "number",
+          "title": "Screw hole diameter",
+          "description": "Screw hole diameter parameter.",
+          "default": 4,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            4
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "screwHoleSpacing": {
+          "type": "number",
+          "title": "Screw hole spacing",
+          "description": "Screw hole spacing parameter.",
+          "default": 36,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            36
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "cornerRadius": {
+          "type": "number",
+          "title": "Corner radius",
+          "description": "Corner radius parameter.",
+          "default": 3,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            3
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        }
+      },
+      "additionalProperties": false,
+      "x-printspec-ui": {
+        "order": [
+          "width",
+          "height",
+          "thickness",
+          "tabDepth",
+          "screwHoleDiameter",
+          "screwHoleSpacing",
+          "cornerRadius"
+        ],
+        "groups": [
+          {
+            "id": "parameters",
+            "title": "Parameters",
+            "fields": [
+              "width",
+              "height",
+              "thickness",
+              "tabDepth",
+              "screwHoleDiameter",
+              "screwHoleSpacing",
+              "cornerRadius"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

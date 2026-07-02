@@ -9,7 +9,7 @@ export type FormField = {
 export type FormMetadata = {partType: string; title: string; description?: string; fields: FormField[]; groups: FormGroup[]};
 export type PartFamilySummary = {type: string; title: string; description?: string; schemaFilename: string; generatorSupported?: boolean};
 
-const generatorSupported = new Set(['rounded_rectangular_plate','spacer_block','round_spacer','electronics_standoff']);
+const generatorSupported = new Set(['rounded_rectangular_plate','spacer_block','round_spacer','electronics_standoff','cable_comb','cable_clip','wall_mount_bracket','l_bracket','drawer_divider','project_enclosure_tray']);
 
 function partFamilyEntries(): Array<{type: string; filename: string; schema: any}> {
   return Object.entries(schemas)

@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.invisra.ai/printspec/0.1.0/project-enclosure-tray.schema.json",
+  "type": "object",
+  "title": "Project enclosure tray",
+  "description": "Open tray for low-voltage electronics and project organization.",
+  "required": [
+    "type",
+    "label",
+    "parameters"
+  ],
+  "properties": {
+    "type": {
+      "const": "project_enclosure_tray",
+      "title": "Part type",
+      "description": "Stable printspec part family identifier."
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Label",
+      "description": "Human-readable name."
+    },
+    "description": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "object",
+      "title": "Project enclosure tray parameters",
+      "description": "Open tray for low-voltage electronics and project organization.",
+      "required": [
+        "outerWidth",
+        "outerDepth",
+        "wallHeight",
+        "wallThickness",
+        "floorThickness"
+      ],
+      "properties": {
+        "outerWidth": {
+          "type": "number",
+          "title": "Outer width",
+          "description": "Outer width parameter.",
+          "default": 80,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            80
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "outerDepth": {
+          "type": "number",
+          "title": "Outer depth",
+          "description": "Outer depth parameter.",
+          "default": 50,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            50
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "wallHeight": {
+          "type": "number",
+          "title": "Wall height",
+          "description": "Wall height parameter.",
+          "default": 15,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            15
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "wallThickness": {
+          "type": "number",
+          "title": "Wall thickness",
+          "description": "Wall thickness parameter.",
+          "default": 3,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            3
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "floorThickness": {
+          "type": "number",
+          "title": "Floor thickness",
+          "description": "Floor thickness parameter.",
+          "default": 3,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            3
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "cornerRadius": {
+          "type": "number",
+          "title": "Corner radius",
+          "description": "Corner radius parameter.",
+          "default": 4,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            4
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "mountHoleDiameter": {
+          "type": "number",
+          "title": "Mount hole diameter",
+          "description": "Mount hole diameter parameter.",
+          "default": 3,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            3
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "mountHoleInset": {
+          "type": "number",
+          "title": "Mount hole inset",
+          "description": "Mount hole inset parameter.",
+          "default": 8,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            8
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        }
+      },
+      "additionalProperties": false,
+      "x-printspec-ui": {
+        "order": [
+          "outerWidth",
+          "outerDepth",
+          "wallHeight",
+          "wallThickness",
+          "floorThickness",
+          "cornerRadius",
+          "mountHoleDiameter",
+          "mountHoleInset"
+        ],
+        "groups": [
+          {
+            "id": "parameters",
+            "title": "Parameters",
+            "fields": [
+              "outerWidth",
+              "outerDepth",
+              "wallHeight",
+              "wallThickness",
+              "floorThickness",
+              "cornerRadius",
+              "mountHoleDiameter",
+              "mountHoleInset"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

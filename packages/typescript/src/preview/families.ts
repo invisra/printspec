@@ -1,52 +1,38 @@
 import type {PartFamilySpec} from '../types.js';
 import type {PreviewHoleMarker, PreviewScene} from './types.js';
 
-type Params = Record<string, any>;
+type Params = Record<string, unknown>;
 const visualWarning = 'Preview geometry is approximate and for visual UI use only; use OpenSCAD/CadQuery/worker exports for authoritative manufacturing output.';
 
-function holeMarkers(holes: any[] | undefined, fallbackDepth: number): PreviewHoleMarker[] {
-  return (holes ?? []).map((h, i) => ({
-    id: h.id ?? `hole-${i + 1}`,
+function num(value: unknown, fallback = 0): number { const n = Number(value); return Number.isFinite(n) ? n : fallback; }
+function bool(value: unknown, fallback = false): boolean { return typeof value === 'boolean' ? value : fallback; }
+function str(value: unknown, fallback = ''): string { return typeof value === 'string' ? value : fallback; }
+function arr(value: unknown): Record<string, unknown>[] { return Array.isArray(value) ? value.filter((v): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)) : []; }
+function p(part: PartFamilySpec): Params { return part.parameters as Params; }
+
+function holeMarkers(holes: unknown, fallbackDepth: number): PreviewHoleMarker[] {
+  return arr(holes).map((h, i) => ({
+    id: str(h.id, `hole-${i + 1}`),
     kind: 'hole_marker',
-    positionMm: {x: Number(h.x ?? 0), y: Number(h.y ?? 0), z: fallbackDepth / 2},
-    radiusMm: Number(h.diameter) / 2,
-    depthMm: h.depth === 'through' ? fallbackDepth : Number(h.depth ?? fallbackDepth),
-    axis: h.axis ?? 'z',
+    positionMm: {x: num(h.x), y: num(h.y), z: fallbackDepth / 2},
+    radiusMm: num(h.diameter) / 2,
+    depthMm: h.depth === 'through' ? fallbackDepth : num(h.depth, fallbackDepth),
+    axis: h.axis === 'x' || h.axis === 'y' || h.axis === 'z' ? h.axis : 'z',
     material: 'hole',
   }));
 }
-
 function scene(part: PartFamilySpec, boundsMm: {x: number; y: number; z: number}, objects: PreviewScene['objects'], warnings: string[] = []): PreviewScene {
   return {units: 'mm', partType: part.type, label: part.label, boundsMm, objects, warnings: [visualWarning, ...warnings]};
 }
 
-export function buildRoundSpacerPreview(part: PartFamilySpec): PreviewScene {
-  const p = part.parameters as Params;
-  const radius = Number(p.outerDiameter) / 2;
-  const height = Number(p.height);
-  const objects: PreviewScene['objects'] = [{id: 'body', kind: 'cylinder', positionMm: {x: 0, y: 0, z: height / 2}, radiusMm: radius, depthMm: height, axis: 'z', material: 'body'}];
-  if (p.innerDiameter != null) objects.push({id: 'center-hole', kind: 'hole_marker', positionMm: {x: 0, y: 0, z: height / 2}, radiusMm: Number(p.innerDiameter) / 2, depthMm: height, axis: 'z', material: 'hole'});
-  objects.push(...holeMarkers(p.holes, height));
-  return scene(part, {x: radius * 2, y: radius * 2, z: height}, objects);
-}
+export function buildRoundSpacerPreview(part: PartFamilySpec): PreviewScene { const q=p(part); const radius=num(q.outerDiameter)/2, height=num(q.height); const objects:PreviewScene['objects']=[{id:'body',kind:'cylinder',positionMm:{x:0,y:0,z:height/2},radiusMm:radius,depthMm:height,axis:'z',material:'body'}]; if(q.innerDiameter!=null) objects.push({id:'center-hole',kind:'hole_marker',positionMm:{x:0,y:0,z:height/2},radiusMm:num(q.innerDiameter)/2,depthMm:height,axis:'z',material:'hole'}); objects.push(...holeMarkers(q.holes,height)); return scene(part,{x:radius*2,y:radius*2,z:height},objects); }
+export function buildSpacerBlockPreview(part: PartFamilySpec): PreviewScene { const q=p(part); const length=num(q.length), width=num(q.width), height=num(q.height); return scene(part,{x:length,y:width,z:height},[{id:'body',kind:'box',positionMm:{x:0,y:0,z:height/2},dimensionsMm:{x:length,y:width,z:height},material:'body'},...holeMarkers(q.holes,height)]); }
+export function buildElectronicsStandoffPreview(part: PartFamilySpec): PreviewScene { const q=p(part); const radius=num(q.outerDiameter)/2, height=num(q.height), baseHeight=q.baseHeight==null?0:num(q.baseHeight), baseRadius=q.baseDiameter==null?radius:num(q.baseDiameter)/2; const objects:PreviewScene['objects']=[]; if(baseHeight>0) objects.push({id:'base',kind:'cylinder',positionMm:{x:0,y:0,z:baseHeight/2},radiusMm:baseRadius,depthMm:baseHeight,axis:'z',material:'body'}); objects.push({id:'body',kind:'cylinder',positionMm:{x:0,y:0,z:baseHeight+height/2},radiusMm:radius,depthMm:height,axis:'z',material:'body'}); objects.push({id:'center-hole',kind:'hole_marker',positionMm:{x:0,y:0,z:(baseHeight+height)/2},radiusMm:num(q.holeDiameter)/2,depthMm:baseHeight+height,axis:'z',material:'hole'}); return scene(part,{x:baseRadius*2,y:baseRadius*2,z:baseHeight+height},objects); }
+export function buildRoundedRectangularPlatePreview(part: PartFamilySpec): PreviewScene { const q=p(part); const length=num(q.length), width=num(q.width), thickness=num(q.thickness); return scene(part,{x:length,y:width,z:thickness},[{id:'body',kind:'rounded_box',positionMm:{x:0,y:0,z:thickness/2},dimensionsMm:{x:length,y:width,z:thickness},radiusMm:num(q.cornerRadius),material:'body'},...holeMarkers(q.holes,thickness)]); }
 
-export function buildSpacerBlockPreview(part: PartFamilySpec): PreviewScene {
-  const p = part.parameters as Params; const length = Number(p.length), width = Number(p.width), height = Number(p.height);
-  return scene(part, {x: length, y: width, z: height}, [{id: 'body', kind: 'box', positionMm: {x: 0, y: 0, z: height / 2}, dimensionsMm: {x: length, y: width, z: height}, material: 'body'}, ...holeMarkers(p.holes, height)]);
-}
-
-export function buildElectronicsStandoffPreview(part: PartFamilySpec): PreviewScene {
-  const p = part.parameters as Params; const radius = Number(p.outerDiameter) / 2, height = Number(p.height);
-  const baseHeight = p.baseHeight == null ? 0 : Number(p.baseHeight); const baseRadius = p.baseDiameter == null ? radius : Number(p.baseDiameter) / 2;
-  const objects: PreviewScene['objects'] = [];
-  if (baseHeight > 0) objects.push({id: 'base', kind: 'cylinder', positionMm: {x: 0, y: 0, z: baseHeight / 2}, radiusMm: baseRadius, depthMm: baseHeight, axis: 'z', material: 'body'});
-  objects.push({id: 'body', kind: 'cylinder', positionMm: {x: 0, y: 0, z: baseHeight + height / 2}, radiusMm: radius, depthMm: height, axis: 'z', material: 'body'});
-  objects.push({id: 'center-hole', kind: 'hole_marker', positionMm: {x: 0, y: 0, z: (baseHeight + height) / 2}, radiusMm: Number(p.holeDiameter) / 2, depthMm: baseHeight + height, axis: 'z', material: 'hole'});
-  if (p.counterbore) objects.push({id: 'counterbore', kind: 'hole_marker', positionMm: {x: 0, y: 0, z: baseHeight + height - Number(p.counterbore.depth ?? 0) / 2}, radiusMm: Number(p.counterbore.diameter ?? p.holeDiameter) / 2, depthMm: Number(p.counterbore.depth ?? height), axis: 'z', material: 'reference'});
-  return scene(part, {x: baseRadius * 2, y: baseRadius * 2, z: baseHeight + height}, objects);
-}
-
-export function buildRoundedRectangularPlatePreview(part: PartFamilySpec): PreviewScene {
-  const p = part.parameters as Params; const length = Number(p.length), width = Number(p.width), thickness = Number(p.thickness);
-  return scene(part, {x: length, y: width, z: thickness}, [{id: 'body', kind: 'rounded_box', positionMm: {x: 0, y: 0, z: thickness / 2}, dimensionsMm: {x: length, y: width, z: thickness}, radiusMm: Number(p.cornerRadius), material: 'body'}, ...holeMarkers(p.holes, thickness)]);
-}
+export function buildCableCombPreview(part: PartFamilySpec): PreviewScene { const q=p(part); const slotCount=num(q.slotCount,6), slotWidth=num(q.slotWidth,4), toothWidth=num(q.toothWidth,num(q.slotSpacing,6)-slotWidth||2), slotDepth=num(q.slotDepth,8), thickness=num(q.baseThickness,num(q.thickness,3)); const length=num(q.length, slotCount*slotWidth+(slotCount+1)*toothWidth); const width=num(q.width, slotDepth+toothWidth); const objects:PreviewScene['objects']=[{id:'body',kind:'box',positionMm:{x:0,y:0,z:thickness/2},dimensionsMm:{x:length,y:width,z:thickness},material:'body'}]; for(let i=0;i<slotCount;i++){ const x=-length/2+toothWidth+slotWidth/2+i*(slotWidth+toothWidth); objects.push({id:`slot-${i+1}`,kind:'box',positionMm:{x,y:width/2-slotDepth/2,z:thickness+0.05},dimensionsMm:{x:slotWidth,y:slotDepth,z:0.1},material:'reference'}); } const hd=num(q.mountHoleDiameter); if(hd>0){ const spacing=num(q.mountHoleSpacing,40); for(const x of [-spacing/2,spacing/2]) objects.push({id:`mount-hole-${x<0?1:2}`,kind:'hole_marker',positionMm:{x,y:0,z:thickness/2},radiusMm:hd/2,depthMm:thickness,axis:'z',material:'hole'}); } return scene(part,{x:length,y:width,z:thickness},objects); }
+export function buildCableClipPreview(part: PartFamilySpec): PreviewScene { const q=p(part); const cable=num(q.cableDiameter,6)+num(q.clearance,0.5), width=num(q.width,12), thickness=num(q.thickness,3), baseLength=num(q.baseLength,28); return scene(part,{x:baseLength,y:width,z:thickness+cable/2},[{id:'body',kind:'box',positionMm:{x:0,y:0,z:thickness/2},dimensionsMm:{x:baseLength,y:width,z:thickness},material:'body'},{id:'clip-bridge',kind:'box',positionMm:{x:0,y:0,z:thickness+cable/2},dimensionsMm:{x:baseLength*0.65,y:width,z:thickness},material:'body'},{id:'cable-channel',kind:'hole_marker',positionMm:{x:0,y:0,z:thickness+cable/2},radiusMm:cable/2,depthMm:width,axis:'y',material:'hole'},{id:'mount-hole',kind:'hole_marker',positionMm:{x:-baseLength*0.33,y:0,z:thickness/2},radiusMm:num(q.mountHoleDiameter,4)/2,depthMm:thickness,axis:'z',material:'hole'}]); }
+export function buildWallMountBracketPreview(part: PartFamilySpec): PreviewScene { const q=p(part); const width=num(q.width,40), height=num(q.height,60), t=num(q.thickness,4), tab=num(q.tabDepth,20), d=num(q.screwHoleDiameter,4), spacing=num(q.screwHoleSpacing,36); return scene(part,{x:width,y:tab+t,z:height},[{id:'body',kind:'box',positionMm:{x:0,y:0,z:height/2},dimensionsMm:{x:width,y:t,z:height},material:'body'},{id:'tab',kind:'box',positionMm:{x:0,y:tab/2,z:t/2},dimensionsMm:{x:width,y:tab,z:t},material:'body'},...[-spacing/2,spacing/2].map((z,i)=>({id:`screw-hole-${i+1}`,kind:'hole_marker' as const,positionMm:{x:0,y:0,z:height/2+z},radiusMm:d/2,depthMm:t,axis:'y' as const,material:'hole' as const}))]); }
+export function buildLBracketPreview(part: PartFamilySpec): PreviewScene { const q=p(part); const a=num(q.legLengthA,40), b=num(q.legLengthB,40), width=num(q.width,20), t=num(q.thickness,4), d=num(q.holeDiameter,4), n=num(q.holesPerLeg,1); const objects:PreviewScene['objects']=[{id:'leg-a',kind:'box',positionMm:{x:a/2-t/2,y:0,z:t/2},dimensionsMm:{x:a,y:width,z:t},material:'body'},{id:'leg-b',kind:'box',positionMm:{x:0,y:0,z:b/2-t/2},dimensionsMm:{x:t,y:width,z:b},material:'body'}]; for(let i=0;i<n;i++){ objects.push({id:`leg-a-hole-${i+1}`,kind:'hole_marker',positionMm:{x:(i+1)*a/(n+1),y:0,z:t/2},radiusMm:d/2,depthMm:t,axis:'z',material:'hole'}); objects.push({id:`leg-b-hole-${i+1}`,kind:'hole_marker',positionMm:{x:0,y:0,z:(i+1)*b/(n+1)},radiusMm:d/2,depthMm:t,axis:'x',material:'hole'}); } return scene(part,{x:a,y:width,z:b},objects,['Light-duty/non-structural bracket preview.']); }
+export function buildDrawerDividerPreview(part: PartFamilySpec): PreviewScene { const q=p(part); const length=num(q.length,120), height=num(q.height,40), t=num(q.thickness,3), n=num(q.notchCount,0), nw=num(q.notchWidth,3), nd=num(q.notchDepth,10); const objects:PreviewScene['objects']=[{id:'body',kind:'box',positionMm:{x:0,y:0,z:height/2},dimensionsMm:{x:length,y:t,z:height},material:'body'}]; for(let i=0;i<n;i++) objects.push({id:`notch-${i+1}`,kind:'box',positionMm:{x:-length/2+(i+1)*length/(n+1),y:0,z:height-nd/2},dimensionsMm:{x:nw,y:t+0.2,z:nd},material:'reference'}); if(bool(q.endTab)) for(const x of [-length/2-t/2,length/2+t/2]) objects.push({id:`end-tab-${x<0?1:2}`,kind:'box',positionMm:{x,y:0,z:height/2},dimensionsMm:{x:t,y:t*2,z:height},material:'body'}); return scene(part,{x:length,y:t,z:height},objects); }
+export function buildProjectEnclosureTrayPreview(part: PartFamilySpec): PreviewScene { const q=p(part); const ow=num(q.outerWidth,80), od=num(q.outerDepth,50), h=num(q.wallHeight,15), wt=num(q.wallThickness,3), ft=num(q.floorThickness,3), hd=num(q.mountHoleDiameter,3), inset=num(q.mountHoleInset,8); const objects:PreviewScene['objects']=[{id:'floor',kind:'box',positionMm:{x:0,y:0,z:ft/2},dimensionsMm:{x:ow,y:od,z:ft},material:'body'},{id:'front-wall',kind:'box',positionMm:{x:0,y:-od/2+wt/2,z:ft+h/2},dimensionsMm:{x:ow,y:wt,z:h},material:'body'},{id:'back-wall',kind:'box',positionMm:{x:0,y:od/2-wt/2,z:ft+h/2},dimensionsMm:{x:ow,y:wt,z:h},material:'body'},{id:'left-wall',kind:'box',positionMm:{x:-ow/2+wt/2,y:0,z:ft+h/2},dimensionsMm:{x:wt,y:od,z:h},material:'body'},{id:'right-wall',kind:'box',positionMm:{x:ow/2-wt/2,y:0,z:ft+h/2},dimensionsMm:{x:wt,y:od,z:h},material:'body'}]; if(hd>0) for(const x of [-ow/2+inset,ow/2-inset]) for(const y of [-od/2+inset,od/2-inset]) objects.push({id:`mount-hole-${objects.length}`,kind:'hole_marker',positionMm:{x,y,z:ft/2},radiusMm:hd/2,depthMm:ft,axis:'z',material:'hole'}); return scene(part,{x:ow,y:od,z:ft+h},objects); }
