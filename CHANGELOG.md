@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- Add browser-safe renderer-neutral preview scene generator.
+- Add optional Three.js adapter.
+- Support visual previews for initial alpha part families.
+- No schema changes.
+- Preview geometry is non-authoritative and for UI visualization only.
+
 ## 0.1.5
 
 Patch release:

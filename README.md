@@ -2,7 +2,7 @@
 
 **Practical JSON Schemas and offline tooling for parametric 3D-printable parts.**
 
-**Status: v0.1.0 experimental**
+**Status: v0.2.0 experimental**
 
 printspec is an open-source specification and toolkit from Invisra for describing practical, parameterized 3D-printable parts as JSON. The v0.1.0 release focuses on stable schemas, offline TypeScript/Python validation, bundled schema distribution, static hosted schema references, BOM/form helpers, starter source generators, CLI workflows, and deterministic source bundle export—not CAD execution or production manufacturing automation.
 
@@ -74,6 +74,33 @@ const generated = generateOpenScad(spec);
 if (generated.supported) console.log(generated.code);
 ```
 
+## Browser preview example
+
+The TypeScript package includes a browser-safe, renderer-neutral preview scene generator for immediate UI visualization in tools such as PartPilot. Preview geometry is approximate and visual only: it does not boolean-subtract exact holes, does not execute CAD code, and is not authoritative manufacturing output. Use the OpenSCAD, CadQuery, or external worker pipeline for exact STL/STEP/3MF manufacturing outputs.
+
+```js
+import { generatePreviewScene } from "@invisra/printspec/preview";
+
+const preview = generatePreviewScene(spec);
+if (preview.supported) {
+  console.log(preview.scene.objects);
+}
+```
+
+An optional Three.js adapter is available without adding Three.js to `@invisra/printspec/browser` or making it a hard runtime dependency. Consumers provide the Three.js namespace themselves.
+
+```js
+import { generatePreviewScene } from "@invisra/printspec/preview";
+import { createThreePreviewObject } from "@invisra/printspec/three";
+import * as THREE from "three";
+
+const preview = generatePreviewScene(spec);
+if (preview.supported) {
+  const object = createThreePreviewObject(preview.scene, THREE);
+  scene.add(object);
+}
+```
+
 ## Python API example
 
 ```python
@@ -135,7 +162,7 @@ printspec form-metadata rounded_rectangular_plate
 printspec list-part-families
 ```
 
-## What v0.1.0 includes
+## What v0.2.0 includes
 
 - JSON Schemas for practical parametric 3D-printable parts.
 - Offline TypeScript validation.
@@ -150,9 +177,12 @@ printspec list-part-families
 - CLI commands.
 - Deterministic project/part bundle export.
 - Optional experimental PartCAD stub metadata.
+- Browser-safe renderer-neutral visual preview scene generation for initial alpha part families.
+- Optional Three.js adapter at `@invisra/printspec/three` with Three.js as an optional peer dependency.
 
 ## What v0.1.0 does not include
 
+- Authoritative preview meshes for manufacturing.
 - STL, STEP, or 3MF export.
 - CAD runtime execution.
 - Slicer integration.
