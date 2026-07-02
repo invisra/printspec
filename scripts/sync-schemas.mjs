@@ -97,7 +97,7 @@ mkdirSync(publicProjectPath, {recursive: true});
 mkdirSync(publicVersionPath, {recursive: true});
 
 const versions = readdirSync(publicProjectPath)
-  .filter((entry) => statSync(path.join(publicProjectPath, entry)).isDirectory())
+  .filter((entry) => /^\d+\.\d+\.\d+$/.test(entry) && statSync(path.join(publicProjectPath, entry)).isDirectory())
   .sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
 
 writeJson(path.join(publicProjectPath, 'manifest.json'), {
@@ -123,11 +123,13 @@ const schemaManifest = {
 };
 writeJson(path.join(publicVersionPath, 'manifest.json'), schemaManifest);
 
-writeFileSync(path.join(root, 'public/index.html'), page('Invisra Schemas', `<main>\n  <h1>Invisra Schemas</h1>\n  <p>Public JSON Schemas for Invisra open-source projects.</p>\n  <ul>\n    <li><a href="/${PROJECT_NAME}/">${PROJECT_NAME} schemas</a></li>\n    <li><a href="https://invisra.ai">Invisra website</a></li>\n  </ul>\n</main>\n<footer>Schemas are provided for public reference. Validators should resolve bundled schemas offline where possible.</footer>`));
+writeFileSync(path.join(root, 'public/index.html'), page('Invisra Schemas', `<main>\n  <h1>Invisra Schemas</h1>\n  <p>Public JSON Schemas for Invisra open-source projects.</p>\n  <ul>\n    <li><a href="/${PROJECT_NAME}/">${PROJECT_NAME} schemas</a></li>
+    <li><a href="/${PROJECT_NAME}/validator/">Open the in-browser PrintSpec Validator</a></li>\n    <li><a href="https://invisra.ai">Invisra website</a></li>\n  </ul>\n</main>\n<footer>Schemas are provided for public reference. Validators should resolve bundled schemas offline where possible.</footer>`));
 
-writeFileSync(path.join(publicProjectPath, 'index.html'), page(`${PROJECT_NAME} Schemas`, `<main>\n  <h1>${PROJECT_NAME} Schemas</h1>\n  <p>${PROJECT_DESCRIPTION}</p>\n  <p>Schemas include browser-editor metadata where available so tools can build parameter forms from bundled schemas.</p>\n  <h2>Versions</h2>\n  <ul>\n${versions.map((version) => `    <li><a href="/${PROJECT_NAME}/${version}/">${version}</a></li>`).join('\n')}\n  </ul>\n  <p><a href="/${PROJECT_NAME}/manifest.json">Project manifest</a></p>\n  <p><a href="${PROJECT_REPO_URL}">GitHub repository</a></p>\n</main>`));
+writeFileSync(path.join(publicProjectPath, 'index.html'), page(`${PROJECT_NAME} Schemas`, `<main>\n  <h1>${PROJECT_NAME} Schemas</h1>\n  <p>${PROJECT_DESCRIPTION}</p>\n  <p>Schemas include browser-editor metadata where available so tools can build parameter forms from bundled schemas.</p>\n  <h2>Versions</h2>\n  <ul>\n${versions.map((version) => `    <li><a href="/${PROJECT_NAME}/${version}/">${version}</a></li>`).join('\n')}\n  </ul>\n  <p><a href="/${PROJECT_NAME}/validator/">Open the in-browser PrintSpec Validator</a></p>
+  <p><a href="/${PROJECT_NAME}/manifest.json">Project manifest</a></p>\n  <p><a href="${PROJECT_REPO_URL}">GitHub repository</a></p>\n</main>`));
 
-writeFileSync(path.join(publicVersionPath, 'index.html'), page(`${PROJECT_NAME} ${SCHEMA_VERSION} Schemas`, `<main>\n  <h1>${PROJECT_NAME} ${SCHEMA_VERSION} Schemas</h1>\n  <p>Versioned JSON Schemas for ${PROJECT_NAME} ${SCHEMA_VERSION}.</p>\n  <p><a href="/${PROJECT_NAME}/">Back to ${PROJECT_NAME}</a> · <a href="/${PROJECT_NAME}/${SCHEMA_VERSION}/manifest.json">Version manifest</a></p>\n  <h2>Schema files</h2>\n${schemaManifest.schemas.map((schema) => `  <section class="schema">\n    <h3><a href="${escapeHtml(schema.filename)}">${escapeHtml(schema.filename)}</a></h3>\n    ${schema.title ? `<p><strong>${escapeHtml(schema.title)}</strong></p>` : ''}\n    ${schema.description ? `<p>${escapeHtml(schema.description)}</p>` : ''}\n    ${schema.id ? `<p class="muted"><code>${escapeHtml(schema.id)}</code></p>` : ''}\n  </section>`).join('\n')}\n</main>`));
+writeFileSync(path.join(publicVersionPath, 'index.html'), page(`${PROJECT_NAME} ${SCHEMA_VERSION} Schemas`, `<main>\n  <h1>${PROJECT_NAME} ${SCHEMA_VERSION} Schemas</h1>\n  <p>Versioned JSON Schemas for ${PROJECT_NAME} ${SCHEMA_VERSION}.</p>\n  <p><a href="/${PROJECT_NAME}/">Back to ${PROJECT_NAME}</a> · <a href="/${PROJECT_NAME}/validator/">Open the in-browser PrintSpec Validator</a> · <a href="/${PROJECT_NAME}/${SCHEMA_VERSION}/manifest.json">Version manifest</a></p>\n  <h2>Schema files</h2>\n${schemaManifest.schemas.map((schema) => `  <section class="schema">\n    <h3><a href="${escapeHtml(schema.filename)}">${escapeHtml(schema.filename)}</a></h3>\n    ${schema.title ? `<p><strong>${escapeHtml(schema.title)}</strong></p>` : ''}\n    ${schema.description ? `<p>${escapeHtml(schema.description)}</p>` : ''}\n    ${schema.id ? `<p class="muted"><code>${escapeHtml(schema.id)}</code></p>` : ''}\n  </section>`).join('\n')}\n</main>`));
 
 console.log(`Synced ${files.length} schema files`);
 console.log(`Public destination: ${PUBLIC_SCHEMA_DIR}`);

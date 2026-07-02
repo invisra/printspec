@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {existsSync, readFileSync} from 'node:fs';
+import {test} from 'node:test';
+
+const bundlePath = 'public/printspec/validator/validator.js';
+const htmlPath = 'public/printspec/validator/index.html';
+const forbidden = ['node:fs', 'node:path', 'node:url', 'require("fs")', 'require("path")', 'require("url")'];
+
+const examples = {
+  round_spacer: {printspecVersion:'0.1.0', units:'mm', part:{type:'round_spacer', label:'Round spacer', parameters:{outerDiameter:12, innerDiameter:4, height:8}}},
+  spacer_block: {printspecVersion:'0.1.0', units:'mm', part:{type:'spacer_block', label:'Spacer block', parameters:{length:40, width:20, height:8, holes:[{x:-10,y:0,diameter:3,depth:'through'}]}}},
+  electronics_standoff: {printspecVersion:'0.1.0', units:'mm', part:{type:'electronics_standoff', label:'Electronics standoff', parameters:{outerDiameter:8, height:10, holeDiameter:3, baseDiameter:12, baseHeight:2}}},
+  rounded_rectangular_plate: {printspecVersion:'0.1.0', units:'mm', part:{type:'rounded_rectangular_plate', label:'Rounded rectangular plate', parameters:{length:80, width:40, thickness:3, cornerRadius:4, holes:[{x:20,y:10,diameter:3,depth:'through'}]}}},
+};
+
+test('schema validator static files are built without Node built-ins', () => {
+  assert.ok(existsSync(htmlPath), `${htmlPath} should exist`);
+  assert.ok(existsSync(bundlePath), `${bundlePath} should exist`);
+  const bundle = readFileSync(bundlePath, 'utf8');
+  for (const pattern of forbidden) assert.equal(bundle.includes(pattern), false, `${pattern} must not be bundled`);
+  assert.match(bundle, /validatePrintSpec/);
+  assert.match(bundle, /listPartFamilies/);
+  assert.match(bundle, /getPartFamilyFormMetadata/);
+});
+
+test('validator examples validate through browser-safe API', async () => {
+  const {validatePrintSpec, listPartFamilies, getPartFamilyFormMetadata} = await import('../packages/typescript/dist/browser.js');
+  assert.ok(listPartFamilies().some((family) => family.type === 'round_spacer'));
+  for (const [type, spec] of Object.entries(examples)) {
+    assert.equal(getPartFamilyFormMetadata(type).partType, type);
+    const result = validatePrintSpec(spec);
+    assert.deepEqual(result, {valid: true, errors: []}, type);
+  }
+});
