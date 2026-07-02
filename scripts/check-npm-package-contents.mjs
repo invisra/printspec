@@ -8,6 +8,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const requiredFiles = [
   'package/dist/index.js',
   'package/dist/index.d.ts',
+  'package/dist/browser.js',
+  'package/dist/browser.d.ts',
   'package/dist/cli.js',
   'package/package.json',
   'package/README.md',
