@@ -7,6 +7,12 @@ export const examples: Record<string, Example> = {
   spacer_block: {label: 'Spacer block', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'spacer_block', label: 'Spacer block', parameters: {length: 40, width: 20, height: 8, holes: [{x: -10, y: 0, diameter: 3, depth: 'through'}]}}}},
   electronics_standoff: {label: 'Electronics standoff', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'electronics_standoff', label: 'Electronics standoff', parameters: {outerDiameter: 8, height: 10, holeDiameter: 3, baseDiameter: 12, baseHeight: 2}}}},
   rounded_rectangular_plate: {label: 'Rounded rectangular plate', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'rounded_rectangular_plate', label: 'Rounded rectangular plate', parameters: {length: 80, width: 40, thickness: 3, cornerRadius: 4, holes: [{x: 20, y: 10, diameter: 3, depth: 'through'}]}}}},
+  cable_comb: {label: 'Cable comb', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'cable_comb', label: 'Cable comb', parameters: {length: 70, width: 18, thickness: 4, slotCount: 5, slotWidth: 5, slotSpacing: 12, slotDepth: 12}}}},
+  cable_clip: {label: 'Cable clip', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'cable_clip', label: 'Cable clip', parameters: {baseLength: 30, baseWidth: 14, baseThickness: 3, clipInnerDiameter: 8, clipWallThickness: 2}}}},
+  wall_mount_bracket: {label: 'Wall mount bracket', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'wall_mount_bracket', label: 'Wall mount bracket', parameters: {width: 40, height: 60, thickness: 4, tabDepth: 20, screwHoleDiameter: 4, screwHoleSpacing: 36, cornerRadius: 3}}}},
+  l_bracket: {label: 'L bracket', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'l_bracket', label: 'L bracket', parameters: {legLengthA: 40, legLengthB: 30, width: 20, thickness: 4}}}},
+  drawer_divider: {label: 'Drawer divider', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'drawer_divider', label: 'Drawer divider', parameters: {length: 120, height: 40, thickness: 3, notchCount: 2, notchWidth: 3, notchDepth: 10, endTab: false}}}},
+  project_enclosure_tray: {label: 'Project enclosure tray', spec: {printspecVersion: '0.1.0', units: 'mm', part: {type: 'project_enclosure_tray', label: 'Project enclosure tray', parameters: {outerWidth: 80, outerDepth: 50, wallHeight: 15, wallThickness: 3, floorThickness: 3, cornerRadius: 4, mountHoleDiameter: 3, mountHoleInset: 8}}}},
 };
 
 const $ = <T extends HTMLElement>(id: string): T => {
@@ -22,7 +28,7 @@ const resultContent = $<HTMLElement>('resultContent');
 const errorList = $<HTMLUListElement>('errorList');
 
 function pretty(value: unknown): string { return JSON.stringify(value, null, 2); }
-function asRecord(value: unknown): Record<string, any> { return value && typeof value === 'object' ? value as Record<string, any> : {}; }
+function asRecord(value: unknown): Record<string, unknown> { return value && typeof value === 'object' ? value as Record<string, unknown> : {}; }
 function renderMessages(messages: string[], kind: 'error' | 'warning' = 'error') {
   errorList.innerHTML = '';
   for (const message of messages) {

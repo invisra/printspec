@@ -1,0 +1,17 @@
+{
+  "printspecVersion": "0.1.0",
+  "units": "mm",
+  "part": {
+    "type": "drawer_divider",
+    "label": "Drawer divider",
+    "parameters": {
+      "length": 120,
+      "height": 40,
+      "thickness": 3,
+      "notchCount": 2,
+      "notchWidth": 3,
+      "notchDepth": 10,
+      "endTab": false
+    }
+  }
+}

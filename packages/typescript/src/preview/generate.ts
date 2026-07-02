@@ -1,13 +1,19 @@
 import {validatePrintSpec} from '../validate.browser.js';
 import type {PartFamilySpec, PrintSpec} from '../types.js';
 import type {PreviewGenerationResult, PreviewScene} from './types.js';
-import {buildElectronicsStandoffPreview, buildRoundSpacerPreview, buildRoundedRectangularPlatePreview, buildSpacerBlockPreview} from './families.js';
+import {buildCableClipPreview, buildCableCombPreview, buildDrawerDividerPreview, buildElectronicsStandoffPreview, buildLBracketPreview, buildProjectEnclosureTrayPreview, buildRoundSpacerPreview, buildRoundedRectangularPlatePreview, buildSpacerBlockPreview, buildWallMountBracketPreview} from './families.js';
 
 const builders: Record<string, (part: PartFamilySpec) => PreviewScene> = {
   round_spacer: buildRoundSpacerPreview,
   spacer_block: buildSpacerBlockPreview,
   electronics_standoff: buildElectronicsStandoffPreview,
   rounded_rectangular_plate: buildRoundedRectangularPlatePreview,
+  cable_comb: buildCableCombPreview,
+  cable_clip: buildCableClipPreview,
+  wall_mount_bracket: buildWallMountBracketPreview,
+  l_bracket: buildLBracketPreview,
+  drawer_divider: buildDrawerDividerPreview,
+  project_enclosure_tray: buildProjectEnclosureTrayPreview,
 };
 
 export function generatePreviewScene(spec: unknown): PreviewGenerationResult {

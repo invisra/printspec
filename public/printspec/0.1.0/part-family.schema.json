@@ -30,6 +30,15 @@
     },
     {
       "$ref": "simple-lid.schema.json"
+    },
+    {
+      "$ref": "wall-mount-bracket.schema.json"
+    },
+    {
+      "$ref": "drawer-divider.schema.json"
+    },
+    {
+      "$ref": "project-enclosure-tray.schema.json"
     }
   ],
   "$id": "https://schemas.invisra.ai/printspec/0.1.0/part-family.schema.json",

@@ -1,0 +1,18 @@
+{
+  "printspecVersion": "0.1.0",
+  "units": "mm",
+  "part": {
+    "type": "project_enclosure_tray",
+    "label": "Project enclosure tray",
+    "parameters": {
+      "outerWidth": 80,
+      "outerDepth": 50,
+      "wallHeight": 15,
+      "wallThickness": 3,
+      "floorThickness": 3,
+      "cornerRadius": 4,
+      "mountHoleDiameter": 3,
+      "mountHoleInset": 8
+    }
+  }
+}

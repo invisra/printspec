@@ -38,6 +38,13 @@
       "description": "Composable Part schema for printspec documents."
     },
     {
+      "filename": "drawer-divider.schema.json",
+      "url": "/printspec/0.1.0/drawer-divider.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/drawer-divider.schema.json",
+      "title": "Drawer divider",
+      "description": "Customizable drawer divider strip with optional interlocking notches."
+    },
+    {
       "filename": "drill-guide.schema.json",
       "url": "/printspec/0.1.0/drill-guide.schema.json",
       "id": "https://schemas.invisra.ai/printspec/0.1.0/drill-guide.schema.json",
@@ -64,6 +71,13 @@
       "id": "https://schemas.invisra.ai/printspec/0.1.0/part-family.schema.json",
       "title": "Part Family",
       "description": "Part Family schema for printspec documents."
+    },
+    {
+      "filename": "project-enclosure-tray.schema.json",
+      "url": "/printspec/0.1.0/project-enclosure-tray.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/project-enclosure-tray.schema.json",
+      "title": "Project enclosure tray",
+      "description": "Open tray for low-voltage electronics and project organization."
     },
     {
       "filename": "project.schema.json",
@@ -106,6 +120,13 @@
       "id": "https://schemas.invisra.ai/printspec/0.1.0/spacer-block.schema.json",
       "title": "Spacer Block",
       "description": "Rectangular spacer block with optional holes, slots, and edge finishing."
+    },
+    {
+      "filename": "wall-mount-bracket.schema.json",
+      "url": "/printspec/0.1.0/wall-mount-bracket.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.1.0/wall-mount-bracket.schema.json",
+      "title": "Wall mount bracket",
+      "description": "Simple flat wall bracket with a light-duty shelf/tab."
     }
   ]
 }

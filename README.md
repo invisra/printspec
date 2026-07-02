@@ -210,3 +210,18 @@ printspec is experimental software for describing and generating starter source 
 ## License
 
 Apache-2.0. See package metadata and repository license files for details.
+
+## Supported part families
+
+printspec 0.2.0 includes these practical, low-risk alpha part families. Generated OpenSCAD/CadQuery source should be reviewed before manufacturing, and preview geometry is visual/non-authoritative.
+
+- `round_spacer` — cylindrical spacer with optional center hole; key parameters: outerDiameter, innerDiameter, height.
+- `spacer_block` — rectangular spacer block with optional holes; key parameters: length, width, height, holes.
+- `electronics_standoff` — low-voltage electronics standoff; key parameters: outerDiameter, height, holeDiameter, optional base.
+- `rounded_rectangular_plate` — rounded utility plate; key parameters: length, width, thickness, cornerRadius, holes.
+- `cable_comb` — flat wire/cable routing comb; key parameters: slotCount, slotWidth, slotDepth, spacing/thickness.
+- `cable_clip` — simple cable retaining clip; key parameters: baseLength, base size, clip diameter/wall.
+- `wall_mount_bracket` — light-duty wall plate with shelf/tab; key parameters: width, height, thickness, tabDepth, screw holes.
+- `l_bracket` — light-duty, non-structural organization/prototyping bracket; key parameters: leg lengths, width, thickness, holes.
+- `drawer_divider` — customizable drawer divider strip; key parameters: length, height, thickness, notches, end tabs.
+- `project_enclosure_tray` — open tray for low-voltage projects; key parameters: outer size, wall/floor thickness, mount holes.

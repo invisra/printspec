@@ -11,6 +11,12 @@ const examples = {
   spacer_block: {printspecVersion:'0.1.0', units:'mm', part:{type:'spacer_block', label:'Spacer block', parameters:{length:40, width:20, height:8, holes:[{x:-10,y:0,diameter:3,depth:'through'}]}}},
   electronics_standoff: {printspecVersion:'0.1.0', units:'mm', part:{type:'electronics_standoff', label:'Electronics standoff', parameters:{outerDiameter:8, height:10, holeDiameter:3, baseDiameter:12, baseHeight:2}}},
   rounded_rectangular_plate: {printspecVersion:'0.1.0', units:'mm', part:{type:'rounded_rectangular_plate', label:'Rounded rectangular plate', parameters:{length:80, width:40, thickness:3, cornerRadius:4, holes:[{x:20,y:10,diameter:3,depth:'through'}]}}},
+  cable_comb: {printspecVersion:'0.1.0', units:'mm', part:{type:'cable_comb', label:'Cable comb', parameters:{length:70,width:18,thickness:4,slotCount:5,slotWidth:5,slotSpacing:12,slotDepth:12}}},
+  cable_clip: {printspecVersion:'0.1.0', units:'mm', part:{type:'cable_clip', label:'Cable clip', parameters:{baseLength:30,baseWidth:14,baseThickness:3,clipInnerDiameter:8,clipWallThickness:2}}},
+  wall_mount_bracket: {printspecVersion:'0.1.0', units:'mm', part:{type:'wall_mount_bracket', label:'Wall mount bracket', parameters:{width:40,height:60,thickness:4,tabDepth:20,screwHoleDiameter:4,screwHoleSpacing:36,cornerRadius:3}}},
+  l_bracket: {printspecVersion:'0.1.0', units:'mm', part:{type:'l_bracket', label:'L bracket', parameters:{legLengthA:40,legLengthB:30,width:20,thickness:4}}},
+  drawer_divider: {printspecVersion:'0.1.0', units:'mm', part:{type:'drawer_divider', label:'Drawer divider', parameters:{length:120,height:40,thickness:3,notchCount:2,notchWidth:3,notchDepth:10,endTab:false}}},
+  project_enclosure_tray: {printspecVersion:'0.1.0', units:'mm', part:{type:'project_enclosure_tray', label:'Project enclosure tray', parameters:{outerWidth:80,outerDepth:50,wallHeight:15,wallThickness:3,floorThickness:3,cornerRadius:4,mountHoleDiameter:3,mountHoleInset:8}}},
 };
 
 test('schema validator static files are built without Node built-ins', () => {

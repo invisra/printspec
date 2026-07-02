@@ -2,11 +2,16 @@
 
 ## 0.2.0
 
+Feature release:
 - Add browser-safe renderer-neutral preview scene generator.
-- Add optional Three.js adapter.
-- Support visual previews for initial alpha part families.
-- No schema changes.
-- Preview geometry is non-authoritative and for UI visualization only.
+- Add optional Three.js preview adapter.
+- Add static in-browser PrintSpec validator for schemas.invisra.ai.
+- Expand supported practical part families to at least 10.
+- Add examples for all supported alpha families.
+- Keep Three.js optional and out of the main browser entrypoint.
+- Improve browser-safety and package-content checks.
+- Keep schema version at `0.1.0`; added alpha family schemas are backward-compatible additions.
+- Preview geometry is visual/non-authoritative and generated source should be reviewed before manufacturing.
 
 ## 0.1.5
 

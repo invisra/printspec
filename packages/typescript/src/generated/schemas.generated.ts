@@ -1179,6 +1179,172 @@ export const bundledSchemas = {
     "title": "Composable Part",
     "description": "Composable Part schema for printspec documents."
   },
+  "drawer-divider.schema.json": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://schemas.invisra.ai/printspec/0.1.0/drawer-divider.schema.json",
+    "type": "object",
+    "title": "Drawer divider",
+    "description": "Customizable drawer divider strip with optional interlocking notches.",
+    "required": [
+      "type",
+      "label",
+      "parameters"
+    ],
+    "properties": {
+      "type": {
+        "const": "drawer_divider",
+        "title": "Part type",
+        "description": "Stable printspec part family identifier."
+      },
+      "label": {
+        "type": "string",
+        "minLength": 1,
+        "title": "Label",
+        "description": "Human-readable name."
+      },
+      "description": {
+        "type": "string"
+      },
+      "parameters": {
+        "type": "object",
+        "title": "Drawer divider parameters",
+        "description": "Customizable drawer divider strip with optional interlocking notches.",
+        "required": [
+          "length",
+          "height",
+          "thickness"
+        ],
+        "properties": {
+          "length": {
+            "type": "number",
+            "title": "Length",
+            "description": "Length parameter.",
+            "default": 120,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              120
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "height": {
+            "type": "number",
+            "title": "Height",
+            "description": "Height parameter.",
+            "default": 40,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              40
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "thickness": {
+            "type": "number",
+            "title": "Thickness",
+            "description": "Thickness parameter.",
+            "default": 3,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              3
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "notchCount": {
+            "type": "integer",
+            "title": "Notch count",
+            "description": "Notch count parameter.",
+            "default": 0,
+            "x-printspec-control": "integer",
+            "x-printspec-unit": "count",
+            "x-printspec-step": 1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              0
+            ],
+            "minimum": 0,
+            "maximum": 12
+          },
+          "notchWidth": {
+            "type": "number",
+            "title": "Notch width",
+            "description": "Notch width parameter.",
+            "default": 3,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              3
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "notchDepth": {
+            "type": "number",
+            "title": "Notch depth",
+            "description": "Notch depth parameter.",
+            "default": 10,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              10
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "endTab": {
+            "type": "boolean",
+            "title": "End tabs",
+            "description": "Add small end tabs.",
+            "default": false,
+            "x-printspec-control": "checkbox",
+            "x-printspec-priority": "advanced"
+          }
+        },
+        "additionalProperties": false,
+        "x-printspec-ui": {
+          "order": [
+            "length",
+            "height",
+            "thickness",
+            "notchCount",
+            "notchWidth",
+            "notchDepth",
+            "endTab"
+          ],
+          "groups": [
+            {
+              "id": "parameters",
+              "title": "Parameters",
+              "fields": [
+                "length",
+                "height",
+                "thickness",
+                "notchCount",
+                "notchWidth",
+                "notchDepth",
+                "endTab"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "additionalProperties": false
+  },
   "drill-guide.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://schemas.invisra.ai/printspec/0.1.0/drill-guide.schema.json",
@@ -1848,6 +2014,15 @@ export const bundledSchemas = {
       },
       {
         "$ref": "simple-lid.schema.json"
+      },
+      {
+        "$ref": "wall-mount-bracket.schema.json"
+      },
+      {
+        "$ref": "drawer-divider.schema.json"
+      },
+      {
+        "$ref": "project-enclosure-tray.schema.json"
       }
     ],
     "$id": "https://schemas.invisra.ai/printspec/0.1.0/part-family.schema.json",
@@ -1926,6 +2101,198 @@ export const bundledSchemas = {
     "additionalProperties": false,
     "title": "Printspec",
     "description": "Printspec schema for printspec documents."
+  },
+  "project-enclosure-tray.schema.json": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://schemas.invisra.ai/printspec/0.1.0/project-enclosure-tray.schema.json",
+    "type": "object",
+    "title": "Project enclosure tray",
+    "description": "Open tray for low-voltage electronics and project organization.",
+    "required": [
+      "type",
+      "label",
+      "parameters"
+    ],
+    "properties": {
+      "type": {
+        "const": "project_enclosure_tray",
+        "title": "Part type",
+        "description": "Stable printspec part family identifier."
+      },
+      "label": {
+        "type": "string",
+        "minLength": 1,
+        "title": "Label",
+        "description": "Human-readable name."
+      },
+      "description": {
+        "type": "string"
+      },
+      "parameters": {
+        "type": "object",
+        "title": "Project enclosure tray parameters",
+        "description": "Open tray for low-voltage electronics and project organization.",
+        "required": [
+          "outerWidth",
+          "outerDepth",
+          "wallHeight",
+          "wallThickness",
+          "floorThickness"
+        ],
+        "properties": {
+          "outerWidth": {
+            "type": "number",
+            "title": "Outer width",
+            "description": "Outer width parameter.",
+            "default": 80,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              80
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "outerDepth": {
+            "type": "number",
+            "title": "Outer depth",
+            "description": "Outer depth parameter.",
+            "default": 50,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              50
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "wallHeight": {
+            "type": "number",
+            "title": "Wall height",
+            "description": "Wall height parameter.",
+            "default": 15,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              15
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "wallThickness": {
+            "type": "number",
+            "title": "Wall thickness",
+            "description": "Wall thickness parameter.",
+            "default": 3,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              3
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "floorThickness": {
+            "type": "number",
+            "title": "Floor thickness",
+            "description": "Floor thickness parameter.",
+            "default": 3,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              3
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "cornerRadius": {
+            "type": "number",
+            "title": "Corner radius",
+            "description": "Corner radius parameter.",
+            "default": 4,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              4
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "mountHoleDiameter": {
+            "type": "number",
+            "title": "Mount hole diameter",
+            "description": "Mount hole diameter parameter.",
+            "default": 3,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              3
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "mountHoleInset": {
+            "type": "number",
+            "title": "Mount hole inset",
+            "description": "Mount hole inset parameter.",
+            "default": 8,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              8
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          }
+        },
+        "additionalProperties": false,
+        "x-printspec-ui": {
+          "order": [
+            "outerWidth",
+            "outerDepth",
+            "wallHeight",
+            "wallThickness",
+            "floorThickness",
+            "cornerRadius",
+            "mountHoleDiameter",
+            "mountHoleInset"
+          ],
+          "groups": [
+            {
+              "id": "parameters",
+              "title": "Parameters",
+              "fields": [
+                "outerWidth",
+                "outerDepth",
+                "wallHeight",
+                "wallThickness",
+                "floorThickness",
+                "cornerRadius",
+                "mountHoleDiameter",
+                "mountHoleInset"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "additionalProperties": false
   },
   "project.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -3035,6 +3402,182 @@ export const bundledSchemas = {
     "additionalProperties": false,
     "title": "Spacer Block",
     "description": "Rectangular spacer block with optional holes, slots, and edge finishing."
+  },
+  "wall-mount-bracket.schema.json": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://schemas.invisra.ai/printspec/0.1.0/wall-mount-bracket.schema.json",
+    "type": "object",
+    "title": "Wall mount bracket",
+    "description": "Simple flat wall bracket with a light-duty shelf/tab.",
+    "required": [
+      "type",
+      "label",
+      "parameters"
+    ],
+    "properties": {
+      "type": {
+        "const": "wall_mount_bracket",
+        "title": "Part type",
+        "description": "Stable printspec part family identifier."
+      },
+      "label": {
+        "type": "string",
+        "minLength": 1,
+        "title": "Label",
+        "description": "Human-readable name."
+      },
+      "description": {
+        "type": "string"
+      },
+      "parameters": {
+        "type": "object",
+        "title": "Wall mount bracket parameters",
+        "description": "Simple flat wall bracket with a light-duty shelf/tab.",
+        "required": [
+          "width",
+          "height",
+          "thickness",
+          "tabDepth",
+          "screwHoleDiameter",
+          "screwHoleSpacing"
+        ],
+        "properties": {
+          "width": {
+            "type": "number",
+            "title": "Width",
+            "description": "Width parameter.",
+            "default": 40,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              40
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "height": {
+            "type": "number",
+            "title": "Height",
+            "description": "Height parameter.",
+            "default": 60,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              60
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "thickness": {
+            "type": "number",
+            "title": "Thickness",
+            "description": "Thickness parameter.",
+            "default": 4,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              4
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "tabDepth": {
+            "type": "number",
+            "title": "Tab depth",
+            "description": "Tab depth parameter.",
+            "default": 20,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              20
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "screwHoleDiameter": {
+            "type": "number",
+            "title": "Screw hole diameter",
+            "description": "Screw hole diameter parameter.",
+            "default": 4,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              4
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "screwHoleSpacing": {
+            "type": "number",
+            "title": "Screw hole spacing",
+            "description": "Screw hole spacing parameter.",
+            "default": 36,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              36
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "cornerRadius": {
+            "type": "number",
+            "title": "Corner radius",
+            "description": "Corner radius parameter.",
+            "default": 3,
+            "x-printspec-control": "number",
+            "x-printspec-unit": "mm",
+            "x-printspec-step": 0.1,
+            "x-printspec-priority": "primary",
+            "examples": [
+              3
+            ],
+            "minimum": 0,
+            "maximum": 10000
+          }
+        },
+        "additionalProperties": false,
+        "x-printspec-ui": {
+          "order": [
+            "width",
+            "height",
+            "thickness",
+            "tabDepth",
+            "screwHoleDiameter",
+            "screwHoleSpacing",
+            "cornerRadius"
+          ],
+          "groups": [
+            {
+              "id": "parameters",
+              "title": "Parameters",
+              "fields": [
+                "width",
+                "height",
+                "thickness",
+                "tabDepth",
+                "screwHoleDiameter",
+                "screwHoleSpacing",
+                "cornerRadius"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "additionalProperties": false
   }
 } as const;
 
@@ -3043,15 +3586,18 @@ export const bundledSchemaFiles = [
   "cable-comb.schema.json",
   "common.schema.json",
   "composable-part.schema.json",
+  "drawer-divider.schema.json",
   "drill-guide.schema.json",
   "electronics-standoff.schema.json",
   "l-bracket.schema.json",
   "part-family.schema.json",
   "printspec.schema.json",
+  "project-enclosure-tray.schema.json",
   "project.schema.json",
   "round-spacer.schema.json",
   "rounded-rectangular-plate.schema.json",
   "simple-box.schema.json",
   "simple-lid.schema.json",
-  "spacer-block.schema.json"
+  "spacer-block.schema.json",
+  "wall-mount-bracket.schema.json"
 ] as const;

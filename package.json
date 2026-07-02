@@ -25,5 +25,8 @@
     "smoke:browser-import-graph": "node scripts/smoke-browser-import-graph.mjs",
     "build:schema-validator": "node scripts/build-schema-validator.mjs",
     "build:schema-site": "npm run sync:schemas && npm run build:schema-validator"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
   }
 }
