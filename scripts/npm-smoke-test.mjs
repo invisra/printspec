@@ -38,10 +38,18 @@ try {
   run('npm', ['install', '--offline', '--no-save', tarball], {cwd: smokeDir});
   rmSync(tarball, {force: true});
 
+  const specSource = `const spec = {\n  printspecVersion: "0.1.0",\n  units: "mm",\n  part: {\n    type: "round_spacer",\n    label: "Smoke test spacer",\n    parameters: {\n      outerDiameter: 12,\n      innerDiameter: 4,\n      height: 8\n    }\n  }\n};`;
+
   run('node', ['--input-type=module', '-'], {
     cwd: smokeDir,
-    input: `import { validatePrintSpec } from "@invisra/printspec";\n\nconst spec = {\n  printspecVersion: "0.1.0",\n  units: "mm",\n  part: {\n    type: "round_spacer",\n    label: "Smoke test spacer",\n    parameters: {\n      outerDiameter: 12,\n      innerDiameter: 4,\n      height: 8\n    }\n  }\n};\n\nconst result = validatePrintSpec(spec);\nif (!result.valid) {\n  console.error(result);\n  process.exit(1);\n}\nconsole.log("NPM package validation smoke test passed");\n`,
+    input: `import { validatePrintSpec } from "@invisra/printspec";\n\n${specSource}\n\nconst result = validatePrintSpec(spec);\nif (!result.valid) {\n  console.error(result);\n  process.exit(1);\n}\nconsole.log("NPM package root import validation smoke test passed");\n`,
   });
+
+  run('node', ['--input-type=module', '-'], {
+    cwd: smokeDir,
+    input: `import { validatePrintSpec, createBundle } from "@invisra/printspec/browser";\n\n${specSource}\n\nconst result = validatePrintSpec(spec);\nif (!result.valid) {\n  console.error(result);\n  process.exit(1);\n}\nconst bundle = createBundle(spec);\nif (!bundle.supported) {\n  console.error(bundle);\n  process.exit(1);\n}\nconsole.log("NPM package browser import validation and bundle smoke test passed");\n`,
+  });
+
   run('npx', ['printspec', '--version'], {cwd: smokeDir});
 } finally {
   rmSync(smokeDir, {recursive: true, force: true});
