@@ -3,7 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {validatePrintSpec, generateOpenScad, createBundle} from '../../packages/typescript/dist/browser.js';
+import {
+  validatePrintSpec,
+  generateOpenScad,
+  createBundle,
+  getPartFamilyFormMetadata,
+  listPartFamilies,
+} from '../../packages/typescript/dist/browser.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const distBrowser = path.join(root, 'packages/typescript/dist/browser.js');
@@ -26,6 +32,11 @@ test('browser entrypoint validates, generates OpenSCAD, and creates bundles', ()
   const bundle = createBundle(spec);
   assert.equal(bundle.supported, true, bundle.message);
   assert.ok(bundle.files.some((file) => file.path === 'printspec.json'));
+  const metadata = getPartFamilyFormMetadata('round_spacer');
+  assert.equal(metadata.partType, 'round_spacer');
+  assert.ok(metadata.fields.some((field) => field.name === 'outerDiameter'));
+  const families = listPartFamilies();
+  assert.ok(families.some((family) => family.type === 'round_spacer'));
 });
 
 test('compiled browser entrypoint has no Node builtin imports', () => {
