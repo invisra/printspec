@@ -5,6 +5,7 @@ function listPartFamilies(){return partEntries().map(({type,schemaFilename,schem
 function getPartFamilyFormMetadata(partType){const e=partEntries().find(x=>x.type===partType);if(!e)throw new Error('Unsupported printspec part family: '+partType);return {partType,title:e.schema.title??partType,description:e.schema.description,fields:Object.keys(e.schema.properties.parameters.properties??{}).map(name=>({name,required:(e.schema.properties.parameters.required??[]).includes(name)})),groups:[]};}
 function validatePrintSpec(spec){const errors=[];const add=(p,m)=>errors.push(p? p+' '+m:m);if(!spec||typeof spec!=='object')add('','must be an object');if(spec?.printspecVersion!=='0.1.0')add('printspecVersion','must be 0.1.0');if(spec?.units!=='mm')add('units','must be mm');const part=spec?.part;if(!part||typeof part!=='object')add('part','is required');else{const entry=partEntries().find(e=>e.type===part.type);if(!entry)add('part.type','must be a supported part family');if(typeof part.label!=='string')add('part.label','must be a string');const params=part.parameters??{};for(const req of entry?.schema?.properties?.parameters?.required??[])if(params[req]===undefined)add('part.parameters.'+req,'is required');if(part.type==='rounded_rectangular_plate'&&params.cornerRadius>Math.min(params.length,params.width)/2)add('part.parameters.cornerRadius','exceeds half of min(length,width)');if(part.type==='round_spacer'&&params.innerDiameter!=null&&params.innerDiameter>=params.outerDiameter)add('part.parameters.innerDiameter','must be less than outerDiameter');if(part.type==='electronics_standoff'){if(params.holeDiameter>=params.outerDiameter)add('part.parameters.holeDiameter','must be less than outerDiameter');if((params.baseDiameter==null)!==(params.baseHeight==null))add('part.parameters.baseDiameter','and baseHeight must be provided together');if(params.baseDiameter!=null&&params.baseDiameter<params.outerDiameter)add('part.parameters.baseDiameter','must be greater than or equal to outerDiameter');}}return {valid:errors.length===0,errors};}
 
+const PRINTSPEC_VALIDATOR_BUNDLE_MARKER = 'printspec-validator-real-browser-api-v1';
 const examples = {
     round_spacer: { label: 'Round spacer', spec: { printspecVersion: '0.1.0', units: 'mm', part: { type: 'round_spacer', label: 'Round spacer', parameters: { outerDiameter: 12, innerDiameter: 4, height: 8 } } } },
     spacer_block: { label: 'Spacer block', spec: { printspecVersion: '0.1.0', units: 'mm', part: { type: 'spacer_block', label: 'Spacer block', parameters: { length: 40, width: 20, height: 8, holes: [{ x: -10, y: 0, diameter: 3, depth: 'through' }] } } } },
@@ -23,6 +24,7 @@ const $ = (id) => {
         throw new Error(`Missing element #${id}`);
     return element;
 };
+document.documentElement.dataset.validatorBundle = PRINTSPEC_VALIDATOR_BUNDLE_MARKER;
 const input = $('jsonInput');
 const exampleSelect = $('exampleSelect');
 const resultPanel = $('resultPanel');
