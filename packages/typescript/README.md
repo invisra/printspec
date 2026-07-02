@@ -2,7 +2,7 @@
 
 TypeScript package for printspec JSON Schemas, offline validation, BOM helpers, browser form metadata helpers, CLI commands, deterministic bundle export, and starter OpenSCAD/CadQuery source generation.
 
-**Status: npm package v0.1.1 / schema v0.1.0 experimental.** Version 0.1.1 is a packaging-only patch that includes built `dist/` artifacts; schemas and `printspecVersion` remain 0.1.0.
+**Status: npm package v0.2.0 / schema v0.1.0 experimental.** Version 0.2.0 adds browser-safe visual preview APIs; schemas and `printspecVersion` remain 0.1.0.
 
 ## Installation
 
@@ -39,6 +39,24 @@ const generated = generateOpenScad(spec);
 if (generated.supported) console.log(generated.code);
 ```
 
+## Browser preview usage
+
+The preview API is renderer-neutral, browser-safe, and intended for approximate visual UI previews only. It does not execute CAD code or generate authoritative manufacturing meshes; exact STL/STEP/3MF output should stay in the external worker/OpenSCAD/CadQuery pipeline.
+
+```js
+import { generatePreviewScene } from "@invisra/printspec/preview";
+import { createThreePreviewObject } from "@invisra/printspec/three";
+import * as THREE from "three";
+
+const preview = generatePreviewScene(spec);
+if (preview.supported) {
+  const object = createThreePreviewObject(preview.scene, THREE);
+  scene.add(object);
+}
+```
+
+Three.js is an optional peer dependency and is not imported by `@invisra/printspec/browser`.
+
 ## CLI usage
 
 ```sh
@@ -63,7 +81,7 @@ writeBundleToDirectory(bundle, "bundle", { overwrite: true });
 
 ## Package exports and bundled schemas
 
-The package exports the main ESM API from `@invisra/printspec` and package schema files through `@invisra/printspec/schemas/*`. Published npm packages must include built TypeScript artifacts under `dist/` (`dist/index.js`, `dist/index.d.ts`, and `dist/cli.js`) and schema files under `schemas/`.
+The package exports the main ESM API from `@invisra/printspec`, browser-safe APIs from `@invisra/printspec/browser` and `@invisra/printspec/preview`, the optional Three.js adapter from `@invisra/printspec/three`, and package schema files through `@invisra/printspec/schemas/*`. Published npm packages must include built TypeScript artifacts under `dist/` (`dist/index.js`, `dist/index.d.ts`, and `dist/cli.js`) and schema files under `schemas/`.
 
 Validation resolves bundled schemas offline. It does not fetch hosted schema URLs during normal validation.
 

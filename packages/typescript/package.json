@@ -1,6 +1,6 @@
 {
   "name": "@invisra/printspec",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "JSON schemas, validators, BOM helpers, CLI commands, and starter generators for practical parametric 3D-printable parts.",
   "license": "Apache-2.0",
   "author": "Invisra",
@@ -39,7 +39,15 @@
       "import": "./dist/browser.js"
     },
     "./schemas/*": "./schemas/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./preview": {
+      "types": "./dist/preview/index.d.ts",
+      "import": "./dist/preview/index.js"
+    },
+    "./three": {
+      "types": "./dist/three.d.ts",
+      "import": "./dist/three.js"
+    }
   },
   "files": [
     "dist",
@@ -63,5 +71,13 @@
   },
   "bin": {
     "printspec": "dist/cli.js"
+  },
+  "peerDependencies": {
+    "three": ">=0.160.0"
+  },
+  "peerDependenciesMeta": {
+    "three": {
+      "optional": true
+    }
   }
 }
