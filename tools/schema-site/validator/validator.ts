@@ -35,15 +35,22 @@ function pretty(value: unknown): string { return JSON.stringify(value, null, 2);
 function asRecord(value: unknown): Record<string, unknown> { return value && typeof value === 'object' ? value as Record<string, unknown> : {}; }
 function renderMessages(messages: string[], kind: 'error' | 'warning' = 'error') {
   errorList.innerHTML = '';
-  for (const message of messages) {
+  const visible = messages.slice(0, 12);
+  for (const message of visible) {
     const item = document.createElement('li');
     item.className = kind;
     item.textContent = message;
     errorList.append(item);
   }
+  if (messages.length > visible.length) {
+    const item = document.createElement('li');
+    item.className = kind;
+    item.textContent = `${messages.length - visible.length} more issue(s) hidden. Fix the listed issues and validate again for the next set.`;
+    errorList.append(item);
+  }
 }
 function setResult(kind: 'neutral' | 'success' | 'error', html: string) {
-  resultPanel.className = `panel result ${kind}`;
+  resultPanel.className = `invisra-container invisra-card result ${kind}`;
   resultContent.innerHTML = html;
 }
 function escapeHtml(value: unknown): string {
@@ -75,7 +82,11 @@ function validateCurrent() {
     renderMessages(warnings.length ? warnings : ['No warnings.'], warnings.length ? 'warning' : 'warning');
   } else {
     setResult('error', `<p class="status">Invalid PrintSpec JSON</p><p>${result.errors.length} validation issue(s) found.</p>`);
-    renderMessages(result.errors.length ? result.errors : ['Validation failed.']);
+    const sortedErrors = [...result.errors].sort((a, b) => {
+      const priority = (message: string) => /required|additional/i.test(message) ? 0 : 1;
+      return priority(a) - priority(b);
+    });
+    renderMessages(sortedErrors.length ? sortedErrors : ['Validation failed.']);
   }
 }
 

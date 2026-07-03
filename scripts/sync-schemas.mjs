@@ -56,8 +56,78 @@ function analyticsSnippet() {
   return `\n<script>\n  window.va =\n    window.va ||\n    function () {\n      (window.vaq = window.vaq || []).push(arguments);\n    };\n</script>\n<script defer src="/_vercel/insights/script.js"></script>`;
 }
 
+const BRAND_BASE = 'https://assets.invisra.ai/brand/v1';
+
+function brandHead() {
+  return `  <link rel="stylesheet" href="${BRAND_BASE}/brand.min.css">\n  <link rel="icon" href="${BRAND_BASE}/favicon.svg" type="image/svg+xml">\n  <link rel="icon" href="${BRAND_BASE}/favicon-32.png" sizes="32x32" type="image/png">\n  <link rel="icon" href="${BRAND_BASE}/favicon-16.png" sizes="16x16" type="image/png">\n  <link rel="apple-touch-icon" href="${BRAND_BASE}/apple-touch-icon.png">\n  <meta name="theme-color" content="#020617">`;
+}
+
+function themeScript() {
+  return `<script>
+  (function () {
+    var key = 'invisra-theme';
+    var saved = localStorage.getItem(key);
+    var theme = saved === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+
+    function updateThemeButton() {
+      var button = document.querySelector('[data-theme-toggle]');
+      if (button) {
+        button.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        button.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme');
+      }
+    }
+
+    window.toggleInvisraTheme = function () {
+      var current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+      var next = current === 'dark' ? 'light' : 'dark';
+      theme = next;
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem(key, next);
+      updateThemeButton();
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateThemeButton);
+    } else {
+      updateThemeButton();
+    }
+  })();
+</script>`;
+}
+
+function logoMarkup() {
+  return `<a class="invisra-logo-lockup" href="/${PROJECT_NAME}/" aria-label="printspec home">
+      <svg class="invisra-logo-mark invisra-logo-mark-sm" viewBox="0 0 160 380" role="img" aria-hidden="true" focusable="false"><path fill="currentColor" d="M80 6 8 222 38 256 80 356 122 256 152 222Z M80 118 112 214 80 248 48 214Z"></path></svg>
+      <span class="invisra-logo-wordmark">Invisra</span>
+      <span class="invisra-text-muted">/ printspec</span>
+    </a>`;
+}
+
+function siteHeader() {
+  return `<header class="invisra-header">
+  <div class="invisra-container site-nav">
+    ${logoMarkup()}
+    <nav class="site-links" aria-label="Site navigation">
+      <a href="/${PROJECT_NAME}/">Home</a>
+      <a href="/${PROJECT_NAME}/validator/">Validator</a>
+      <a href="/${PROJECT_NAME}/${SCHEMA_VERSION}/">Schemas</a>
+      <a href="https://partpilot.invisra.ai">PartPilot</a>
+      <a href="https://invisra.ai">Invisra</a>
+      <button type="button" class="invisra-button invisra-button-ghost theme-toggle" data-theme-toggle onclick="window.toggleInvisraTheme()" aria-label="Switch theme">Light</button>
+    </nav>
+  </div>
+</header>`;
+}
+
+function localStyles() {
+  return `<style>
+    :root{color-scheme:dark light}body.invisra-theme{margin:0;background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.22),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.18),transparent 30rem),var(--invisra-bg,#020617);color:var(--invisra-text,#e5eefb);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.site-nav{display:flex;align-items:center;justify-content:space-between;gap:1rem}.site-links{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}.site-links a{color:var(--invisra-muted,#94a3b8);text-decoration:none;font-weight:700}.site-links a:hover{color:var(--invisra-text,#e5eefb)}.schema-grid,.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}.hero-card{padding:clamp(1.5rem,4vw,3rem);margin:2rem 0}.hero-actions,.link-row{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center}.schema{padding:1rem}.schema code,.invisra-code{overflow-wrap:anywhere}.muted{color:var(--invisra-muted,#94a3b8)}footer{padding:2rem 0;color:var(--invisra-muted,#94a3b8)}pre.invisra-code{white-space:pre-wrap;padding:1rem;border-radius:1rem}.theme-toggle{padding:.45rem .8rem}@media(max-width:760px){.site-nav{align-items:flex-start;flex-direction:column}.site-links{gap:.6rem}}
+  </style>`;
+}
+
 function page(title, body) {
-  return `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>${escapeHtml(title)}</title>\n  <style>body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.5;max-width:960px;margin:0 auto;padding:2rem;color:#172033}a{color:#2454d6}code{background:#f2f4f8;padding:.1rem .25rem;border-radius:.25rem}.muted{color:#5f6b7a}.schema{border-top:1px solid #d9dee7;padding:1rem 0}footer{margin-top:3rem;font-size:.9rem;color:#5f6b7a}</style>${analyticsSnippet()}\n</head>\n<body>\n${body}\n</body>\n</html>\n`;
+  return `<!doctype html>\n<html lang="en" data-theme="dark">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>${escapeHtml(title)}</title>\n${brandHead()}\n  ${localStyles()}${analyticsSnippet()}\n</head>\n<body class="invisra-theme">\n${themeScript()}\n${siteHeader()}\n${body}\n</body>\n</html>\n`;
 }
 
 function validateSchemaIdVersion(file, schema) {
@@ -123,13 +193,73 @@ const schemaManifest = {
 };
 writeJson(path.join(publicVersionPath, 'manifest.json'), schemaManifest);
 
-writeFileSync(path.join(root, 'public/index.html'), page('Invisra Schemas', `<main>\n  <h1>Invisra Schemas</h1>\n  <p>Public JSON Schemas for Invisra open-source projects.</p>\n  <ul>\n    <li><a href="/${PROJECT_NAME}/">${PROJECT_NAME} schemas</a></li>
-    <li><a href="/${PROJECT_NAME}/validator/">Open the in-browser PrintSpec Validator</a></li>\n    <li><a href="https://invisra.ai">Invisra website</a></li>\n  </ul>\n</main>\n<footer>Schemas are provided for public reference. Validators should resolve bundled schemas offline where possible.</footer>`));
+writeFileSync(path.join(root, 'public/index.html'), page('Invisra schemas | printspec', `<main class="invisra-shell">
+  <section class="invisra-container invisra-card hero-card">
+    <span class="invisra-badge">Developer schemas</span>
+    <h1>Invisra Schemas</h1>
+    <p class="invisra-text-muted lede">Public JSON Schemas for Invisra open-source projects, including printspec.</p>
+    <div class="hero-actions">
+      <a class="invisra-button invisra-button-primary" href="/${PROJECT_NAME}/">Open printspec schemas</a>
+      <a class="invisra-button invisra-button-secondary" href="/${PROJECT_NAME}/validator/">Open validator</a>
+    </div>
+  </section>
+  <section class="invisra-container card-grid" aria-label="Schema links">
+    <article class="invisra-card"><h2>printspec</h2><p class="invisra-text-muted">JSON Schemas for practical parametric 3D-printable parts.</p><a href="/${PROJECT_NAME}/">View project</a></article>
+    <article class="invisra-card"><h2>Validator</h2><p class="invisra-text-muted">Browser-only validation with bundled offline schemas.</p><a href="/${PROJECT_NAME}/validator/">Validate JSON</a></article>
+    <article class="invisra-card"><h2>Invisra</h2><p class="invisra-text-muted">Open-source tooling and products for practical fabrication workflows.</p><a href="https://invisra.ai">Visit Invisra</a></article>
+  </section>
+</main>
+<footer class="invisra-container">Schemas are provided for public reference. Validators should resolve bundled schemas offline where possible.</footer>`));
 
-writeFileSync(path.join(publicProjectPath, 'index.html'), page(`${PROJECT_NAME} Schemas`, `<main>\n  <h1>${PROJECT_NAME} Schemas</h1>\n  <p>${PROJECT_DESCRIPTION}</p>\n  <p>Schemas include browser-editor metadata where available so tools can build parameter forms from bundled schemas.</p>\n  <h2>Versions</h2>\n  <ul>\n${versions.map((version) => `    <li><a href="/${PROJECT_NAME}/${version}/">${version}</a></li>`).join('\n')}\n  </ul>\n  <p><a href="/${PROJECT_NAME}/validator/">Open the in-browser PrintSpec Validator</a></p>
-  <p><a href="/${PROJECT_NAME}/manifest.json">Project manifest</a></p>\n  <p><a href="${PROJECT_REPO_URL}">GitHub repository</a></p>\n</main>`));
+writeFileSync(path.join(publicProjectPath, 'index.html'), page('printspec schemas | Invisra', `<main class="invisra-shell">
+  <section class="invisra-container invisra-card hero-card">
+    <span class="invisra-badge">Open format</span>
+    <h1>printspec</h1>
+    <p class="invisra-text-muted lede">A practical JSON format for parametric 3D-printable parts.</p>
+    <p>Schemas include browser-editor metadata where available so tools can build parameter forms from bundled schemas.</p>
+    <div class="hero-actions"><a class="invisra-button invisra-button-primary" href="/${PROJECT_NAME}/validator/">Open validator</a><a class="invisra-button invisra-button-secondary" href="/${PROJECT_NAME}/${SCHEMA_VERSION}/">View schemas</a></div>
+  </section>
+  <section class="invisra-container card-grid">
+    <article class="invisra-card"><h2>Versions</h2><ul>
+${versions.map((version) => `      <li><a href="/${PROJECT_NAME}/${version}/">${version}</a></li>`).join('\n')}
+    </ul></article>
+    <article class="invisra-card"><h2>Usage example</h2><pre class="invisra-code"><code>{
+  "printspecVersion": "${SCHEMA_VERSION}",
+  "units": "mm",
+  "part": { "type": "round_spacer" }
+}</code></pre></article>
+    <article class="invisra-card"><h2>References</h2><p class="link-row"><a href="/${PROJECT_NAME}/manifest.json">Project manifest</a><a href="${PROJECT_REPO_URL}">GitHub repository</a><a href="https://partpilot.invisra.ai">PartPilot</a></p></article>
+  </section>
+</main>`));
 
-writeFileSync(path.join(publicVersionPath, 'index.html'), page(`${PROJECT_NAME} ${SCHEMA_VERSION} Schemas`, `<main>\n  <h1>${PROJECT_NAME} ${SCHEMA_VERSION} Schemas</h1>\n  <p>Versioned JSON Schemas for ${PROJECT_NAME} ${SCHEMA_VERSION}.</p>\n  <p><a href="/${PROJECT_NAME}/">Back to ${PROJECT_NAME}</a> · <a href="/${PROJECT_NAME}/validator/">Open the in-browser PrintSpec Validator</a> · <a href="/${PROJECT_NAME}/${SCHEMA_VERSION}/manifest.json">Version manifest</a></p>\n  <h2>Schema files</h2>\n${schemaManifest.schemas.map((schema) => `  <section class="schema">\n    <h3><a href="${escapeHtml(schema.filename)}">${escapeHtml(schema.filename)}</a></h3>\n    ${schema.title ? `<p><strong>${escapeHtml(schema.title)}</strong></p>` : ''}\n    ${schema.description ? `<p>${escapeHtml(schema.description)}</p>` : ''}\n    ${schema.id ? `<p class="muted"><code>${escapeHtml(schema.id)}</code></p>` : ''}\n  </section>`).join('\n')}\n</main>`));
+writeFileSync(path.join(publicVersionPath, 'index.html'), page(`printspec ${SCHEMA_VERSION} schemas | Invisra`, `<main class="invisra-shell">
+  <section class="invisra-container invisra-card hero-card">
+    <span class="invisra-badge">Version ${SCHEMA_VERSION}</span>
+    <h1>printspec ${SCHEMA_VERSION} schemas</h1>
+    <p class="invisra-text-muted">Versioned JSON Schemas for printspec ${SCHEMA_VERSION}.</p>
+    <p class="link-row"><a class="invisra-button invisra-button-secondary" href="/${PROJECT_NAME}/">Back to printspec</a><a class="invisra-button invisra-button-primary" href="/${PROJECT_NAME}/validator/">Open validator</a><a class="invisra-button invisra-button-ghost" href="/${PROJECT_NAME}/${SCHEMA_VERSION}/manifest.json">Version manifest</a></p>
+  </section>
+  <section class="invisra-container">
+    <h2>Schema files</h2>
+    <div class="schema-grid">
+${schemaManifest.schemas.map((schema) => `      <article class="invisra-card schema">
+        <h3><a href="${escapeHtml(schema.filename)}">${escapeHtml(schema.filename)}</a></h3>
+        ${schema.title ? `<p><strong>${escapeHtml(schema.title)}</strong></p>` : ''}
+        ${schema.description ? `<p class="invisra-text-muted">${escapeHtml(schema.description)}</p>` : ''}
+        ${schema.id ? `<p class="muted"><code class="invisra-code">${escapeHtml(schema.id)}</code></p>` : ''}
+      </article>`).join('\n')}
+    </div>
+  </section>
+</main>`));
+
+writeFileSync(path.join(root, 'public/404.html'), page('Signal lost | Invisra', `<main class="invisra-shell">
+  <section class="invisra-container invisra-card hero-card">
+    <span class="invisra-badge">404</span>
+    <h1>Signal lost.</h1>
+    <p class="invisra-text-muted lede">The schema page or asset you requested does not exist, moved, or was never generated.</p>
+    <div class="hero-actions"><a class="invisra-button invisra-button-primary" href="/${PROJECT_NAME}/">Open printspec home</a><a class="invisra-button invisra-button-secondary" href="/${PROJECT_NAME}/validator/">Open validator</a></div>
+  </section>
+</main>`));
 
 console.log(`Synced ${files.length} schema files`);
 console.log(`Public destination: ${PUBLIC_SCHEMA_DIR}`);

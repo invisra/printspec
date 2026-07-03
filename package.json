@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "npm run build:schema-site && npm --workspace @invisra/printspec run build",
-    "test": "npm run build:schema-site && npm run test:ts && npm run smoke:browser-import-graph && node tests/schema-validator.test.mjs",
+    "test": "npm run build:schema-site && npm run test:ts && npm run smoke:browser-import-graph && node tests/schema-site.test.mjs && node tests/schema-validator.test.mjs",
     "test:ts": "npm --workspace @invisra/printspec test",
     "test:python": "npm run sync:schemas && pytest tests/python tests/schema",
     "test:schema": "npm run sync:schemas && python -m pytest tests/schema",

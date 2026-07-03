@@ -31,6 +31,16 @@ test('schema validator static files are built without Node built-ins', () => {
   assert.match(bundle, /Invalid PrintSpec JSON/);
 });
 
+test('schema validator HTML includes Invisra static branding', () => {
+  const html = readFileSync(htmlPath, 'utf8');
+  assert.match(html, /https:\/\/assets\.invisra\.ai\/brand\/v1\/brand\.min\.css/);
+  assert.match(html, /https:\/\/assets\.invisra\.ai\/brand\/v1\/favicon\.svg/);
+  assert.match(html, /<html lang="en" data-theme="dark">/);
+  assert.match(html, /Invisra/);
+  assert.match(html, /printspec validator/);
+  assert.match(html, /<script type="module" src="\.\/validator\.js"><\/script>/);
+});
+
 test('validator examples validate through browser-safe API', async () => {
   const {validatePrintSpec, listPartFamilies, getPartFamilyFormMetadata} = await import('../packages/typescript/dist/browser.js');
   assert.ok(listPartFamilies().some((family) => family.type === 'round_spacer'));
