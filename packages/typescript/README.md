@@ -2,7 +2,7 @@
 
 TypeScript package for printspec JSON Schemas, offline validation, BOM helpers, browser form metadata helpers, CLI commands, deterministic bundle export, and starter OpenSCAD/CadQuery source generation.
 
-**Status: npm package v0.2.0 / schema v0.1.0 experimental.** Version 0.2.0 adds browser-safe visual preview APIs; schemas and `printspecVersion` remain 0.1.0.
+**Status: npm package v0.2.1 / schema v0.1.0 experimental.** Version 0.2.1 adds browser-safe visual preview APIs; schemas and `printspecVersion` remain 0.1.0.
 
 ## Installation
 
@@ -91,11 +91,11 @@ Hosted schemas at `https://schemas.invisra.ai/printspec/0.1.0/` are public refer
 
 ## Safety note
 
-Generated OpenSCAD and CadQuery source is a starter artifact for review. This package does not export STL/STEP/3MF files and does not run CAD runtimes, slicers, supplier APIs, or purchasing automation. Do not use generated designs without appropriate engineering review.
+Browser previews are approximate visual previews: they are dimensionally faithful to major features, but generated OpenSCAD/CadQuery remains the source of manufacturing geometry. Generated OpenSCAD and CadQuery source is a starter artifact for review. This package does not export STL/STEP/3MF files and does not run CAD runtimes, slicers, supplier APIs, or purchasing automation. Do not use generated designs without appropriate engineering review.
 
 ## Supported part families
 
-printspec 0.2.0 includes these practical, low-risk alpha part families. Generated OpenSCAD/CadQuery source should be reviewed before manufacturing, and preview geometry is visual/non-authoritative.
+printspec 0.2.1 includes these practical, low-risk alpha part families. Generated OpenSCAD/CadQuery source should be reviewed before manufacturing, and preview geometry is visual/non-authoritative.
 
 - `round_spacer` — cylindrical spacer with optional center hole; key parameters: outerDiameter, innerDiameter, height.
 - `spacer_block` — rectangular spacer block with optional holes; key parameters: length, width, height, holes.

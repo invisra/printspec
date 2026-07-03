@@ -4,24 +4,98 @@ import path from 'node:path';
 import test from 'node:test';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
+const read = (rel) => JSON.parse(fs.readFileSync(path.join(root, rel), 'utf8'));
 
-const specs = {
-  round_spacer: {printspecVersion:'0.1.0', units:'mm', part:{type:'round_spacer', label:'Round spacer', parameters:{outerDiameter:12, innerDiameter:4, height:8}}},
-  spacer_block: {printspecVersion:'0.1.0', units:'mm', part:{type:'spacer_block', label:'Spacer block', parameters:{length:40, width:20, height:8, holes:[{x:-10,y:0,diameter:3,depth:'through'}]}}},
-  electronics_standoff: {printspecVersion:'0.1.0', units:'mm', part:{type:'electronics_standoff', label:'Standoff', parameters:{outerDiameter:8, height:10, holeDiameter:3, baseDiameter:12, baseHeight:2}}},
-  rounded_rectangular_plate: {printspecVersion:'0.1.0', units:'mm', part:{type:'rounded_rectangular_plate', label:'Plate', parameters:{length:80, width:40, thickness:3, cornerRadius:4, holes:[{x:20,y:10,diameter:3,depth:'through'}]}}},
+const familyFiles = {
+  round_spacer: 'round-spacer.basic.json',
+  spacer_block: 'spacer-block.four-hole.json',
+  electronics_standoff: 'electronics-standoff.m3.json',
+  rounded_rectangular_plate: 'rounded-rectangular-plate.basic.json',
+  cable_comb: 'cable-comb.usb.json',
+  cable_clip: 'cable-clip.basic.json',
+  wall_mount_bracket: 'wall-mount-bracket.basic.json',
+  l_bracket: 'l-bracket.basic.json',
+  drawer_divider: 'drawer-divider.basic.json',
+  project_enclosure_tray: 'project-enclosure-tray.basic.json',
 };
 
-test('preview scene generator supports initial alpha families', async () => {
+const specs = Object.fromEntries(Object.entries(familyFiles).map(([type, file]) => [type, read(`examples/part-families/${file}`)]));
+const box = (scene, id) => scene.objects.find((object) => object.id === id && (object.kind === 'box' || object.kind === 'rounded_box'));
+const byKind = (scene, kind) => scene.objects.filter((object) => object.kind === kind);
+
+test('preview scene generator supports all PartPilot-visible families', async () => {
   const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
   for (const [partType, spec] of Object.entries(specs)) {
     const preview = generatePreviewScene(spec);
     assert.equal(preview.supported, true, partType);
+    assert.equal(preview.scene.units, 'mm', partType);
     assert.equal(preview.scene.partType, partType);
-    assert.ok(preview.scene.objects.some((object) => object.id === 'body' || object.id === 'base'), partType);
-    assert.ok(preview.scene.objects.some((object) => object.kind === 'hole_marker'), partType);
+    assert.equal(preview.scene.label, spec.part.label, partType);
+    assert.ok(preview.scene.objects.length > 0, partType);
     assert.ok(preview.scene.warnings.some((warning) => warning.includes('approximate')), partType);
   }
+});
+
+test('project enclosure tray preview exposes tray walls, cavity, bounds, and mount markers', async () => {
+  const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
+  const preview = generatePreviewScene(specs.project_enclosure_tray);
+  const {outerWidth, outerDepth, floorThickness, wallThickness, wallHeight} = specs.project_enclosure_tray.part.parameters;
+  assert.equal(preview.supported, true);
+  assert.deepEqual(preview.scene.boundsMm, {x: outerWidth, y: outerDepth, z: floorThickness + wallHeight});
+  for (const id of ['floor', 'front-wall', 'back-wall', 'left-wall', 'right-wall']) assert.ok(box(preview.scene, id), id);
+  assert.deepEqual(box(preview.scene, 'floor').dimensionsMm, {x: outerWidth, y: outerDepth, z: floorThickness});
+  assert.equal(box(preview.scene, 'front-wall').dimensionsMm.y, wallThickness);
+  assert.equal(box(preview.scene, 'left-wall').dimensionsMm.x, wallThickness);
+  assert.equal(byKind(preview.scene, 'hole_marker').filter((o) => o.id.startsWith('mount-hole-')).length, 4);
+  assert.ok(preview.scene.objects.some((o) => o.id === 'inner-cavity' && o.kind === 'slot_marker'));
+});
+
+test('cable comb preview shows one slot marker per generated slot', async () => {
+  const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
+  const preview = generatePreviewScene(specs.cable_comb);
+  assert.ok(box(preview.scene, 'body'));
+  const slots = byKind(preview.scene, 'slot_marker').filter((o) => o.id.startsWith('slot-'));
+  assert.equal(slots.length, specs.cable_comb.part.parameters.slotCount);
+  assert.ok(slots.every((slot) => slot.dimensionsMm.x === specs.cable_comb.part.parameters.slotWidth));
+  assert.ok(slots.every((slot) => slot.dimensionsMm.y === specs.cable_comb.part.parameters.slotDepth));
+});
+
+test('cable clip preview shows base, retaining jaws, cable channel, and opening gap', async () => {
+  const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
+  const preview = generatePreviewScene(specs.cable_clip);
+  assert.ok(box(preview.scene, 'base'));
+  for (const id of ['clip-top', 'clip-left-jaw', 'clip-right-jaw']) assert.ok(box(preview.scene, id), id);
+  const channel = preview.scene.objects.find((o) => o.id === 'cable-channel');
+  assert.equal(channel.kind, 'hole_marker');
+  assert.equal(channel.radiusMm * 2, specs.cable_clip.part.parameters.clipInnerDiameter);
+  const gap = preview.scene.objects.find((o) => o.id === 'opening-gap');
+  assert.equal(gap.kind, 'slot_marker');
+  assert.ok(gap.dimensionsMm.z > 0);
+});
+
+test('l bracket preview has two perpendicular legs with expected dimensions', async () => {
+  const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
+  const preview = generatePreviewScene(specs.l_bracket);
+  const p = specs.l_bracket.part.parameters;
+  assert.deepEqual(box(preview.scene, 'leg-a').dimensionsMm, {x: p.legLengthA, y: p.width, z: p.thickness});
+  assert.deepEqual(box(preview.scene, 'leg-b').dimensionsMm, {x: p.thickness, y: p.width, z: p.legLengthB});
+});
+
+test('wall mount bracket preview shows wall plate, projection, and screw hole markers', async () => {
+  const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
+  const preview = generatePreviewScene(specs.wall_mount_bracket);
+  const p = specs.wall_mount_bracket.part.parameters;
+  assert.deepEqual(box(preview.scene, 'wall-plate').dimensionsMm, {x: p.width, y: p.thickness, z: p.height});
+  assert.deepEqual(box(preview.scene, 'tab').dimensionsMm, {x: p.width, y: p.tabDepth, z: p.thickness});
+  assert.equal(byKind(preview.scene, 'hole_marker').filter((o) => o.id.startsWith('screw-hole-')).length, 2);
+});
+
+test('drawer divider preview shows divider panel and notch markers', async () => {
+  const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
+  const preview = generatePreviewScene(specs.drawer_divider);
+  const p = specs.drawer_divider.part.parameters;
+  assert.deepEqual(box(preview.scene, 'divider-panel').dimensionsMm, {x: p.length, y: p.thickness, z: p.height});
+  assert.equal(byKind(preview.scene, 'slot_marker').filter((o) => o.id.startsWith('notch-')).length, p.notchCount);
 });
 
 test('invalid specs fail cleanly', async () => {
@@ -56,7 +130,7 @@ test('three adapter works with consumer-provided Three-like namespace', async ()
   class Material { constructor(params){ this.params=params; } }
   class Mesh { constructor(geometry, material){ this.geometry=geometry; this.material=material; this.name=''; this.position={set:(x,y,z)=>{this.position.x=x; this.position.y=y; this.position.z=z;}}; this.rotation={x:0,y:0,z:0}; } }
   const THREE = {Group, BoxGeometry:Geometry, CylinderGeometry:Geometry, MeshBasicMaterial:Material, Mesh};
-  const preview = generatePreviewScene(specs.round_spacer);
+  const preview = generatePreviewScene(specs.project_enclosure_tray);
   const group = createThreePreviewObject(preview.scene, THREE);
   assert.equal(group.children.length, preview.scene.objects.length);
 });
