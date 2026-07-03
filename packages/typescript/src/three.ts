@@ -32,7 +32,7 @@ export function createThreePreviewObject(scene: PreviewScene, THREE: ThreeLike):
   group.name = scene.label;
   for (const object of scene.objects) {
     let geometry: any;
-    if (object.kind === 'box' || object.kind === 'rounded_box') geometry = new THREE.BoxGeometry(object.dimensionsMm.x, object.dimensionsMm.y, object.dimensionsMm.z);
+    if (object.kind === 'box' || object.kind === 'rounded_box' || object.kind === 'slot_marker') geometry = new THREE.BoxGeometry(object.dimensionsMm.x, object.dimensionsMm.y, object.dimensionsMm.z);
     else if (object.kind === 'cylinder' || object.kind === 'hole_marker') geometry = new THREE.CylinderGeometry(object.radiusMm, object.radiusMm, object.depthMm, 48);
     else continue;
     const mesh = new THREE.Mesh(geometry, materialFor(object, THREE));

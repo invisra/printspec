@@ -36,13 +36,18 @@ export type PreviewHoleMarker = PreviewObjectBase & {
   axis?: 'x' | 'y' | 'z';
 };
 
+export type PreviewSlotMarker = PreviewObjectBase & {
+  kind: 'slot_marker';
+  dimensionsMm: PreviewVector3;
+};
+
 export type PreviewAxisMarker = PreviewObjectBase & {
   kind: 'axis_marker';
   axis: 'x' | 'y' | 'z';
   lengthMm: number;
 };
 
-export type PreviewObject = PreviewBox | PreviewCylinder | PreviewRoundedBox | PreviewHoleMarker | PreviewAxisMarker;
+export type PreviewObject = PreviewBox | PreviewCylinder | PreviewRoundedBox | PreviewHoleMarker | PreviewSlotMarker | PreviewAxisMarker;
 
 export type PreviewScene = {
   units: PreviewUnit;
