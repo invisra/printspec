@@ -17,5 +17,7 @@ test('schema site pages include pinned Invisra brand assets and dark theme', () 
     assert.match(html, /data-theme="dark"/, page);
     assert.match(html, /Invisra/, page);
     assert.match(html, /printspec/, page);
+    assert.match(html, /html\[data-theme=light\] body\.invisra-theme/, page);
+    assert.match(html, /html\[data-theme=light\] \.invisra-shell,html\[data-theme=light\] footer/, page);
   }
 });

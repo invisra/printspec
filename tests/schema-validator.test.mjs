@@ -39,6 +39,9 @@ test('schema validator HTML includes Invisra static branding', () => {
   assert.match(html, /Invisra/);
   assert.match(html, /printspec validator/);
   assert.match(html, /<script type="module" src="\.\/validator\.js"><\/script>/);
+  const css = readFileSync('public/printspec/validator/style.css', 'utf8');
+  assert.match(css, /html\[data-theme=light\] body\.invisra-theme/);
+  assert.match(css, /html\[data-theme=light\] \.invisra-shell/);
 });
 
 test('validator examples validate through browser-safe API', async () => {
