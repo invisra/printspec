@@ -112,7 +112,7 @@ function siteHeader() {
       <a href="/${PROJECT_NAME}/">Home</a>
       <a href="/${PROJECT_NAME}/validator/">Validator</a>
       <a href="/${PROJECT_NAME}/${SCHEMA_VERSION}/">Schemas</a>
-      <a href="https://partpilot.invisra.ai">PartPilot</a>
+      <a href="https://cad.invisra.ai">PartPilot</a>
       <a href="https://invisra.ai">Invisra</a>
       <button type="button" class="invisra-button invisra-button-ghost theme-toggle" data-theme-toggle onclick="window.toggleInvisraTheme()" aria-label="Switch theme">Light</button>
     </nav>
@@ -228,7 +228,7 @@ ${versions.map((version) => `      <li><a href="/${PROJECT_NAME}/${version}/">${
   "units": "mm",
   "part": { "type": "round_spacer" }
 }</code></pre></article>
-    <article class="invisra-card"><h2>References</h2><p class="link-row"><a href="/${PROJECT_NAME}/manifest.json">Project manifest</a><a href="${PROJECT_REPO_URL}">GitHub repository</a><a href="https://partpilot.invisra.ai">PartPilot</a></p></article>
+    <article class="invisra-card"><h2>References</h2><p class="link-row"><a href="/${PROJECT_NAME}/manifest.json">Project manifest</a><a href="${PROJECT_REPO_URL}">GitHub repository</a><a href="https://cad.invisra.ai">PartPilot</a></p></article>
   </section>
 </main>`));
 
