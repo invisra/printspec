@@ -20,7 +20,7 @@ const familyFiles = {
 };
 
 const specs = Object.fromEntries(Object.entries(familyFiles).map(([type, file]) => [type, read(`examples/part-families/${file}`)]));
-const box = (scene, id) => scene.objects.find((object) => object.id === id && (object.kind === 'box' || object.kind === 'rounded_box'));
+const box = (scene, id) => scene.objects.find((object) => object.id === id && (object.kind === 'box' || object.kind === 'roundedBox'));
 const byKind = (scene, kind) => scene.objects.filter((object) => object.kind === kind);
 
 test('preview scene generator supports all PartPilot-visible families', async () => {
@@ -36,6 +36,18 @@ test('preview scene generator supports all PartPilot-visible families', async ()
   }
 });
 
+
+
+test('rounded rectangular plate preview uses roundedBox with expected radius', async () => {
+  const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
+  const preview = generatePreviewScene(specs.rounded_rectangular_plate);
+  const p = specs.rounded_rectangular_plate.part.parameters;
+  const body = preview.scene.objects.find((o) => o.id === 'body');
+  assert.equal(body.kind, 'roundedBox');
+  assert.deepEqual(body.dimensionsMm, {x: p.length, y: p.width, z: p.thickness});
+  assert.equal(body.radiusMm, p.cornerRadius);
+});
+
 test('project enclosure tray preview exposes tray walls, cavity, bounds, and mount markers', async () => {
   const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
   const preview = generatePreviewScene(specs.project_enclosure_tray);
@@ -43,6 +55,8 @@ test('project enclosure tray preview exposes tray walls, cavity, bounds, and mou
   assert.equal(preview.supported, true);
   assert.deepEqual(preview.scene.boundsMm, {x: outerWidth, y: outerDepth, z: floorThickness + wallHeight});
   for (const id of ['floor', 'front-wall', 'back-wall', 'left-wall', 'right-wall']) assert.ok(box(preview.scene, id), id);
+  assert.equal(box(preview.scene, 'floor').kind, 'roundedBox');
+  assert.equal(box(preview.scene, 'floor').radiusMm, specs.project_enclosure_tray.part.parameters.cornerRadius);
   assert.deepEqual(box(preview.scene, 'floor').dimensionsMm, {x: outerWidth, y: outerDepth, z: floorThickness});
   assert.equal(box(preview.scene, 'front-wall').dimensionsMm.y, wallThickness);
   assert.equal(box(preview.scene, 'left-wall').dimensionsMm.x, wallThickness);
@@ -53,7 +67,9 @@ test('project enclosure tray preview exposes tray walls, cavity, bounds, and mou
 test('cable comb preview shows one slot marker per generated slot', async () => {
   const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
   const preview = generatePreviewScene(specs.cable_comb);
-  assert.ok(box(preview.scene, 'body'));
+  const body = box(preview.scene, 'body');
+  assert.equal(body.kind, 'roundedBox');
+  assert.equal(body.radiusMm, specs.cable_comb.part.parameters.cornerRadius);
   const slots = byKind(preview.scene, 'slot_marker').filter((o) => o.id.startsWith('slot-'));
   assert.equal(slots.length, specs.cable_comb.part.parameters.slotCount);
   assert.ok(slots.every((slot) => slot.dimensionsMm.x === specs.cable_comb.part.parameters.slotWidth));
@@ -126,11 +142,23 @@ test('three adapter works with consumer-provided Three-like namespace', async ()
   const {generatePreviewScene} = await import('../../packages/typescript/dist/preview/index.js');
   const {createThreePreviewObject} = await import('../../packages/typescript/dist/three.js');
   class Group { constructor(){ this.children=[]; this.name=''; } add(child){ this.children.push(child); } }
-  class Geometry { constructor(...args){ this.args=args; } }
+  class Geometry { constructor(...args){ this.args=args; this.translated=[]; } translate(...args){ this.translated.push(args); } }
+  class Shape { constructor(){ this.commands=[]; } moveTo(...args){ this.commands.push(['moveTo', ...args]); } lineTo(...args){ this.commands.push(['lineTo', ...args]); } quadraticCurveTo(...args){ this.commands.push(['quadraticCurveTo', ...args]); } }
   class Material { constructor(params){ this.params=params; } }
   class Mesh { constructor(geometry, material){ this.geometry=geometry; this.material=material; this.name=''; this.position={set:(x,y,z)=>{this.position.x=x; this.position.y=y; this.position.z=z;}}; this.rotation={x:0,y:0,z:0}; } }
-  const THREE = {Group, BoxGeometry:Geometry, CylinderGeometry:Geometry, MeshBasicMaterial:Material, Mesh};
+  const THREE = {Group, BoxGeometry:Geometry, CylinderGeometry:Geometry, Shape, ExtrudeGeometry:Geometry, MeshBasicMaterial:Material, Mesh};
   const preview = generatePreviewScene(specs.project_enclosure_tray);
   const group = createThreePreviewObject(preview.scene, THREE);
   assert.equal(group.children.length, preview.scene.objects.length);
+  assert.equal(group.children.find((child) => child.name === 'floor').geometry.args[1].curveSegments, 12);
+});
+
+
+test('preview and browser entrypoints do not import Three.js', () => {
+  for (const rel of ['packages/typescript/dist/preview/index.js', 'packages/typescript/dist/preview/generate.js', 'packages/typescript/dist/preview/families.js', 'packages/typescript/dist/browser.js']) {
+    const source = fs.readFileSync(path.join(root, rel), 'utf8');
+    assert.doesNotMatch(source, /(?:from|import\() ['"]three['"]/);
+    assert.doesNotMatch(source, /from ['"]\.\.\/three\.js['"]/);
+    assert.doesNotMatch(source, /from ['"]\.\/three\.js['"]/);
+  }
 });
