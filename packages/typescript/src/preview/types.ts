@@ -17,7 +17,7 @@ export type PreviewBox = PreviewObjectBase & {
 };
 
 export type PreviewRoundedBox = PreviewObjectBase & {
-  kind: 'rounded_box';
+  kind: 'roundedBox';
   dimensionsMm: PreviewVector3;
   radiusMm: number;
 };

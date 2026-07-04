@@ -2,7 +2,7 @@
 
 TypeScript package for printspec JSON Schemas, offline validation, BOM helpers, browser form metadata helpers, CLI commands, deterministic bundle export, and starter OpenSCAD/CadQuery source generation.
 
-**Status: npm package v0.2.1 / schema v0.1.0 experimental.** Version 0.2.1 adds browser-safe visual preview APIs; schemas and `printspecVersion` remain 0.1.0.
+**Status: npm package v0.2.2 / schema v0.1.0 experimental.** Version 0.2.2 adds browser-safe visual preview APIs; schemas and `printspecVersion` remain 0.1.0.
 
 ## Installation
 
@@ -95,7 +95,7 @@ Browser previews are approximate visual previews: they are dimensionally faithfu
 
 ## Supported part families
 
-printspec 0.2.1 includes these practical, low-risk alpha part families. Generated OpenSCAD/CadQuery source should be reviewed before manufacturing, and preview geometry is visual/non-authoritative.
+printspec 0.2.2 includes these practical, low-risk alpha part families. Generated OpenSCAD/CadQuery source should be reviewed before manufacturing, and preview geometry is visual/non-authoritative.
 
 - `round_spacer` — cylindrical spacer with optional center hole; key parameters: outerDiameter, innerDiameter, height.
 - `spacer_block` — rectangular spacer block with optional holes; key parameters: length, width, height, holes.
