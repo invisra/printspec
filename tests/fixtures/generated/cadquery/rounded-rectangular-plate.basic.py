@@ -4,9 +4,21 @@ import cadquery as cq
 
 length = 80
 width = 50
-height = 3
-corner_radius = 5
+thickness = 3
+radius = 5
 
-part = cq.Workplane("XY").rounded_rect(length, width, corner_radius).extrude(height)
+radius = max(0.0, min(radius, length / 2.0, width / 2.0))
+
+if radius <= 0:
+    part = cq.Workplane("XY").box(length, width, thickness, centered=(True, True, False))
+else:
+    profile = (
+        cq.Workplane("XY")
+        .rect(length - 2 * radius, width)
+        .rect(length, width - 2 * radius)
+        .vertices()
+        .circle(radius)
+    )
+    part = profile.extrude(thickness)
 part = part.faces(">Z").workplane().pushPoints([(-25, -15)]).hole(3.2)
 part = part.faces(">Z").workplane().pushPoints([(25, 15)]).hole(3.2)
