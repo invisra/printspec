@@ -1,7 +1,7 @@
 from __future__ import annotations
 from .validate import SCHEMAS
 
-_GENERATOR_SUPPORTED = {'rounded_rectangular_plate','spacer_block','round_spacer','electronics_standoff'}
+_GENERATOR_SUPPORTED = {'rounded_rectangular_plate','spacer_block','round_spacer','electronics_standoff','cable_comb','cable_clip','wall_mount_bracket','l_bracket','drawer_divider','project_enclosure_tray'}
 
 def _part_family_entries():
     entries=[]

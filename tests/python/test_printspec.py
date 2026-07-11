@@ -42,6 +42,38 @@ def test_generator_snapshots_match_fixtures():
         s=read(Path(file))
         assert norm(generate_openscad(s)['code'])==norm((root/f'tests/fixtures/generated/openscad/{name}.scad').read_text())
         assert norm(generate_cadquery(s)['code'])==norm((root/f'tests/fixtures/generated/cadquery/{name}.py').read_text())
+def test_all_ten_core_families():
+    from printspec import create_bundle
+    files=['round-spacer.basic.json','spacer-block.four-hole.json','electronics-standoff.m3.json','rounded-rectangular-plate.basic.json','cable-comb.usb.json','cable-clip.basic.json','wall-mount-bracket.basic.json','l-bracket.basic.json','drawer-divider.basic.json','project-enclosure-tray.basic.json']
+    seen=set()
+    for file in files:
+        s=read(Path('examples/part-families/'+file)); part_type=s['part']['type']; seen.add(part_type)
+        assert validate_printspec(s)=={'valid':True,'errors':[]}, part_type
+        scad=generate_openscad(s); assert scad['supported'], (part_type, scad.get('message'))
+        cq=generate_cadquery(s); assert cq['supported'], (part_type, cq.get('message'))
+        assert 'part =' in cq['code'], part_type
+        bundle=create_bundle(s)
+        assert bundle['supported'], part_type
+        paths={f['path'] for f in bundle['files']}
+        for required in ('printspec.json','cad/model.scad','cad/model.py','README.md','bundle-manifest.json'):
+            assert required in paths, (part_type, required)
+    assert len(seen)==10
+
+def test_generator_supported_metadata_matches_actual_support():
+    by_type={}
+    for f in (root/'examples/part-families').glob('*.json'):
+        s=json.loads(f.read_text())
+        if s.get('part'): by_type[s['part']['type']]=s
+    families=list_part_families()
+    assert families
+    for family in families:
+        example=by_type.get(family['type'])
+        assert example, f"no example fixture for family {family['type']}"
+        scad_supported=generate_openscad(example)['supported']
+        cq_supported=generate_cadquery(example)['supported']
+        assert scad_supported==cq_supported, f"{family['type']}: openscad/cadquery support disagree"
+        assert family['generatorSupported']==scad_supported, f"{family['type']}: generatorSupported metadata ({family['generatorSupported']}) does not match actual generator support ({scad_supported})"
+
 def test_warning_behavior():
     s=read(Path('examples/part-families/round-spacer.basic.json')); s['part']['parameters']['fillet']={'radius':0.25}
     assert generate_cadquery(s)['warnings']==['fillet requested but not implemented']

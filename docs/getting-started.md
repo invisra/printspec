@@ -39,7 +39,7 @@ result = validate_printspec(spec)
 
 ## Generate starter CAD source
 
-Supported starter generator families are `rounded_rectangular_plate`, `spacer_block`, `round_spacer`, and `electronics_standoff`.
+Supported starter generator families are `rounded_rectangular_plate`, `spacer_block`, `round_spacer`, `electronics_standoff`, `cable_comb`, `cable_clip`, `wall_mount_bracket`, `l_bracket`, `drawer_divider`, and `project_enclosure_tray` (see [docs/generators.md](generators.md) for the full list and language parity notes).
 
 ```sh
 printspec to-openscad examples/part-families/round-spacer.basic.json --output round-spacer.scad

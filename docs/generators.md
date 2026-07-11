@@ -1,8 +1,10 @@
 # Generators
 
-The v0.1 generators produce source code only. They do not execute OpenSCAD, CadQuery, filesystem exports, subprocesses, or CAD runtimes in tests.
+The generators produce source code only. They do not execute OpenSCAD, CadQuery, filesystem exports, subprocesses, or CAD runtimes in tests.
 
-Supported part families are currently `rounded_rectangular_plate` and `spacer_block` for both OpenSCAD and CadQuery.
+Supported part families are `rounded_rectangular_plate`, `spacer_block`, `round_spacer`, `electronics_standoff`, `cable_comb`, `cable_clip`, `wall_mount_bracket`, `l_bracket`, `drawer_divider`, and `project_enclosure_tray` for both OpenSCAD and CadQuery, in both the TypeScript and Python packages. `drill_guide`, `simple_box`, `simple_lid`, and `composable_part` have schemas and examples but no generator support yet in either language.
+
+The TypeScript and Python generators are independent implementations and are expected to report the same `supported` result for every part family; `tests/python/test_generator_parity.py` runs both against every example under `examples/part-families/` and fails if they diverge.
 
 APIs:
 
@@ -44,7 +46,7 @@ printspec bom examples/projects/simple-enclosure-project.json --format markdown
 node packages/typescript/dist/cli.js validate examples/part-families/rounded-rectangular-plate.basic.json
 ```
 
-Generators currently emit source code only and do not require or execute OpenSCAD, CadQuery, FreeCAD, or any CAD runtime. Supported generator families are `rounded_rectangular_plate`, `spacer_block`, `round_spacer`, and `electronics_standoff`. Validation runs before generation. Valid but unsupported optional generator features, such as spacer chamfers or fillets, produce stable warnings rather than being silently ignored. BOM helpers format local spec hardware data only; printspec does not scrape suppliers or create carts. The v0.1.0 line is experimental and intended for review before manufacturing.
+Generators currently emit source code only and do not require or execute OpenSCAD, CadQuery, FreeCAD, or any CAD runtime. See the supported family list above; it is the same for both the TypeScript and Python packages. Validation runs before generation. Valid but unsupported optional generator features, such as spacer chamfers or fillets, produce stable warnings rather than being silently ignored. BOM helpers format local spec hardware data only; printspec does not scrape suppliers or create carts. The v0.1.0 line is experimental and intended for review before manufacturing.
 
 ## Browser/editor form metadata
 

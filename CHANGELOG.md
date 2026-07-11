@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+Fix:
+- Fix Python OpenSCAD/CadQuery generators to support `cable_comb`, `cable_clip`, `wall_mount_bracket`, `l_bracket`, `drawer_divider`, and `project_enclosure_tray`, matching existing TypeScript generator coverage. Previously these 6 of the 10 advertised alpha families silently returned "unsupported" from the Python package only.
+- Add a cross-language parity test (`tests/python/test_generator_parity.py`) that runs the Python generators and the built TypeScript CLI against every example and fails if generator support diverges between languages.
+- Fix stale generator-family documentation in `docs/generators.md`, `docs/getting-started.md`, `docs/roadmap.md`, `docs/part-families.md`, and `docs/validation.md`.
+
 ## 0.2.0
 
 Feature release:
