@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+Release tooling:
+- Fix the manual release workflow to validate the independent npm and schema/Python version tracks instead of requiring all package versions to be identical.
+- Use the committed npm lockfile during release verification and document the currently published npm `0.3.0` / schema and Python `0.2.0` versions.
+
 ## 0.3.0
 
 Schema version:
