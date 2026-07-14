@@ -2,8 +2,12 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to dry-run or release, for example 0.2.0'
+      npm_version:
+        description: 'npm package version to dry-run or release, for example 0.3.0'
+        required: true
+        default: '0.3.0'
+      schema_version:
+        description: 'Schema and Python package version, for example 0.2.0'
         required: true
         default: '0.2.0'
       dry_run:
@@ -14,35 +18,66 @@ on:
 jobs:
   release-checks:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: npm install
-      - name: Verify requested version matches package versions
+      - run: npm ci
+      - name: Verify requested versions match independent release tracks
         run: |
           node - <<'NODE'
           import { readFileSync } from 'node:fs';
-          const expected = process.env.INPUT_VERSION;
-          const root = JSON.parse(readFileSync('package.json', 'utf8')).version;
-          const ts = JSON.parse(readFileSync('packages/typescript/package.json', 'utf8')).version;
-          const pyMatch = readFileSync('packages/python/pyproject.toml', 'utf8').match(/^version = "([^"]+)"/m);
+
+          const expectedNpm = process.env.INPUT_NPM_VERSION;
+          const expectedSchema = process.env.INPUT_SCHEMA_VERSION;
+          const schema = JSON.parse(readFileSync('package.json', 'utf8')).version;
+          const npmPackage = JSON.parse(
+            readFileSync('packages/typescript/package.json', 'utf8'),
+          ).version;
+          const pyMatch = readFileSync(
+            'packages/python/pyproject.toml',
+            'utf8',
+          ).match(/^version = "([^"]+)"/m);
+
           if (!pyMatch) throw new Error('Could not find Python package version');
-          const versions = {root, typescript: ts, python: pyMatch[1]};
-          for (const [name, version] of Object.entries(versions)) {
-            if (version !== expected) throw new Error(`${name} version ${version} does not match workflow input ${expected}`);
+
+          const actual = {
+            npm: npmPackage,
+            schema,
+            python: pyMatch[1],
+          };
+          const expected = {
+            npm: expectedNpm,
+            schema: expectedSchema,
+            python: expectedSchema,
+          };
+
+          for (const [name, version] of Object.entries(actual)) {
+            if (version !== expected[name]) {
+              throw new Error(
+                `${name} version ${version} does not match requested ${expected[name]}`,
+              );
+            }
           }
-          console.log(`Version ${expected} verified across packages`);
+
+          console.log(
+            `Verified npm ${actual.npm}; schema and Python ${actual.schema}`,
+          );
           NODE
         env:
-          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_NPM_VERSION: ${{ inputs.npm_version }}
+          INPUT_SCHEMA_VERSION: ${{ inputs.schema_version }}
+      - run: npm run check:versions
       - run: npm run release:all
       - run: npm --workspace @invisra/printspec pack --dry-run
-      - run: echo "Release dry-run complete for ${{ inputs.version }}. Publishing remains disabled while dry_run=${{ inputs.dry_run }}."
+      - run: echo "Release dry-run complete for npm ${{ inputs.npm_version }} and schema/Python ${{ inputs.schema_version }}. Publishing remains disabled while dry_run=${{ inputs.dry_run }}."
 
   # Future npm trusted publishing can be added as a separate job guarded by:
   # if: ${{ inputs.dry_run == false }}
