@@ -1,0 +1,9 @@
+# Generated and vendored artifacts are validated by their dedicated build and smoke tests.
+public/
+packages/typescript/schemas/
+packages/typescript/src/generated/
+tests/fixtures/
+
+# Build and dependency output.
+**/dist/
+**/node_modules/
