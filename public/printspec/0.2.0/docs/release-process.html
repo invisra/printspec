@@ -70,7 +70,7 @@
     <p class="link-row"><a href="./">&larr; All docs</a><a href="https://github.com/invisra/printspec/blob/main/docs/release-process.md">View source on GitHub</a></p>
     <article class="invisra-card doc-body">
 <h1 id="release-process">Release process</h1>
-<p>printspec schema <code>v0.2.0</code> is experimental. Publishing is manual for now; this document is a checklist for preparing release candidates without pushing artifacts to npm or PyPI accidentally.</p>
+<p>printspec npm package <code>v0.3.0</code> and schema/Python <code>v0.2.0</code> are experimental. The release tracks are intentionally independent. Publishing is manual for now; this document is a checklist for preparing release candidates without pushing artifacts to npm or PyPI accidentally.</p>
 <h2 id="pre-release-checklist">Pre-release checklist</h2>
 <ol>
 <li>Sync schemas into package-local and hosted locations:<pre><code class="language-sh">npm run sync:schemas
@@ -95,7 +95,7 @@ npm run smoke:npm
 <li>Review package metadata in <code>packages/typescript/package.json</code> and <code>packages/python/pyproject.toml</code>.</li>
 </ol>
 <h2 id="version-policy">Version policy</h2>
-<p>Before <code>1.0</code>, breaking changes are possible. Once a versioned schema directory has been published, treat that directory as immutable. Package patch releases may advance independently from the schema version when schemas do not change. For example, npm package <code>@invisra/printspec@0.2.5</code> can remain on schema <code>$id</code> paths and <code>printspecVersion</code> <code>0.2.0</code> when the release only fixes package contents. For schema changes, publish a new versioned schema directory instead of rewriting an existing one.</p>
+<p>Before <code>1.0</code>, breaking changes are possible. The release workflow accepts separate npm and schema inputs; the Python package currently follows the schema version. Once a versioned schema directory has been published, treat that directory as immutable. Package patch releases may advance independently from the schema version when schemas do not change. For example, npm package <code>@invisra/printspec@0.2.5</code> can remain on schema <code>$id</code> paths and <code>printspecVersion</code> <code>0.2.0</code> when the release only fixes package contents. For schema changes, publish a new versioned schema directory instead of rewriting an existing one.</p>
 <h2 id="schema-immutability-warning">Schema immutability warning</h2>
 <p><code>v0.1.0</code> is released and immutable; <code>v0.2.0</code> is the current schema version. Once a version is released, do not casually mutate files under its <code>/printspec/&lt;version&gt;/</code> path. Versioned schema URLs are intended to be stable references. For schema changes, publish a new versioned path such as <code>/printspec/0.2.1/</code> or <code>/printspec/0.3.0/</code> -- older versioned directories (like <code>/printspec/0.1.0/</code>) stay published, not rewritten. Package patches may happen, but schema <code>$id</code> paths and hosted version directories need careful handling so existing consumers are not surprised.</p>
 <h2 id="npm-publishing-future-path">npm publishing future path</h2>
