@@ -27,11 +27,15 @@ const requiredFiles = [
   "package/schemas/project-enclosure-tray.schema.json",
 ];
 
-const result = spawnSync("npm", ["--workspace", "@invisra/printspec", "pack", "--json"], {
-  cwd: root,
-  encoding: "utf8",
-  shell: process.platform === "win32",
-});
+const result = spawnSync(
+  "npm",
+  ["--workspace", "@invisra/printspec", "pack", "--json"],
+  {
+    cwd: root,
+    encoding: "utf8",
+    shell: process.platform === "win32",
+  },
+);
 
 if (result.status !== 0) {
   if (result.stdout) process.stdout.write(result.stdout);
@@ -66,7 +70,9 @@ try {
     for (const file of [...paths].sort()) console.error(`- ${file}`);
     process.exitCode = 1;
   } else {
-    console.log("npm package contents check passed. Required files are present:");
+    console.log(
+      "npm package contents check passed. Required files are present:",
+    );
     for (const file of requiredFiles) console.log(`- ${file}`);
   }
 } finally {

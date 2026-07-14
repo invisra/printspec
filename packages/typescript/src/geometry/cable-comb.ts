@@ -7,10 +7,14 @@ export function resolveCableCombGeometry(q: Params) {
   const toothWidth = num(q.toothWidth, Math.max(1, slotSpacing - slotWidth));
   const slotDepth = num(q.slotDepth, 8);
   const thickness = num(q.baseThickness, num(q.thickness, 3));
-  const length = num(q.length, slotCount * slotWidth + (slotCount + 1) * toothWidth);
+  const length = num(
+    q.length,
+    slotCount * slotWidth + (slotCount + 1) * toothWidth,
+  );
   const width = num(q.width, slotDepth + toothWidth);
   const pitch = slotSpacing || slotWidth + toothWidth;
-  const occupied = slotCount > 1 ? (slotCount - 1) * pitch + slotWidth : slotWidth;
+  const occupied =
+    slotCount > 1 ? (slotCount - 1) * pitch + slotWidth : slotWidth;
   const startX = -occupied / 2 + slotWidth / 2;
   const slots = Array.from({ length: slotCount }, (_, i) => ({
     x: startX + i * pitch,

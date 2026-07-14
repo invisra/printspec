@@ -1,7 +1,12 @@
 import type { PrintSpec } from "./types.js";
 import type { ValidationResult } from "./types.js";
 import { normalizePrintSpec } from "./normalize.js";
-import { extractBom, bomToMarkdown, bomToCsv, bomToSupplierOrderList } from "./bom.js";
+import {
+  extractBom,
+  bomToMarkdown,
+  bomToCsv,
+  bomToSupplierOrderList,
+} from "./bom.js";
 
 export type BundleFile = { path: string; content: string; mediaType: string };
 export type BundleWarning = { path?: string; message: string };
@@ -38,7 +43,13 @@ const jsonMedia = "application/json";
 function j(spec: any, pretty: boolean) {
   return JSON.stringify(spec, null, pretty ? 2 : 0) + "\n";
 }
-function add(files: RoleFile[], path: string, content: string, mediaType: string, role: string) {
+function add(
+  files: RoleFile[],
+  path: string,
+  content: string,
+  mediaType: string,
+  role: string,
+) {
   files.push({ path, content, mediaType, role });
 }
 function warn(warnings: BundleWarning[], message: string, path?: string) {
@@ -49,7 +60,13 @@ function safePartId(id: string) {
 }
 function bomFiles(files: RoleFile[], base: string, bom: any[]) {
   if (!bom.length) return;
-  add(files, `${base}bom.md`, bomToMarkdown(bom) + "\n", "text/markdown", "bom-markdown");
+  add(
+    files,
+    `${base}bom.md`,
+    bomToMarkdown(bom) + "\n",
+    "text/markdown",
+    "bom-markdown",
+  );
   add(files, `${base}bom.csv`, bomToCsv(bom) + "\n", "text/csv", "bom-csv");
   add(
     files,
@@ -65,28 +82,66 @@ function cadForPart(
   base: string,
   files: RoleFile[],
   warnings: BundleWarning[],
-  opts: Required<Pick<BundleOptions, "includeOpenScad" | "includeCadQuery" | "includeBrepJs">>,
+  opts: Required<
+    Pick<BundleOptions, "includeOpenScad" | "includeCadQuery" | "includeBrepJs">
+  >,
 ) {
   if (opts.includeOpenScad) {
     const g = deps.generateOpenScad(spec);
     if (g.supported) {
-      add(files, `${base}cad/model.scad`, g.code, "text/plain", "openscad-source");
-      for (const m of g.warnings ?? []) warn(warnings, m, `${base}cad/model.scad`);
-    } else warn(warnings, g.message ?? "OpenSCAD generator unsupported", `${base}cad/model.scad`);
+      add(
+        files,
+        `${base}cad/model.scad`,
+        g.code,
+        "text/plain",
+        "openscad-source",
+      );
+      for (const m of g.warnings ?? [])
+        warn(warnings, m, `${base}cad/model.scad`);
+    } else
+      warn(
+        warnings,
+        g.message ?? "OpenSCAD generator unsupported",
+        `${base}cad/model.scad`,
+      );
   }
   if (opts.includeCadQuery) {
     const g = deps.generateCadQuery(spec);
     if (g.supported) {
-      add(files, `${base}cad/model.py`, g.code, "text/x-python", "cadquery-source");
-      for (const m of g.warnings ?? []) warn(warnings, m, `${base}cad/model.py`);
-    } else warn(warnings, g.message ?? "CadQuery generator unsupported", `${base}cad/model.py`);
+      add(
+        files,
+        `${base}cad/model.py`,
+        g.code,
+        "text/x-python",
+        "cadquery-source",
+      );
+      for (const m of g.warnings ?? [])
+        warn(warnings, m, `${base}cad/model.py`);
+    } else
+      warn(
+        warnings,
+        g.message ?? "CadQuery generator unsupported",
+        `${base}cad/model.py`,
+      );
   }
   if (opts.includeBrepJs) {
     const g = deps.generateBrepJs(spec);
     if (g.supported) {
-      add(files, `${base}cad/model.brep.ts`, g.code, "text/plain", "brepjs-source");
-      for (const m of g.warnings ?? []) warn(warnings, m, `${base}cad/model.brep.ts`);
-    } else warn(warnings, g.message ?? "brepjs generator unsupported", `${base}cad/model.brep.ts`);
+      add(
+        files,
+        `${base}cad/model.brep.ts`,
+        g.code,
+        "text/plain",
+        "brepjs-source",
+      );
+      for (const m of g.warnings ?? [])
+        warn(warnings, m, `${base}cad/model.brep.ts`);
+    } else
+      warn(
+        warnings,
+        g.message ?? "brepjs generator unsupported",
+        `${base}cad/model.brep.ts`,
+      );
   }
 }
 function readme(
@@ -107,7 +162,8 @@ function readme(
     lines.push(
       "## Parts",
       ...(spec.project?.parts ?? []).map(
-        (p: any) => `- ${p.id}: ${p.label ?? p.id} (quantity ${p.quantity ?? 1})`,
+        (p: any) =>
+          `- ${p.id}: ${p.label ?? p.id} (quantity ${p.quantity ?? 1})`,
       ),
       "",
     );
@@ -121,7 +177,9 @@ function readme(
   );
   lines.push(
     "## BOM",
-    bomCount ? `${bomCount} BOM item(s) included.` : "No hardware/BOM items were found.",
+    bomCount
+      ? `${bomCount} BOM item(s) included.`
+      : "No hardware/BOM items were found.",
     "",
   );
   lines.push(
@@ -149,7 +207,11 @@ function partcad(spec: any, files: RoleFile[]) {
   ];
   for (const f of cq) {
     const m = f.path.match(/^parts\/([^/]+)\//);
-    lines.push(`  - name: ${m?.[1] ?? "model"}`, "    type: cadquery", `    path: ${f.path}`);
+    lines.push(
+      `  - name: ${m?.[1] ?? "model"}`,
+      "    type: cadquery",
+      `    path: ${f.path}`,
+    );
   }
   if (!cq.length) lines.push("  []");
   return lines.join("\n") + "\n";
@@ -163,7 +225,11 @@ function manifest(
   const entries = files
     .map((f) => ({ path: f.path, mediaType: f.mediaType, role: f.role }))
     .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-  entries.push({ path: "bundle-manifest.json", mediaType: jsonMedia, role: "bundle-manifest" });
+  entries.push({
+    path: "bundle-manifest.json",
+    mediaType: jsonMedia,
+    role: "bundle-manifest",
+  });
   entries.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   return j(
     {
@@ -202,7 +268,13 @@ export function createBundleWithDeps(
   const files: RoleFile[] = [];
   const warnings: BundleWarning[] = [];
   const kind = spec.project ? "project" : "part";
-  add(files, "printspec.json", j(spec, opts.prettyJson), jsonMedia, "source-spec");
+  add(
+    files,
+    "printspec.json",
+    j(spec, opts.prettyJson),
+    jsonMedia,
+    "source-spec",
+  );
   if (kind === "part") {
     cadForPart(deps, spec, "", files, warnings, opts);
     if (opts.includeBom) bomFiles(files, "bom/", extractBom(spec));
@@ -228,10 +300,22 @@ export function createBundleWithDeps(
     }
     if (opts.includeBom) bomFiles(files, "bom/", extractBom(spec));
     if (opts.includePartCad)
-      add(files, "partcad.yaml", partcad(spec, files), "text/yaml", "partcad-stub");
+      add(
+        files,
+        "partcad.yaml",
+        partcad(spec, files),
+        "text/yaml",
+        "partcad-stub",
+      );
   }
   const bomCount = extractBom(spec).length;
-  add(files, "README.md", readme(kind, spec, files, warnings, bomCount), "text/markdown", "readme");
+  add(
+    files,
+    "README.md",
+    readme(kind, spec, files, warnings, bomCount),
+    "text/markdown",
+    "readme",
+  );
   add(
     files,
     "bundle-manifest.json",

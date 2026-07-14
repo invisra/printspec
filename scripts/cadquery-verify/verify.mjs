@@ -30,7 +30,14 @@
 // plain `python3` on PATH if that doesn't have `cadquery` importable.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -44,7 +51,10 @@ function fail(message) {
 }
 
 const distIndex = path.join(repoRoot, "packages/typescript/dist/index.js");
-if (!existsSync(distIndex)) fail(`Missing ${path.relative(repoRoot, distIndex)} -- run \`npm run build\` first.`);
+if (!existsSync(distIndex))
+  fail(
+    `Missing ${path.relative(repoRoot, distIndex)} -- run \`npm run build\` first.`,
+  );
 
 function hasCadquery(pythonBin) {
   try {
@@ -56,14 +66,19 @@ function hasCadquery(pythonBin) {
 }
 
 const repoVenvPython = path.join(repoRoot, ".venv/bin/python");
-const pythonBin = existsSync(repoVenvPython) && hasCadquery(repoVenvPython) ? repoVenvPython : "python3";
+const pythonBin =
+  existsSync(repoVenvPython) && hasCadquery(repoVenvPython)
+    ? repoVenvPython
+    : "python3";
 if (!hasCadquery(pythonBin))
   fail(
     `No Python with \`cadquery\` importable found (tried ${repoVenvPython} and \`python3\` on PATH). ` +
       `Install it once with: <python> -m pip install cadquery`,
   );
 
-const { generateCadQuery, validatePrintSpec } = await import(pathToFileURL(distIndex).href);
+const { generateCadQuery, validatePrintSpec } = await import(
+  pathToFileURL(distIndex).href
+);
 
 // Runs one spec through generateCadQuery() and a real cadquery subprocess,
 // returning { volume, valid, bbox, warnings, code }. Exported for ad hoc use
@@ -71,9 +86,11 @@ const { generateCadQuery, validatePrintSpec } = await import(pathToFileURL(distI
 // CLI loop below.
 export function runSpec(spec, options) {
   const validation = validatePrintSpec(spec);
-  if (!validation.valid) throw new Error(`Invalid spec: ${validation.errors.join("; ")}`);
+  if (!validation.valid)
+    throw new Error(`Invalid spec: ${validation.errors.join("; ")}`);
   const result = generateCadQuery(spec, options);
-  if (!result.supported) throw new Error(`generateCadQuery unsupported: ${result.message}`);
+  if (!result.supported)
+    throw new Error(`generateCadQuery unsupported: ${result.message}`);
   const tmpDir = mkdtempSync(path.join(tmpdir(), "printspec-cq-verify-"));
   try {
     const modPath = path.join(tmpDir, "part.py");
@@ -85,7 +102,10 @@ export function runSpec(spec, options) {
         "'bbox': [part.BoundingBox().xmin, part.BoundingBox().xmax, part.BoundingBox().ymin, " +
         "part.BoundingBox().ymax, part.BoundingBox().zmin, part.BoundingBox().zmax]}))\n",
     );
-    const out = execFileSync(pythonBin, [modPath], { encoding: "utf8", cwd: repoRoot });
+    const out = execFileSync(pythonBin, [modPath], {
+      encoding: "utf8",
+      cwd: repoRoot,
+    });
     const report = JSON.parse(out.trim().split("\n").pop());
     return { ...report, warnings: result.warnings, code: result.code };
   } finally {
@@ -119,7 +139,9 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     const validation = validatePrintSpec(spec);
     if (!validation.valid) {
       failures++;
-      console.error(`FAIL ${label}: invalid spec: ${validation.errors.join("; ")}`);
+      console.error(
+        `FAIL ${label}: invalid spec: ${validation.errors.join("; ")}`,
+      );
       continue;
     }
     const result = generateCadQuery(spec);
@@ -129,7 +151,9 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     try {
       const report = runSpec(spec);
       const ok = report.valid && report.volume > 0;
-      console.log(`${ok ? "PASS" : "FAIL"} ${label}: volume=${report.volume.toFixed(3)} mm^3, valid=${report.valid}`);
+      console.log(
+        `${ok ? "PASS" : "FAIL"} ${label}: volume=${report.volume.toFixed(3)} mm^3, valid=${report.valid}`,
+      );
       if (!ok) failures++;
     } catch (e) {
       failures++;
@@ -137,6 +161,8 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     }
   }
 
-  console.log(`\n${checked} CadQuery-supported example(s) checked, ${failures} failure(s).`);
+  console.log(
+    `\n${checked} CadQuery-supported example(s) checked, ${failures} failure(s).`,
+  );
   process.exit(failures === 0 ? 0 : 1);
 }

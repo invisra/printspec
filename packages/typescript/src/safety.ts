@@ -17,7 +17,9 @@ export const isPotentiallyUnsafeLabel = (text: string) =>
 export const hasDisallowedSupplierRole = isPotentiallyUnsafeLabel;
 export function validateSafeMetadata(spec: any) {
   const text =
-    JSON.stringify(spec.metadata ?? {}) + " " + (spec.part?.label ?? spec.project?.label ?? "");
+    JSON.stringify(spec.metadata ?? {}) +
+    " " +
+    (spec.part?.label ?? spec.project?.label ?? "");
   return {
     valid: !isPotentiallyUnsafeLabel(text),
     errors: isPotentiallyUnsafeLabel(text)

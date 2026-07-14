@@ -45,12 +45,21 @@ const generatorSupported = new Set([
   "project_enclosure_tray",
 ]);
 
-function partFamilyEntries(): Array<{ type: string; filename: string; schema: any }> {
+function partFamilyEntries(): Array<{
+  type: string;
+  filename: string;
+  schema: any;
+}> {
   return Object.entries(schemas)
-    .map(([filename, schema]) => ({ filename, schema, type: schema?.properties?.type?.const }))
+    .map(([filename, schema]) => ({
+      filename,
+      schema,
+      type: schema?.properties?.type?.const,
+    }))
     .filter(
       (entry): entry is { type: string; filename: string; schema: any } =>
-        typeof entry.type === "string" && !!entry.schema?.properties?.parameters,
+        typeof entry.type === "string" &&
+        !!entry.schema?.properties?.parameters,
     )
     .sort((a, b) => a.type.localeCompare(b.type));
 }
@@ -73,7 +82,9 @@ export function listPartFamilies(): PartFamilySummary[] {
 }
 
 export function getPartFamilyFormMetadata(partType: string): FormMetadata {
-  const entry = partFamilyEntries().find((candidate) => candidate.type === partType);
+  const entry = partFamilyEntries().find(
+    (candidate) => candidate.type === partType,
+  );
   if (!entry) throw new Error(`Unsupported printspec part family: ${partType}`);
   const parameters = entry.schema?.properties?.parameters;
   const properties = parameters?.properties ?? {};
@@ -90,9 +101,17 @@ export function getPartFamilyFormMetadata(partType: string): FormMetadata {
       ? metadata.groups.map((group: any) => ({
           id: String(group.id),
           title: String(group.title ?? group.id),
-          fields: (group.fields ?? []).filter((name: string) => known.has(name)),
+          fields: (group.fields ?? []).filter((name: string) =>
+            known.has(name),
+          ),
         }))
-      : [{ id: "parameters", title: parameters?.title ?? "Parameters", fields: ordered }];
+      : [
+          {
+            id: "parameters",
+            title: parameters?.title ?? "Parameters",
+            fields: ordered,
+          },
+        ];
   return {
     partType,
     title: entry.schema.title ?? partType,

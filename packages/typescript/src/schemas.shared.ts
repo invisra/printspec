@@ -4,7 +4,11 @@ import addFormats from "ajv-formats";
 const schemaBaseUri = "https://schemas.invisra.ai/printspec/0.2.0/";
 
 export function createAjvFromSchemas(schemas: Record<string, any>): Ajv2020 {
-  const ajv = new Ajv2020({ allErrors: true, strict: false, loadSchema: undefined });
+  const ajv = new Ajv2020({
+    allErrors: true,
+    strict: false,
+    loadSchema: undefined,
+  });
   addFormats(ajv);
   const registered = new Set<string>();
   for (const [filename, schema] of Object.entries(schemas)) {
@@ -45,7 +49,9 @@ export function formatAjvErrors(validate: any): string[] {
 // whose own `type: "project"` const belongs to a different field (the
 // top-level `project`, not `part`) and would otherwise misleadingly match a
 // `part.type` of "project".
-export function typeToSchemaFile(schemas: Record<string, any>): Map<string, string> {
+export function typeToSchemaFile(
+  schemas: Record<string, any>,
+): Map<string, string> {
   const map = new Map<string, string>();
   for (const [filename, schema] of Object.entries(schemas)) {
     if (filename === "project.schema.json") continue;

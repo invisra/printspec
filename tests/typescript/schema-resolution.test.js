@@ -43,13 +43,21 @@ test("all schemas are valid Draft 2020-12 schemas", () => {
   const ajv = createMetaAjv();
   for (const filename of schemaFiles) {
     const schema = read(`schemas/${filename}`);
-    assert.equal(ajv.validateSchema(schema), true, `${filename}: ${ajv.errorsText(ajv.errors)}`);
+    assert.equal(
+      ajv.validateSchema(schema),
+      true,
+      `${filename}: ${ajv.errorsText(ajv.errors)}`,
+    );
   }
 });
 
 test("schema-backed validation resolves nested refs offline from compiled package", () => {
-  const plate = read("examples/part-families/rounded-rectangular-plate.basic.json");
-  plate.part.parameters.holes = [{ x: 5, y: 5, diameter: 3.2, depth: "through" }];
+  const plate = read(
+    "examples/part-families/rounded-rectangular-plate.basic.json",
+  );
+  plate.part.parameters.holes = [
+    { x: 5, y: 5, diameter: 3.2, depth: "through" },
+  ];
   plate.hardware = [
     {
       id: "screw",
@@ -74,7 +82,9 @@ test("schema-backed validation resolves nested refs offline from compiled packag
 });
 
 test("cable clip requires at least one clip sizing field", () => {
-  const valid = validatePrintSpec(read("examples/part-families/cable-clip.basic.json"));
+  const valid = validatePrintSpec(
+    read("examples/part-families/cable-clip.basic.json"),
+  );
   assert.equal(valid.valid, true, valid.errors.join("; "));
 
   const invalid = validatePrintSpec(

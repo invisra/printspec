@@ -274,7 +274,11 @@ def _component_dimension_errors(component):
         path = dims["path"]
         if len(path) >= 2:
             p0, p1 = path[0], path[1]
-            if p0.get("x") != p1.get("x") or p0.get("y") != p1.get("y") or p0.get("z") == p1.get("z"):
+            if (
+                p0.get("x") != p1.get("x")
+                or p0.get("y") != p1.get("y")
+                or p0.get("z") == p1.get("z")
+            ):
                 e.append(
                     f"component {cid} (swept_profile) path's first two points must differ only in z "
                     f"(the first segment must run parallel to the Z axis, matching the profile's fixed orientation)"
@@ -395,8 +399,14 @@ def _thread_feature_errors(feature, components_by_id, features_by_id):
             if isinstance(depth, (int, float)):
                 depth_bound = depth
                 depth_label = f"target {target_id}'s hole depth"
-    if depth_bound is not None and isinstance(params.get("height"), (int, float)) and params["height"] > depth_bound:
-        e.append(f"feature {fid} (thread) height exceeds {depth_label} ({params['height']} > {depth_bound})")
+    if (
+        depth_bound is not None
+        and isinstance(params.get("height"), (int, float))
+        and params["height"] > depth_bound
+    ):
+        e.append(
+            f"feature {fid} (thread) height exceeds {depth_label} ({params['height']} > {depth_bound})"
+        )
     return e
 
 
@@ -501,7 +511,7 @@ def _clearance_constraint_errors(constraint, index, components_by_id):
         elif component.get("kind") in _NO_AABB_KINDS:
             e.append(
                 f"constraint {label} {side} references component {ref} "
-                f"(kind \"{component.get('kind')}\"), which has no well-defined bounding box "
+                f'(kind "{component.get("kind")}"), which has no well-defined bounding box '
                 f"to check a clearance against"
             )
 

@@ -6,7 +6,8 @@ import {
 
 type Example = { label: string; spec: unknown };
 
-const PRINTSPEC_VALIDATOR_BUNDLE_MARKER = "printspec-validator-real-browser-api-v1";
+const PRINTSPEC_VALIDATOR_BUNDLE_MARKER =
+  "printspec-validator-real-browser-api-v1";
 
 export const examples: Record<string, Example> = {
   round_spacer: {
@@ -193,7 +194,8 @@ const $ = <T extends HTMLElement>(id: string): T => {
   return element as T;
 };
 
-document.documentElement.dataset.validatorBundle = PRINTSPEC_VALIDATOR_BUNDLE_MARKER;
+document.documentElement.dataset.validatorBundle =
+  PRINTSPEC_VALIDATOR_BUNDLE_MARKER;
 
 const input = $<HTMLTextAreaElement>("jsonInput");
 const exampleSelect = $<HTMLSelectElement>("exampleSelect");
@@ -205,9 +207,14 @@ function pretty(value: unknown): string {
   return JSON.stringify(value, null, 2);
 }
 function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
 }
-function renderMessages(messages: string[], kind: "error" | "warning" = "error") {
+function renderMessages(
+  messages: string[],
+  kind: "error" | "warning" = "error",
+) {
   errorList.innerHTML = "";
   const visible = messages.slice(0, 12);
   for (const message of visible) {
@@ -242,7 +249,10 @@ function validateCurrent() {
     parsed = JSON.parse(input.value);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    setResult("error", `<p class="status">Invalid JSON</p><p>${escapeHtml(message)}</p>`);
+    setResult(
+      "error",
+      `<p class="status">Invalid JSON</p><p>${escapeHtml(message)}</p>`,
+    );
     renderMessages([`JSON parse error: ${message}`]);
     return;
   }
@@ -257,7 +267,9 @@ function validateCurrent() {
         ? families.find((candidate) => candidate.type === part.type)
         : undefined;
     const metadata =
-      typeof part.type === "string" ? getPartFamilyFormMetadata(part.type) : undefined;
+      typeof part.type === "string"
+        ? getPartFamilyFormMetadata(part.type)
+        : undefined;
     const warnings = [
       ...(family && !family.generatorSupported
         ? [`${part.type} is valid but not marked generator-supported.`]
@@ -278,7 +290,8 @@ function validateCurrent() {
       `<p class="status">Invalid PrintSpec JSON</p><p>${result.errors.length} validation issue(s) found.</p>`,
     );
     const sortedErrors = [...result.errors].sort((a, b) => {
-      const priority = (message: string) => (/required|additional/i.test(message) ? 0 : 1);
+      const priority = (message: string) =>
+        /required|additional/i.test(message) ? 0 : 1;
       return priority(a) - priority(b);
     });
     renderMessages(sortedErrors.length ? sortedErrors : ["Validation failed."]);
@@ -303,6 +316,7 @@ $("clearButton").addEventListener("click", () => {
   renderMessages([]);
 });
 input.addEventListener("keydown", (event) => {
-  if ((event.ctrlKey || event.metaKey) && event.key === "Enter") validateCurrent();
+  if ((event.ctrlKey || event.metaKey) && event.key === "Enter")
+    validateCurrent();
 });
 input.value = pretty(examples.round_spacer.spec);

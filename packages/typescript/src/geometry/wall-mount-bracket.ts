@@ -6,10 +6,20 @@ export function resolveWallMountBracketGeometry(q: Params) {
     tabDepth = num(q.tabDepth, 20);
   const screwHoleDiameter = num(q.screwHoleDiameter, 4),
     screwHoleSpacing = num(q.screwHoleSpacing, 36);
-  const screwHoles = [-screwHoleSpacing / 2, screwHoleSpacing / 2].map((dz) => ({
-    x: 0,
-    y: -thickness / 2,
-    z: height / 2 + dz,
-  }));
-  return { width, height, thickness, tabDepth, screwHoleDiameter, screwHoleSpacing, screwHoles };
+  const screwHoles = [-screwHoleSpacing / 2, screwHoleSpacing / 2].map(
+    (dz) => ({
+      x: 0,
+      y: -thickness / 2,
+      z: height / 2 + dz,
+    }),
+  );
+  return {
+    width,
+    height,
+    thickness,
+    tabDepth,
+    screwHoleDiameter,
+    screwHoleSpacing,
+    screwHoles,
+  };
 }

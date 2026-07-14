@@ -1,4 +1,8 @@
-import type { PreviewObject, PreviewRoundedBox, PreviewScene } from "./preview/types.js";
+import type {
+  PreviewObject,
+  PreviewRoundedBox,
+  PreviewScene,
+} from "./preview/types.js";
 
 export type ThreeLike = {
   Group: new () => any;
@@ -32,7 +36,10 @@ function orientCylinder(mesh: any, axis: "x" | "y" | "z" = "z"): void {
   if (axis === "z") mesh.rotation.x = Math.PI / 2;
 }
 
-function clampRoundedBoxRadius(size: { x: number; y: number }, radius: number): number {
+function clampRoundedBoxRadius(
+  size: { x: number; y: number },
+  radius: number,
+): number {
   return Math.max(0, Math.min(radius, Math.min(size.x, size.y) / 2));
 }
 
@@ -66,7 +73,11 @@ function roundedBoxGeometry(object: PreviewRoundedBox, THREE: ThreeLike): any {
 }
 
 function applyTransform(mesh: any, object: PreviewObject): void {
-  mesh.position.set(object.positionMm.x, object.positionMm.y, object.positionMm.z);
+  mesh.position.set(
+    object.positionMm.x,
+    object.positionMm.y,
+    object.positionMm.z,
+  );
   if (object.rotationDeg) {
     mesh.rotation.x += ((object.rotationDeg.x ?? 0) * Math.PI) / 180;
     mesh.rotation.y += ((object.rotationDeg.y ?? 0) * Math.PI) / 180;
@@ -74,7 +85,10 @@ function applyTransform(mesh: any, object: PreviewObject): void {
   }
 }
 
-export function createThreePreviewObject(scene: PreviewScene, THREE: ThreeLike): any {
+export function createThreePreviewObject(
+  scene: PreviewScene,
+  THREE: ThreeLike,
+): any {
   const group = new THREE.Group();
   group.name = scene.label;
   for (const object of scene.objects) {
@@ -85,9 +99,15 @@ export function createThreePreviewObject(scene: PreviewScene, THREE: ThreeLike):
         object.dimensionsMm.y,
         object.dimensionsMm.z,
       );
-    else if (object.kind === "roundedBox") geometry = roundedBoxGeometry(object, THREE);
+    else if (object.kind === "roundedBox")
+      geometry = roundedBoxGeometry(object, THREE);
     else if (object.kind === "cylinder" || object.kind === "hole_marker")
-      geometry = new THREE.CylinderGeometry(object.radiusMm, object.radiusMm, object.depthMm, 48);
+      geometry = new THREE.CylinderGeometry(
+        object.radiusMm,
+        object.radiusMm,
+        object.depthMm,
+        48,
+      );
     else continue;
     const mesh = new THREE.Mesh(geometry, materialFor(object, THREE));
     if (object.kind === "cylinder" || object.kind === "hole_marker")

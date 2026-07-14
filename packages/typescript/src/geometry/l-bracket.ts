@@ -10,5 +10,13 @@ export function resolveLBracketGeometry(q: Params) {
     aX: ((i + 1) * legLengthA) / (holesPerLeg + 1),
     bZ: ((i + 1) * legLengthB) / (holesPerLeg + 1),
   }));
-  return { legLengthA, legLengthB, width, thickness, holeDiameter, holesPerLeg, holes };
+  return {
+    legLengthA,
+    legLengthB,
+    width,
+    thickness,
+    holeDiameter,
+    holesPerLeg,
+    holes,
+  };
 }

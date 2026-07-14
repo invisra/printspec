@@ -6,13 +6,19 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+export const root = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 
 export const PROJECT_NAME = "printspec";
-export const PROJECT_DESCRIPTION = "JSON Schemas for practical parametric 3D-printable parts.";
+export const PROJECT_DESCRIPTION =
+  "JSON Schemas for practical parametric 3D-printable parts.";
 export const PROJECT_REPO_URL = "https://github.com/invisra/printspec";
 
-const packageJson = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
+const packageJson = JSON.parse(
+  readFileSync(path.join(root, "package.json"), "utf8"),
+);
 export const SCHEMA_VERSION = packageJson.version;
 
 export const PUBLIC_PROJECT_DIR = `public/${PROJECT_NAME}`;

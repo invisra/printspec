@@ -21,7 +21,8 @@ function str(value: unknown, fallback = ""): string {
 function arr(value: unknown): Record<string, unknown>[] {
   return Array.isArray(value)
     ? value.filter(
-        (v): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v),
+        (v): v is Record<string, unknown> =>
+          !!v && typeof v === "object" && !Array.isArray(v),
       )
     : [];
 }
@@ -29,17 +30,24 @@ function p(part: PartFamilySpec): Params {
   return part.parameters as Params;
 }
 
-function clampRoundedBoxRadius(size: { x: number; y: number }, radius: number): number {
+function clampRoundedBoxRadius(
+  size: { x: number; y: number },
+  radius: number,
+): number {
   return Math.max(0, Math.min(radius, Math.min(size.x, size.y) / 2));
 }
 
-function holeMarkers(holes: unknown, fallbackDepth: number): PreviewHoleMarker[] {
+function holeMarkers(
+  holes: unknown,
+  fallbackDepth: number,
+): PreviewHoleMarker[] {
   return arr(holes).map((h, i) => ({
     id: str(h.id, `hole-${i + 1}`),
     kind: "hole_marker",
     positionMm: { x: num(h.x), y: num(h.y), z: fallbackDepth / 2 },
     radiusMm: num(h.diameter) / 2,
-    depthMm: h.depth === "through" ? fallbackDepth : num(h.depth, fallbackDepth),
+    depthMm:
+      h.depth === "through" ? fallbackDepth : num(h.depth, fallbackDepth),
     axis: h.axis === "x" || h.axis === "y" || h.axis === "z" ? h.axis : "z",
     material: "hole",
   }));
@@ -104,7 +112,9 @@ export function buildSpacerBlockPreview(part: PartFamilySpec): PreviewScene {
     ...holeMarkers(q.holes, height),
   ]);
 }
-export function buildElectronicsStandoffPreview(part: PartFamilySpec): PreviewScene {
+export function buildElectronicsStandoffPreview(
+  part: PartFamilySpec,
+): PreviewScene {
   const q = p(part);
   const radius = num(q.outerDiameter) / 2,
     height = num(q.height),
@@ -139,9 +149,15 @@ export function buildElectronicsStandoffPreview(part: PartFamilySpec): PreviewSc
     axis: "z",
     material: "hole",
   });
-  return scene(part, { x: baseRadius * 2, y: baseRadius * 2, z: baseHeight + height }, objects);
+  return scene(
+    part,
+    { x: baseRadius * 2, y: baseRadius * 2, z: baseHeight + height },
+    objects,
+  );
 }
-export function buildRoundedRectangularPlatePreview(part: PartFamilySpec): PreviewScene {
+export function buildRoundedRectangularPlatePreview(
+  part: PartFamilySpec,
+): PreviewScene {
   const q = p(part);
   const length = num(q.length),
     width = num(q.width),
@@ -152,7 +168,10 @@ export function buildRoundedRectangularPlatePreview(part: PartFamilySpec): Previ
       kind: "roundedBox",
       positionMm: { x: 0, y: 0, z: thickness / 2 },
       dimensionsMm: { x: length, y: width, z: thickness },
-      radiusMm: clampRoundedBoxRadius({ x: length, y: width }, num(q.cornerRadius)),
+      radiusMm: clampRoundedBoxRadius(
+        { x: length, y: width },
+        num(q.cornerRadius),
+      ),
       material: "body",
     },
     ...holeMarkers(q.holes, thickness),
@@ -168,7 +187,10 @@ export function buildCableCombPreview(part: PartFamilySpec): PreviewScene {
       kind: "roundedBox",
       positionMm: { x: 0, y: 0, z: g.thickness / 2 },
       dimensionsMm: { x: g.length, y: g.width, z: g.thickness },
-      radiusMm: clampRoundedBoxRadius({ x: g.length, y: g.width }, num(q.cornerRadius)),
+      radiusMm: clampRoundedBoxRadius(
+        { x: g.length, y: g.width },
+        num(q.cornerRadius),
+      ),
       material: "body",
     },
   ];
@@ -213,7 +235,11 @@ export function buildCableClipPreview(part: PartFamilySpec): PreviewScene {
     {
       id: "clip-top",
       kind: "box",
-      positionMm: { x: 0, y: 0, z: z + g.outerDiameter / 2 - g.wallThickness / 2 },
+      positionMm: {
+        x: 0,
+        y: 0,
+        z: z + g.outerDiameter / 2 - g.wallThickness / 2,
+      },
       dimensionsMm: { x: g.outerDiameter, y: g.baseWidth, z: g.wallThickness },
       material: "body",
     },
@@ -228,7 +254,11 @@ export function buildCableClipPreview(part: PartFamilySpec): PreviewScene {
       id: "clip-right-jaw",
       kind: "box",
       positionMm: { x: g.outerDiameter / 2 - g.wallThickness / 2, y: 0, z },
-      dimensionsMm: { x: g.wallThickness, y: g.baseWidth, z: g.outerDiameter - g.openingWidth },
+      dimensionsMm: {
+        x: g.wallThickness,
+        y: g.baseWidth,
+        z: g.outerDiameter - g.openingWidth,
+      },
       material: "body",
     },
     {
@@ -248,7 +278,11 @@ export function buildCableClipPreview(part: PartFamilySpec): PreviewScene {
         y: 0,
         z: z - g.outerDiameter / 2 + g.openingWidth / 2,
       },
-      dimensionsMm: { x: g.wallThickness + 0.2, y: g.baseWidth + 0.2, z: g.openingWidth },
+      dimensionsMm: {
+        x: g.wallThickness + 0.2,
+        y: g.baseWidth + 0.2,
+        z: g.openingWidth,
+      },
       material: "hole",
     },
   ];
@@ -269,7 +303,9 @@ export function buildCableClipPreview(part: PartFamilySpec): PreviewScene {
     objects,
   );
 }
-export function buildWallMountBracketPreview(part: PartFamilySpec): PreviewScene {
+export function buildWallMountBracketPreview(
+  part: PartFamilySpec,
+): PreviewScene {
   const q = p(part);
   const g = resolveWallMountBracketGeometry(q);
   return scene(part, { x: g.width, y: g.tabDepth + g.thickness, z: g.height }, [
@@ -338,9 +374,12 @@ export function buildLBracketPreview(part: PartFamilySpec): PreviewScene {
         material: "hole",
       });
     }
-  return scene(part, { x: g.legLengthA, y: g.width, z: g.legLengthB }, objects, [
-    "Light-duty/non-structural bracket preview.",
-  ]);
+  return scene(
+    part,
+    { x: g.legLengthA, y: g.width, z: g.legLengthB },
+    objects,
+    ["Light-duty/non-structural bracket preview."],
+  );
 }
 export function buildDrawerDividerPreview(part: PartFamilySpec): PreviewScene {
   const q = p(part);
@@ -363,7 +402,10 @@ export function buildDrawerDividerPreview(part: PartFamilySpec): PreviewScene {
       material: "hole",
     });
   if (g.endTab)
-    for (const x of [-g.length / 2 - g.thickness / 2, g.length / 2 + g.thickness / 2])
+    for (const x of [
+      -g.length / 2 - g.thickness / 2,
+      g.length / 2 + g.thickness / 2,
+    ])
       objects.push({
         id: `end-tab-${x < 0 ? 1 : 2}`,
         kind: "box",
@@ -373,7 +415,9 @@ export function buildDrawerDividerPreview(part: PartFamilySpec): PreviewScene {
       });
   return scene(part, { x: g.length, y: g.thickness, z: g.height }, objects);
 }
-export function buildProjectEnclosureTrayPreview(part: PartFamilySpec): PreviewScene {
+export function buildProjectEnclosureTrayPreview(
+  part: PartFamilySpec,
+): PreviewScene {
   const q = p(part);
   const g = resolveProjectEnclosureTrayGeometry(q);
   const objects: PreviewScene["objects"] = [
@@ -382,7 +426,10 @@ export function buildProjectEnclosureTrayPreview(part: PartFamilySpec): PreviewS
       kind: "roundedBox",
       positionMm: { x: 0, y: 0, z: g.floorThickness / 2 },
       dimensionsMm: { x: g.outerWidth, y: g.outerDepth, z: g.floorThickness },
-      radiusMm: clampRoundedBoxRadius({ x: g.outerWidth, y: g.outerDepth }, num(q.cornerRadius)),
+      radiusMm: clampRoundedBoxRadius(
+        { x: g.outerWidth, y: g.outerDepth },
+        num(q.cornerRadius),
+      ),
       material: "body",
     },
     {
@@ -449,5 +496,9 @@ export function buildProjectEnclosureTrayPreview(part: PartFamilySpec): PreviewS
       material: "hole",
     });
   }
-  return scene(part, { x: g.outerWidth, y: g.outerDepth, z: g.totalHeight }, objects);
+  return scene(
+    part,
+    { x: g.outerWidth, y: g.outerDepth, z: g.totalHeight },
+    objects,
+  );
 }

@@ -1,7 +1,9 @@
 import type { BomItem, PrintSpec, HardwareItem } from "./types.js";
 function supplier(s?: string) {
   const x = (s ?? "").toLowerCase().replace(/\s+/g, "");
-  return ["mcmaster", "mcmaster-carr"].includes(x) ? "mcmaster" : (s ?? "").toLowerCase();
+  return ["mcmaster", "mcmaster-carr"].includes(x)
+    ? "mcmaster"
+    : (s ?? "").toLowerCase();
 }
 function norm(item: HardwareItem, mult = 1): BomItem {
   return {
@@ -26,7 +28,8 @@ function key(i: BomItem) {
 }
 function collect(spec: any, mult = 1, out: BomItem[] = []) {
   for (const h of spec.hardware ?? []) out.push(norm(h, mult));
-  if (spec.part) for (const h of spec.part.hardware ?? []) out.push(norm(h, mult));
+  if (spec.part)
+    for (const h of spec.part.hardware ?? []) out.push(norm(h, mult));
   if (spec.project) {
     for (const h of spec.project.hardware ?? []) out.push(norm(h, mult));
     for (const p of spec.project.parts ?? [])

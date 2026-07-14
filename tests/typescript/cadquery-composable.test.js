@@ -11,7 +11,10 @@
 // see docs/generators.md for the results.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validatePrintSpec, generateCadQuery } from "../../packages/typescript/dist/index.js";
+import {
+  validatePrintSpec,
+  generateCadQuery,
+} from "../../packages/typescript/dist/index.js";
 
 function spec(components, features, groups, constraints) {
   return {
@@ -29,13 +32,23 @@ function spec(components, features, groups, constraints) {
 }
 
 test("composable-part cadquery generator emits a plain Python module for a simple box", () => {
-  const s = spec([{ id: "a", kind: "box", operation: "add", dimensions: { length: 20, width: 20, height: 10 } }]);
+  const s = spec([
+    {
+      id: "a",
+      kind: "box",
+      operation: "add",
+      dimensions: { length: 20, width: 20, height: 10 },
+    },
+  ]);
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });
   const r = generateCadQuery(s);
   assert.equal(r.supported, true);
   assert.deepEqual(r.warnings, []);
   assert.match(r.code, /^import cadquery as cq/m);
-  assert.match(r.code, /comp_a_\d+ = cq\.Solid\.makeBox\(20, 20, 10\)\.translate\(\(-10, -10, 0\)\)/);
+  assert.match(
+    r.code,
+    /comp_a_\d+ = cq\.Solid\.makeBox\(20, 20, 10\)\.translate\(\(-10, -10, 0\)\)/,
+  );
   assert.match(r.code, /^part = part_0$/m);
   assert.doesNotMatch(r.code, /require\(|subprocess|os\.system|eval\(/);
 });
@@ -65,19 +78,38 @@ test("composable-part cadquery generator builds sphere as a FULL sphere, not the
   // Real-kernel testing found cq.Solid.makeSphere(radius) alone defaults to
   // a hemisphere (angleDegrees1=0, angleDegrees2=90); angleDegrees1=-90 is
   // required for a full sphere. Regression guard for that finding.
-  const s = spec([{ id: "a", kind: "sphere", operation: "add", dimensions: { diameter: 10 } }]);
+  const s = spec([
+    { id: "a", kind: "sphere", operation: "add", dimensions: { diameter: 10 } },
+  ]);
   const r = generateCadQuery(s);
   assert.match(r.code, /makeSphere\(5, angleDegrees1=-90, angleDegrees2=90\)/);
 });
 
 test("composable-part cadquery generator supports rib, wedge, and extruded_profile with curves", () => {
-  const ribSpec = spec([{ id: "a", kind: "rib", operation: "add", dimensions: { length: 20, thickness: 4, height: 10 } }]);
+  const ribSpec = spec([
+    {
+      id: "a",
+      kind: "rib",
+      operation: "add",
+      dimensions: { length: 20, thickness: 4, height: 10 },
+    },
+  ]);
   assert.deepEqual(validatePrintSpec(ribSpec), { valid: true, errors: [] });
   const ribResult = generateCadQuery(ribSpec);
   assert.equal(ribResult.supported, true);
-  assert.match(ribResult.code, /cq\.Solid\.extrudeLinear\(cq\.Wire\.assembleEdges/);
+  assert.match(
+    ribResult.code,
+    /cq\.Solid\.extrudeLinear\(cq\.Wire\.assembleEdges/,
+  );
 
-  const wedgeSpec = spec([{ id: "a", kind: "wedge", operation: "add", dimensions: { length: 20, width: 4, height: 10 } }]);
+  const wedgeSpec = spec([
+    {
+      id: "a",
+      kind: "wedge",
+      operation: "add",
+      dimensions: { length: 20, width: 4, height: 10 },
+    },
+  ]);
   assert.equal(generateCadQuery(wedgeSpec).supported, true);
 
   const profileSpec = spec([
@@ -90,7 +122,11 @@ test("composable-part cadquery generator supports rib, wedge, and extruded_profi
           { x: 0, y: 0 },
           { x: 10, y: 0 },
           { x: 10, y: 10, curve: { type: "arc", through: { x: 5, y: 15 } } },
-          { x: 0, y: 10, curve: { type: "spline", through: [{ x: -3, y: 5 }] } },
+          {
+            x: 0,
+            y: 10,
+            curve: { type: "spline", through: [{ x: -3, y: 5 }] },
+          },
         ],
         height: 5,
       },
@@ -111,7 +147,11 @@ test("composable-part cadquery generator supports revolved_profile, loft_profile
       operation: "add",
       dimensions: {
         points: [
-          { radius: 5, z: 0, curve: { type: "bezier", controlPoints: [{ radius: 8, z: 5 }] } },
+          {
+            radius: 5,
+            z: 0,
+            curve: { type: "bezier", controlPoints: [{ radius: 8, z: 5 }] },
+          },
           { radius: 10, z: 10 },
           { radius: 0, z: 10 },
           { radius: 0, z: 0 },
@@ -122,7 +162,10 @@ test("composable-part cadquery generator supports revolved_profile, loft_profile
   assert.deepEqual(validatePrintSpec(revolveSpec), { valid: true, errors: [] });
   const revolveResult = generateCadQuery(revolveSpec);
   assert.equal(revolveResult.supported, true);
-  assert.match(revolveResult.code, /cq\.Solid\.revolve\(cq\.Wire\.assembleEdges/);
+  assert.match(
+    revolveResult.code,
+    /cq\.Solid\.revolve\(cq\.Wire\.assembleEdges/,
+  );
   assert.match(revolveResult.code, /cq\.Edge\.makeBezier\(/);
 
   const loftSpec = spec([
@@ -132,8 +175,24 @@ test("composable-part cadquery generator supports revolved_profile, loft_profile
       operation: "add",
       dimensions: {
         profiles: [
-          { points: [{ x: -5, y: -5 }, { x: 5, y: -5 }, { x: 5, y: 5 }, { x: -5, y: 5 }], z: 0 },
-          { points: [{ x: -2, y: -2 }, { x: 2, y: -2 }, { x: 2, y: 2 }, { x: -2, y: 2 }], z: 10 },
+          {
+            points: [
+              { x: -5, y: -5 },
+              { x: 5, y: -5 },
+              { x: 5, y: 5 },
+              { x: -5, y: 5 },
+            ],
+            z: 0,
+          },
+          {
+            points: [
+              { x: -2, y: -2 },
+              { x: 2, y: -2 },
+              { x: 2, y: 2 },
+              { x: -2, y: 2 },
+            ],
+            z: 10,
+          },
         ],
       },
     },
@@ -149,8 +208,17 @@ test("composable-part cadquery generator supports revolved_profile, loft_profile
       kind: "swept_profile",
       operation: "add",
       dimensions: {
-        profile: [{ x: -2, y: -2 }, { x: 2, y: -2 }, { x: 2, y: 2 }, { x: -2, y: 2 }],
-        path: [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 10 }, { x: 10, y: 0, z: 10 }],
+        profile: [
+          { x: -2, y: -2 },
+          { x: 2, y: -2 },
+          { x: 2, y: 2 },
+          { x: -2, y: 2 },
+        ],
+        path: [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 10 },
+          { x: 10, y: 0, z: 10 },
+        ],
       },
     },
   ]);
@@ -166,19 +234,49 @@ test("composable-part cadquery generator supports revolved_profile, loft_profile
 test("composable-part cadquery generator implements hole/slot/counterbore/countersink and add/subtract/intersect", () => {
   const s = spec(
     [
-      { id: "block", kind: "box", operation: "add", dimensions: { length: 40, width: 40, height: 20 } },
-      { id: "groove", kind: "torus", operation: "subtract", position: { x: 0, y: 0, z: 7 }, dimensions: { outerDiameter: 30, tubeDiameter: 6 } },
+      {
+        id: "block",
+        kind: "box",
+        operation: "add",
+        dimensions: { length: 40, width: 40, height: 20 },
+      },
+      {
+        id: "groove",
+        kind: "torus",
+        operation: "subtract",
+        position: { x: 0, y: 0, z: 7 },
+        dimensions: { outerDiameter: 30, tubeDiameter: 6 },
+      },
     ],
     [
-      { id: "h", kind: "hole", target: "block", relation: { type: "centered_on", target: "block" }, parameters: { diameter: 5, depth: "through" } },
-      { id: "cb", kind: "counterbore", target: "h", parameters: { diameter: 10, depth: 3 } },
-      { id: "cs", kind: "countersink", target: "h", parameters: { diameter: 10, angle: 90 } },
+      {
+        id: "h",
+        kind: "hole",
+        target: "block",
+        relation: { type: "centered_on", target: "block" },
+        parameters: { diameter: 5, depth: "through" },
+      },
+      {
+        id: "cb",
+        kind: "counterbore",
+        target: "h",
+        parameters: { diameter: 10, depth: 3 },
+      },
+      {
+        id: "cs",
+        kind: "countersink",
+        target: "h",
+        parameters: { diameter: 10, angle: 90 },
+      },
     ],
   );
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });
   const r = generateCadQuery(s);
   assert.equal(r.supported, true);
-  assert.deepEqual(r.warnings.filter((w) => !w.includes("centered on its resolved position")), []);
+  assert.deepEqual(
+    r.warnings.filter((w) => !w.includes("centered on its resolved position")),
+    [],
+  );
   assert.match(r.code, /cq\.Solid\.makeCylinder\(2\.5, 1000\.2\)/);
   assert.match(r.code, /cq\.Solid\.makeCone\(/);
   assert.match(r.code, /\.cut\(cut_groove_\d+\)/);
@@ -186,16 +284,44 @@ test("composable-part cadquery generator implements hole/slot/counterbore/counte
 
 test("composable-part cadquery generator implements fillet/chamfer/shell with the same support matrix as brepjs", () => {
   const boxAll = spec(
-    [{ id: "a", kind: "box", operation: "add", dimensions: { length: 20, width: 20, height: 10 } }],
-    [{ id: "f", kind: "fillet", target: "a", parameters: { radius: 3, edges: "all" } }],
+    [
+      {
+        id: "a",
+        kind: "box",
+        operation: "add",
+        dimensions: { length: 20, width: 20, height: 10 },
+      },
+    ],
+    [
+      {
+        id: "f",
+        kind: "fillet",
+        target: "a",
+        parameters: { radius: 3, edges: "all" },
+      },
+    ],
   );
   const boxAllResult = generateCadQuery(boxAll);
   assert.deepEqual(boxAllResult.warnings, []);
   assert.match(boxAllResult.code, /\.fillet\(3, list\(.*\.edges\(\)\)\)/);
 
   const cylinderAll = spec(
-    [{ id: "a", kind: "cylinder", operation: "add", dimensions: { diameter: 20, height: 10 } }],
-    [{ id: "f", kind: "fillet", target: "a", parameters: { radius: 3, edges: "all" } }],
+    [
+      {
+        id: "a",
+        kind: "cylinder",
+        operation: "add",
+        dimensions: { diameter: 20, height: 10 },
+      },
+    ],
+    [
+      {
+        id: "f",
+        kind: "fillet",
+        target: "a",
+        parameters: { radius: 3, edges: "all" },
+      },
+    ],
   );
   const cylinderAllResult = generateCadQuery(cylinderAll);
   assert.match(
@@ -204,21 +330,56 @@ test("composable-part cadquery generator implements fillet/chamfer/shell with th
   );
 
   const vertical = spec(
-    [{ id: "a", kind: "box", operation: "add", dimensions: { length: 20, width: 20, height: 10 }, rotation: { x: 30, y: 0, z: 0 } }],
-    [{ id: "f", kind: "chamfer", target: "a", parameters: { distance: 2, edges: "vertical" } }],
+    [
+      {
+        id: "a",
+        kind: "box",
+        operation: "add",
+        dimensions: { length: 20, width: 20, height: 10 },
+        rotation: { x: 30, y: 0, z: 0 },
+      },
+    ],
+    [
+      {
+        id: "f",
+        kind: "chamfer",
+        target: "a",
+        parameters: { distance: 2, edges: "vertical" },
+      },
+    ],
   );
   const verticalResult = generateCadQuery(vertical);
   assert.deepEqual(verticalResult.warnings, []);
-  assert.match(verticalResult.code, /cq\.ParallelDirSelector\(cq\.Vector\(0, -0\.4999\d*, 0\.8660254\d*\)/);
+  assert.match(
+    verticalResult.code,
+    /cq\.ParallelDirSelector\(cq\.Vector\(0, -0\.4999\d*, 0\.8660254\d*\)/,
+  );
   assert.match(verticalResult.code, /\.chamfer\(2, None, list\(/);
 
   const shell = spec(
-    [{ id: "a", kind: "box", operation: "add", dimensions: { length: 20, width: 20, height: 10 } }],
-    [{ id: "s", kind: "shell", target: "a", parameters: { thickness: 2, openFaces: ["top"] } }],
+    [
+      {
+        id: "a",
+        kind: "box",
+        operation: "add",
+        dimensions: { length: 20, width: 20, height: 10 },
+      },
+    ],
+    [
+      {
+        id: "s",
+        kind: "shell",
+        target: "a",
+        parameters: { thickness: 2, openFaces: ["top"] },
+      },
+    ],
   );
   const shellResult = generateCadQuery(shell);
   assert.deepEqual(shellResult.warnings, []);
-  assert.match(shellResult.code, /\.hollow\(\[\n\s*\w+\.faces\(cq\.NearestToPointSelector/);
+  assert.match(
+    shellResult.code,
+    /\.hollow\(\[\n\s*\w+\.faces\(cq\.NearestToPointSelector/,
+  );
   assert.match(shellResult.code, /, -2\)/);
 });
 
@@ -235,15 +396,36 @@ test("composable-part cadquery generator supports patterns, groups, and relation
   assert.deepEqual(validatePrintSpec(patterned), { valid: true, errors: [] });
   const patternedResult = generateCadQuery(patterned);
   assert.equal(patternedResult.supported, true);
-  assert.match(patternedResult.code, /\.translate\(\(-20, 0, 0\)\)\.fuse\(.*\.translate\(\(0, 0, 0\)\)\)\.fuse\(.*\.translate\(\(20, 0, 0\)\)\)/);
+  assert.match(
+    patternedResult.code,
+    /\.translate\(\(-20, 0, 0\)\)\.fuse\(.*\.translate\(\(0, 0, 0\)\)\)\.fuse\(.*\.translate\(\(20, 0, 0\)\)\)/,
+  );
 
   const grouped = spec(
     [
-      { id: "a", kind: "box", operation: "add", dimensions: { length: 10, width: 10, height: 5 } },
-      { id: "b", kind: "box", operation: "add", dimensions: { length: 5, width: 5, height: 5 }, relation: { type: "on_top_of", target: "a" } },
+      {
+        id: "a",
+        kind: "box",
+        operation: "add",
+        dimensions: { length: 10, width: 10, height: 5 },
+      },
+      {
+        id: "b",
+        kind: "box",
+        operation: "add",
+        dimensions: { length: 5, width: 5, height: 5 },
+        relation: { type: "on_top_of", target: "a" },
+      },
     ],
     [],
-    [{ id: "g", memberIds: ["a", "b"], position: { x: 20, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 45 } }],
+    [
+      {
+        id: "g",
+        memberIds: ["a", "b"],
+        position: { x: 20, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 45 },
+      },
+    ],
   );
   assert.deepEqual(validatePrintSpec(grouped), { valid: true, errors: [] });
   const groupedResult = generateCadQuery(grouped);
@@ -253,8 +435,19 @@ test("composable-part cadquery generator supports patterns, groups, and relation
 
 test("composable-part cadquery generator supports options.isolate the same way as brepjs", () => {
   const s = spec([
-    { id: "plate", kind: "cylinder", operation: "add", dimensions: { diameter: 40, height: 8 } },
-    { id: "groove", kind: "torus", operation: "subtract", position: { x: 0, y: 0, z: 6.5 }, dimensions: { outerDiameter: 31, tubeDiameter: 3 } },
+    {
+      id: "plate",
+      kind: "cylinder",
+      operation: "add",
+      dimensions: { diameter: 40, height: 8 },
+    },
+    {
+      id: "groove",
+      kind: "torus",
+      operation: "subtract",
+      position: { x: 0, y: 0, z: 6.5 },
+      dimensions: { outerDiameter: 31, tubeDiameter: 3 },
+    },
   ]);
   const whole = generateCadQuery(s);
   assert.equal(whole.supported, true);
@@ -273,17 +466,40 @@ test("composable-part cadquery generator supports options.isolate the same way a
   const plateSpec = {
     printspecVersion: "0.2.0",
     units: "mm",
-    part: { type: "rounded_rectangular_plate", label: "isolate non-composable test", parameters: { length: 20, width: 20, thickness: 4, cornerRadius: 2 } },
+    part: {
+      type: "rounded_rectangular_plate",
+      label: "isolate non-composable test",
+      parameters: { length: 20, width: 20, thickness: 4, cornerRadius: 2 },
+    },
   };
-  const isolateNonComposable = generateCadQuery(plateSpec, { isolate: "anything" });
+  const isolateNonComposable = generateCadQuery(plateSpec, {
+    isolate: "anything",
+  });
   assert.equal(isolateNonComposable.supported, false);
-  assert.match(isolateNonComposable.message, /isolate is only supported for composable_part specs/);
+  assert.match(
+    isolateNonComposable.message,
+    /isolate is only supported for composable_part specs/,
+  );
 });
 
 test("composable-part cadquery generator warns and skips unimplemented thread/text features", () => {
   const threadSpec = spec(
-    [{ id: "post", kind: "boss", operation: "add", dimensions: { diameter: 12, height: 10 } }],
-    [{ id: "t", kind: "thread", target: "post", parameters: { pitch: 2, height: 10 } }],
+    [
+      {
+        id: "post",
+        kind: "boss",
+        operation: "add",
+        dimensions: { diameter: 12, height: 10 },
+      },
+    ],
+    [
+      {
+        id: "t",
+        kind: "thread",
+        target: "post",
+        parameters: { pitch: 2, height: 10 },
+      },
+    ],
   );
   assert.deepEqual(validatePrintSpec(threadSpec), { valid: true, errors: [] });
   const threadResult = generateCadQuery(threadSpec);
@@ -296,13 +512,24 @@ test("composable-part cadquery generator warns and skips unimplemented thread/te
   assert.match(threadResult.code, /cq\.Solid\.makeCylinder\(6, 10\)/);
 
   const textSpec = spec(
-    [{ id: "a", kind: "box", operation: "add", dimensions: { length: 20, width: 20, height: 6 } }],
+    [
+      {
+        id: "a",
+        kind: "box",
+        operation: "add",
+        dimensions: { length: 20, width: 20, height: 6 },
+      },
+    ],
     [
       {
         id: "label",
         kind: "text",
         target: "a",
-        parameters: { content: "Hi", depth: 0.6, fontUrl: "https://example.com/font.ttf" },
+        parameters: {
+          content: "Hi",
+          depth: 0.6,
+          fontUrl: "https://example.com/font.ttf",
+        },
       },
     ],
   );

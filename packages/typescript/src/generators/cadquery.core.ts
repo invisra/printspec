@@ -1,5 +1,8 @@
 import type { GeneratorResult, PrintSpec, ValidationResult } from "../types.js";
-import { generateComposablePartCadQuery, type ComposablePartGenerateOptions } from "./cadquery.composable.js";
+import {
+  generateComposablePartCadQuery,
+  type ComposablePartGenerateOptions,
+} from "./cadquery.composable.js";
 
 type ValidatePrintSpec = (spec: unknown) => ValidationResult;
 
@@ -99,7 +102,8 @@ function cadqueryLBracketCuts(
       unsupportedAxis = true;
       continue;
     }
-    const depth = h.depth === "through" || h.depth == null ? throughDepth(axis) : h.depth;
+    const depth =
+      h.depth === "through" || h.depth == null ? throughDepth(axis) : h.depth;
     lines.push(
       axis === "z"
         ? `part = part.cut(cq.Workplane("XY").center(${n(h.x)}, ${n(h.y)}).circle(${n(h.diameter)} / 2).extrude(${n(depth)} + 0.2))`
@@ -112,7 +116,8 @@ function cadqueryLBracketCuts(
       unsupportedAxis = true;
       continue;
     }
-    const depth = s.depth === "through" || s.depth == null ? throughDepth(axis) : s.depth;
+    const depth =
+      s.depth === "through" || s.depth == null ? throughDepth(axis) : s.depth;
     lines.push(
       axis === "z"
         ? `part = part.cut(cq.Workplane("XY").center(${n(s.x)}, ${n(s.y)}).box(${n(s.length)}, ${n(s.width)}, ${n(depth)} + 0.2, centered=(True, True, False)))`
@@ -138,7 +143,12 @@ export function generateCadQueryWithValidator(
   if (bad) return bad;
   const p: any = spec.part;
   if (!p)
-    return { supported: false, code: "", message: "Only part specs are supported.", warnings: [] };
+    return {
+      supported: false,
+      code: "",
+      message: "Only part specs are supported.",
+      warnings: [],
+    };
   const a = p.parameters;
   if (p.type === "composable_part") {
     return generateComposablePartCadQuery(p, options);
@@ -206,7 +216,10 @@ export function generateCadQueryWithValidator(
       .join("\n");
     return {
       supported: true,
-      warnings: ["Cable arch is approximated as a rectangular bridge.", ...warnings(a)],
+      warnings: [
+        "Cable arch is approximated as a rectangular bridge.",
+        ...warnings(a),
+      ],
       code: `${header()}${cadqueryComment("Part family: cable_clip")}${params(a)}base = cq.Workplane("XY").box(${n(a.baseLength ?? 28)}, ${n(a.width ?? a.baseWidth ?? 12)}, ${n(a.thickness ?? a.baseThickness ?? 3)}, centered=(True, True, False))\nbridge = cq.Workplane("XY").workplane(offset=${n(a.thickness ?? a.baseThickness ?? 3)}+(${n(a.cableDiameter ?? a.clipInnerDiameter ?? 6)}+${n(a.clearance ?? 0.5)})/2).box(${n((a.baseLength ?? 28) * 0.65)}, ${n(a.width ?? a.baseWidth ?? 12)}, ${n(a.thickness ?? a.baseThickness ?? 3)}, centered=(True, True, False))\npart = base.union(bridge)\n${mountHoles}\n`,
     };
   }
@@ -218,8 +231,12 @@ export function generateCadQueryWithValidator(
     };
   if (p.type === "l_bracket") {
     const cuts = cadqueryLBracketCuts(a.holes, a.slots, a.thickness, a.width);
-    const w = ["Light-duty/non-structural bracket; review before use.", ...warnings(a)];
-    if (cuts.unsupportedAxis) w.push("hole/slot with axis 'y' is not implemented for l_bracket");
+    const w = [
+      "Light-duty/non-structural bracket; review before use.",
+      ...warnings(a),
+    ];
+    if (cuts.unsupportedAxis)
+      w.push("hole/slot with axis 'y' is not implemented for l_bracket");
     return {
       supported: true,
       warnings: w,

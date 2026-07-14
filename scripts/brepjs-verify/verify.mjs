@@ -25,7 +25,14 @@
 // First run installs brepjs + occt-wasm into scripts/brepjs-verify/
 // node_modules automatically (a real download, not vendored).
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -49,18 +56,29 @@ if (nodeMajor < 24) {
 
 const distIndex = path.join(repoRoot, "packages/typescript/dist/index.js");
 if (!existsSync(distIndex)) {
-  fail(`Missing ${path.relative(repoRoot, distIndex)} -- run \`npm run build\` first.`);
+  fail(
+    `Missing ${path.relative(repoRoot, distIndex)} -- run \`npm run build\` first.`,
+  );
 }
 
 if (!existsSync(path.join(here, "node_modules", "brepjs"))) {
-  console.log("Installing brepjs + occt-wasm into scripts/brepjs-verify/ (first run only)...\n");
-  const install = spawnSync("npm", ["install"], { cwd: here, stdio: "inherit" });
-  if (install.status !== 0) fail("npm install failed in scripts/brepjs-verify/.");
+  console.log(
+    "Installing brepjs + occt-wasm into scripts/brepjs-verify/ (first run only)...\n",
+  );
+  const install = spawnSync("npm", ["install"], {
+    cwd: here,
+    stdio: "inherit",
+  });
+  if (install.status !== 0)
+    fail("npm install failed in scripts/brepjs-verify/.");
 }
 
 const { OcctKernel } = await import("occt-wasm");
-const { registerKernel, OcctWasmAdapter, measureVolume, isValid, unwrap } = await import("brepjs");
-const { generateBrepJs, validatePrintSpec } = await import(pathToFileURL(distIndex).href);
+const { registerKernel, OcctWasmAdapter, measureVolume, isValid, unwrap } =
+  await import("brepjs");
+const { generateBrepJs, validatePrintSpec } = await import(
+  pathToFileURL(distIndex).href
+);
 
 const kernel = await OcctKernel.init();
 registerKernel("occt-wasm", OcctWasmAdapter.fromKernel(kernel));
@@ -76,7 +94,10 @@ function jsonFilesIn(dir) {
     .map((f) => [`${dir}/${f}`, path.join(repoRoot, dir, f)]);
 }
 
-const examples = [...jsonFilesIn("examples/composable"), ...jsonFilesIn("examples/part-families")];
+const examples = [
+  ...jsonFilesIn("examples/composable"),
+  ...jsonFilesIn("examples/part-families"),
+];
 
 let checked = 0;
 let failures = 0;
@@ -85,7 +106,9 @@ for (const [label, file] of examples) {
   const validation = validatePrintSpec(spec);
   if (!validation.valid) {
     failures++;
-    console.error(`FAIL ${label}: invalid spec: ${validation.errors.join("; ")}`);
+    console.error(
+      `FAIL ${label}: invalid spec: ${validation.errors.join("; ")}`,
+    );
     continue;
   }
   const result = generateBrepJs(spec);
@@ -112,5 +135,7 @@ for (const [label, file] of examples) {
 
 rmSync(genDir, { recursive: true, force: true });
 
-console.log(`\n${checked} brepjs-supported example(s) checked, ${failures} failure(s).`);
+console.log(
+  `\n${checked} brepjs-supported example(s) checked, ${failures} failure(s).`,
+);
 process.exit(failures === 0 ? 0 : 1);

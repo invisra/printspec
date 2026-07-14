@@ -8,7 +8,10 @@ const errors = [];
 const readJson = (p) => JSON.parse(readFileSync(path.join(root, p), "utf8"));
 const schemaVersion = readJson("package.json").version;
 const tsVersion = readJson("packages/typescript/package.json").version;
-const pyproject = readFileSync(path.join(root, "packages/python/pyproject.toml"), "utf8");
+const pyproject = readFileSync(
+  path.join(root, "packages/python/pyproject.toml"),
+  "utf8",
+);
 const pyVersion = pyproject.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
 
 function check(condition, message) {
@@ -36,7 +39,10 @@ for (const dir of schemaDirs) {
     .sort()) {
     const schema = JSON.parse(readFileSync(path.join(full, file), "utf8"));
     const expected = `https://schemas.invisra.ai/printspec/${schemaVersion}/${file}`;
-    check(schema.$id === expected, `${dir}/${file} $id must be ${expected}, got ${schema.$id}`);
+    check(
+      schema.$id === expected,
+      `${dir}/${file} $id must be ${expected}, got ${schema.$id}`,
+    );
     if (file === "printspec.schema.json")
       check(
         schema.properties?.printspecVersion?.const === schemaVersion,
@@ -55,7 +61,9 @@ check(
   statSync(path.join(root, "public/printspec", schemaVersion)).isDirectory(),
   `public/printspec/${schemaVersion} directory is missing`,
 );
-const versionManifest = readJson(`public/printspec/${schemaVersion}/manifest.json`);
+const versionManifest = readJson(
+  `public/printspec/${schemaVersion}/manifest.json`,
+);
 check(
   versionManifest.version === schemaVersion,
   `public version manifest must have version ${schemaVersion}`,
@@ -66,7 +74,8 @@ for (const entry of versionManifest.schemas ?? []) {
     `manifest URL mismatch for ${entry.filename}`,
   );
   check(
-    entry.id === `https://schemas.invisra.ai/printspec/${schemaVersion}/${entry.filename}`,
+    entry.id ===
+      `https://schemas.invisra.ai/printspec/${schemaVersion}/${entry.filename}`,
     `manifest id mismatch for ${entry.filename}`,
   );
 }
@@ -75,7 +84,10 @@ for (const html of [
   `public/printspec/${schemaVersion}/index.html`,
 ]) {
   const text = readFileSync(path.join(root, html), "utf8");
-  check(text.includes(schemaVersion), `${html} must reference ${schemaVersion}`);
+  check(
+    text.includes(schemaVersion),
+    `${html} must reference ${schemaVersion}`,
+  );
 }
 function walk(dir) {
   const full = path.join(root, dir);

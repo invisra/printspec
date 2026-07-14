@@ -53,7 +53,8 @@ function narrowedFamilyValidator(partType: string): any | undefined {
   const cached = narrowedFamilyValidators.get(partType);
   if (cached) return cached;
   const schemaFile = TYPE_TO_SCHEMA_FILE.get(partType);
-  if (!schemaFile || schemaFile === "composable-part.schema.json") return undefined;
+  if (!schemaFile || schemaFile === "composable-part.schema.json")
+    return undefined;
   const compiled = compileRefOnly(ajv, schemaFile);
   narrowedFamilyValidators.set(partType, compiled);
   return compiled;
@@ -67,7 +68,11 @@ function narrowedPrintspecValidator(partType: string): any | undefined {
   if (cached) return cached;
   const schemaFile = TYPE_TO_SCHEMA_FILE.get(partType);
   if (!schemaFile) return undefined;
-  const compiled = compilePrintspecNarrowedToPartType(ajv, schemas["printspec.schema.json"], schemaFile);
+  const compiled = compilePrintspecNarrowedToPartType(
+    ajv,
+    schemas["printspec.schema.json"],
+    schemaFile,
+  );
   narrowedPrintspecValidators.set(partType, compiled);
   return compiled;
 }
@@ -112,7 +117,8 @@ export function validatePrintSpec(
     if (narrowed) {
       const ok = narrowed(spec);
       const errors = ok ? [] : formatAjvErrors(narrowed);
-      if (errors.length === 0 && semantic) errors.push(...validateSemantic(spec));
+      if (errors.length === 0 && semantic)
+        errors.push(...validateSemantic(spec));
       return { valid: errors.length === 0, errors };
     }
   }

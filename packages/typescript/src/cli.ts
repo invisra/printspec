@@ -40,8 +40,10 @@ function load(file: string) {
   try {
     return JSON.parse(fs.readFileSync(file, "utf8"));
   } catch (e: any) {
-    if (e?.code && e.code !== "SyntaxError") throw new Error(`${file}: read error: ${e.message}`);
-    if (e instanceof SyntaxError) throw new Error(`${file}: parse error: ${e.message}`);
+    if (e?.code && e.code !== "SyntaxError")
+      throw new Error(`${file}: read error: ${e.message}`);
+    if (e instanceof SyntaxError)
+      throw new Error(`${file}: parse error: ${e.message}`);
     throw new Error(`${file}: parse error: ${e.message}`);
   }
 }
@@ -65,21 +67,40 @@ function main(argv = process.argv.slice(2)) {
   }
   if (!cmd) return fail(usage());
   if (cmd === "list-part-families") {
-    write(JSON.stringify(listPartFamilies(), null, rest.includes("--pretty") ? 2 : 0));
+    write(
+      JSON.stringify(
+        listPartFamilies(),
+        null,
+        rest.includes("--pretty") ? 2 : 0,
+      ),
+    );
     return 0;
   }
   if (cmd === "form-metadata") {
     if (!file) return fail(usage());
     try {
       write(
-        JSON.stringify(getPartFamilyFormMetadata(file), null, rest.includes("--pretty") ? 2 : 0),
+        JSON.stringify(
+          getPartFamilyFormMetadata(file),
+          null,
+          rest.includes("--pretty") ? 2 : 0,
+        ),
       );
       return 0;
     } catch (e: any) {
       return fail(`error: ${e.message}`);
     }
   }
-  if (!["validate", "to-openscad", "to-cadquery", "to-brepjs", "bom", "bundle"].includes(cmd))
+  if (
+    ![
+      "validate",
+      "to-openscad",
+      "to-cadquery",
+      "to-brepjs",
+      "bom",
+      "bundle",
+    ].includes(cmd)
+  )
     return fail(`error: unknown command ${cmd}`);
   if (!file) return fail(usage());
   let spec: any;
@@ -134,9 +155,12 @@ function main(argv = process.argv.slice(2)) {
       includeBom: !rest.includes("--no-bom"),
       includePartCad: rest.includes("--partcad"),
     });
-    if (!b.supported) return fail(`error: ${b.message ?? "unsupported bundle"}`);
+    if (!b.supported)
+      return fail(`error: ${b.message ?? "unsupported bundle"}`);
     try {
-      writeBundleToDirectory(b, out, { overwrite: rest.includes("--overwrite") });
+      writeBundleToDirectory(b, out, {
+        overwrite: rest.includes("--overwrite"),
+      });
     } catch (e: any) {
       return fail(`error: ${e.message}`);
     }

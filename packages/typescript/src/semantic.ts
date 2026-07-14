@@ -93,15 +93,21 @@ function featureFitErrors(feature: any, targetComponent: any): string[] {
   if (footprintKey && dims[footprintKey] != null) {
     const bound = dims[footprintKey];
     const size =
-      kind === "hole" ? params.diameter : Math.max(params.length ?? 0, params.width ?? 0);
+      kind === "hole"
+        ? params.diameter
+        : Math.max(params.length ?? 0, params.width ?? 0);
     if (size != null && size > bound)
-      e.push(`feature ${fid} size exceeds target ${tid} ${footprintKey} (${size} > ${bound})`);
+      e.push(
+        `feature ${fid} size exceeds target ${tid} ${footprintKey} (${size} > ${bound})`,
+      );
   }
   const depth = params.depth;
   if (depthKey && typeof depth === "number" && dims[depthKey] != null) {
     const bound = dims[depthKey];
     if (depth > bound)
-      e.push(`feature ${fid} depth exceeds target ${tid} ${depthKey} (${depth} > ${bound})`);
+      e.push(
+        `feature ${fid} depth exceeds target ${tid} ${depthKey} (${depth} > ${bound})`,
+      );
   }
   return e;
 }
@@ -143,7 +149,12 @@ function shellFitErrors(feature: any, targetComponent: any): string[] {
   if (feature.kind !== "shell") return [];
   const thickness = (feature.parameters ?? {}).thickness;
   if (thickness == null) return [];
-  const err = boundedDimensionError(feature, targetComponent, thickness, "thickness");
+  const err = boundedDimensionError(
+    feature,
+    targetComponent,
+    thickness,
+    "thickness",
+  );
   return err ? [err] : [];
 }
 function filletChamferFitErrors(feature: any, targetComponent: any): string[] {
@@ -226,7 +237,9 @@ function componentDimensionErrors(component: any): string[] {
       const a = path[i];
       const b = path[i + 1];
       if (a.x === b.x && a.y === b.y && a.z === b.z)
-        e.push(`component ${cid} (swept_profile) path has two consecutive identical points at index ${i}`);
+        e.push(
+          `component ${cid} (swept_profile) path has two consecutive identical points at index ${i}`,
+        );
     }
   }
   return e;
@@ -307,7 +320,8 @@ function threadFeatureErrors(
   let depthBound: number | null = null;
   let depthLabel = "";
   if (component) {
-    const validKinds = mode === "external" ? THREAD_EXTERNAL_KINDS : THREAD_INTERNAL_KINDS;
+    const validKinds =
+      mode === "external" ? THREAD_EXTERNAL_KINDS : THREAD_INTERNAL_KINDS;
     if (!validKinds.has(component.kind)) {
       e.push(
         `feature ${fid} (thread, ${mode}) target ${targetId} is a ${component.kind}, which has no ${mode === "external" ? "outer surface" : "inner bore"} to thread`,
@@ -332,8 +346,14 @@ function threadFeatureErrors(
       }
     }
   }
-  if (depthBound != null && typeof params.height === "number" && params.height > depthBound)
-    e.push(`feature ${fid} (thread) height exceeds ${depthLabel} (${params.height} > ${depthBound})`);
+  if (
+    depthBound != null &&
+    typeof params.height === "number" &&
+    params.height > depthBound
+  )
+    e.push(
+      `feature ${fid} (thread) height exceeds ${depthLabel} (${params.height} > ${depthBound})`,
+    );
   return e;
 }
 
@@ -356,7 +376,8 @@ function resolveConstraintOperand(
   const { ref, key } = operand ?? {};
   const component = componentsById.get(ref);
   const feature = featuresById.get(ref);
-  if (!component && !feature) return { error: `references unknown component/feature: ${ref}` };
+  if (!component && !feature)
+    return { error: `references unknown component/feature: ${ref}` };
   const bag = component ? component.dimensions : feature.parameters;
   const value = bag?.[key];
   if (typeof value !== "number")
@@ -365,14 +386,15 @@ function resolveConstraintOperand(
     };
   return { value };
 }
-const CONSTRAINT_OPERATORS: Record<string, (a: number, b: number) => boolean> = {
-  "<": (a, b) => a < b,
-  "<=": (a, b) => a <= b,
-  ">": (a, b) => a > b,
-  ">=": (a, b) => a >= b,
-  "==": (a, b) => a === b,
-  "!=": (a, b) => a !== b,
-};
+const CONSTRAINT_OPERATORS: Record<string, (a: number, b: number) => boolean> =
+  {
+    "<": (a, b) => a < b,
+    "<=": (a, b) => a <= b,
+    ">": (a, b) => a > b,
+    ">=": (a, b) => a >= b,
+    "==": (a, b) => a === b,
+    "!=": (a, b) => a !== b,
+  };
 // Checks one `dimension` constraint against the part's already-authored
 // numbers (see resolveConstraintOperand()). Not a solver: both operands
 // must already resolve to concrete values, the same way every other check
@@ -386,8 +408,16 @@ function dimensionConstraintErrors(
 ): string[] {
   if (constraint?.type !== "dimension") return [];
   const label = constraint.id ?? `#${index}`;
-  const left = resolveConstraintOperand(constraint.left, componentsById, featuresById);
-  const right = resolveConstraintOperand(constraint.right, componentsById, featuresById);
+  const left = resolveConstraintOperand(
+    constraint.left,
+    componentsById,
+    featuresById,
+  );
+  const right = resolveConstraintOperand(
+    constraint.right,
+    componentsById,
+    featuresById,
+  );
   const e: string[] = [];
   if ("error" in left) e.push(`constraint ${label} left ${left.error}`);
   if ("error" in right) e.push(`constraint ${label} right ${right.error}`);
@@ -396,7 +426,10 @@ function dimensionConstraintErrors(
   const rightValue = (right as { value: number }).value;
   const margin = constraint.margin ?? 0;
   const rightWithMargin = rightValue + margin;
-  const holds = CONSTRAINT_OPERATORS[constraint.operator](leftValue, rightWithMargin);
+  const holds = CONSTRAINT_OPERATORS[constraint.operator](
+    leftValue,
+    rightWithMargin,
+  );
   if (!holds) {
     const marginNote = margin ? ` + ${margin}` : "";
     e.push(
@@ -429,7 +462,10 @@ function clearanceConstraintErrors(
   const e: string[] = [];
   const check = (ref: any, side: "a" | "b") => {
     const component = componentsById.get(ref);
-    if (!component) e.push(`constraint ${label} ${side} references unknown component: ${ref}`);
+    if (!component)
+      e.push(
+        `constraint ${label} ${side} references unknown component: ${ref}`,
+      );
     else if (NO_AABB_KINDS.has(component.kind))
       e.push(
         `constraint ${label} ${side} references component ${ref} (kind "${component.kind}"), which has no well-defined bounding box to check a clearance against`,
@@ -451,38 +487,60 @@ function checkPart(part: any, prefix = "part"): string[] {
     part?.type === "rounded_rectangular_plate" &&
     p.cornerRadius > Math.min(p.length, p.width) / 2
   )
-    e.push(`${prefix}.parameters.cornerRadius exceeds half of min(length,width)`);
-  if (part?.type === "simple_box" && p.wallThickness >= Math.min(p.outerLength, p.outerWidth) / 2)
-    e.push(`${prefix}.parameters.wallThickness must be less than half of outer dimensions`);
+    e.push(
+      `${prefix}.parameters.cornerRadius exceeds half of min(length,width)`,
+    );
+  if (
+    part?.type === "simple_box" &&
+    p.wallThickness >= Math.min(p.outerLength, p.outerWidth) / 2
+  )
+    e.push(
+      `${prefix}.parameters.wallThickness must be less than half of outer dimensions`,
+    );
   if (
     part?.type === "round_spacer" &&
     p.innerDiameter != null &&
     p.innerDiameter >= p.outerDiameter
   )
-    e.push(`${prefix}.parameters.innerDiameter must be less than outerDiameter`);
+    e.push(
+      `${prefix}.parameters.innerDiameter must be less than outerDiameter`,
+    );
   if (part?.type === "electronics_standoff") {
     if (p.holeDiameter >= p.outerDiameter)
-      e.push(`${prefix}.parameters.holeDiameter must be less than outerDiameter`);
+      e.push(
+        `${prefix}.parameters.holeDiameter must be less than outerDiameter`,
+      );
     if ((p.baseDiameter == null) !== (p.baseHeight == null))
-      e.push(`${prefix}.parameters.baseDiameter and baseHeight must be provided together`);
+      e.push(
+        `${prefix}.parameters.baseDiameter and baseHeight must be provided together`,
+      );
     if (p.baseDiameter != null && p.baseDiameter < p.outerDiameter)
-      e.push(`${prefix}.parameters.baseDiameter must be greater than or equal to outerDiameter`);
+      e.push(
+        `${prefix}.parameters.baseDiameter must be greater than or equal to outerDiameter`,
+      );
   }
   const maxW = p.width ?? p.outerWidth ?? p.outerDiameter;
   for (const h of p.holes ?? []) {
-    if (h.diameter > maxW) e.push(`${prefix}.parameters.holes diameter exceeds target width`);
+    if (h.diameter > maxW)
+      e.push(`${prefix}.parameters.holes diameter exceeds target width`);
   }
   return e;
 }
 export function validateSemantic(spec: any): string[] {
   const e: string[] = [];
   const checkHw = (items: any[] | undefined, label: string) => {
-    e.push(...dup((items ?? []).map((h) => h.id).filter(Boolean), `${label} hardware`));
+    e.push(
+      ...dup(
+        (items ?? []).map((h) => h.id).filter(Boolean),
+        `${label} hardware`,
+      ),
+    );
     for (const h of items ?? []) {
       if (!Number.isInteger(h.quantity) || h.quantity < 1)
         e.push(`${label}.hardware quantity must be integer >= 1`);
       for (const r of h.supplierReferences ?? []) {
-        if (!r.partNumber) e.push(`${label}.supplierReference partNumber is required`);
+        if (!r.partNumber)
+          e.push(`${label}.supplierReference partNumber is required`);
         if (r.url) {
           let parsed: URL | null = null;
           try {
@@ -507,7 +565,9 @@ export function validateSemantic(spec: any): string[] {
       const components = spec.part.components ?? [];
       const groups = spec.part.groups ?? [];
       const componentIds = components.map((c: any) => c.id);
-      const featureIds = (spec.part.features ?? []).map((f: any) => f.id).filter(Boolean);
+      const featureIds = (spec.part.features ?? [])
+        .map((f: any) => f.id)
+        .filter(Boolean);
       const groupIds = groups.map((g: any) => g.id);
       e.push(...dup(componentIds, "component"));
       e.push(...dup(featureIds, "feature"));
@@ -529,7 +589,9 @@ export function validateSemantic(spec: any): string[] {
       for (const dupId of [...crossCategoryDupes].sort())
         e.push(`id used by more than one component/feature/group: ${dupId}`);
       const known = new Set([...componentIds, ...featureIds, ...groupIds]);
-      const componentsById = new Map<string, any>(components.map((c: any) => [c.id, c]));
+      const componentsById = new Map<string, any>(
+        components.map((c: any) => [c.id, c]),
+      );
       const featuresById = new Map<string, any>(
         (spec.part.features ?? []).map((f: any) => [f.id, f]),
       );
@@ -547,16 +609,26 @@ export function validateSemantic(spec: any): string[] {
       // anchor-point ambiguity.
       const patternedIds = new Set([
         ...components.filter((c: any) => c.pattern).map((c: any) => c.id),
-        ...(spec.part.features ?? []).filter((f: any) => f.pattern).map((f: any) => f.id),
+        ...(spec.part.features ?? [])
+          .filter((f: any) => f.pattern)
+          .map((f: any) => f.id),
         ...groups.filter((g: any) => g.pattern).map((g: any) => g.id),
       ]);
-      const checkRelationTarget = (ownerId: string, ownerLabel: string, relation: any) => {
+      const checkRelationTarget = (
+        ownerId: string,
+        ownerLabel: string,
+        relation: any,
+      ) => {
         const t = relation?.target;
         if (!t) return;
         if (t === ownerId)
-          e.push(`${ownerLabel} ${ownerId} relation target cannot reference itself`);
+          e.push(
+            `${ownerLabel} ${ownerId} relation target cannot reference itself`,
+          );
         else if (!known.has(t))
-          e.push(`${ownerLabel} ${ownerId} relation target does not exist: ${t}`);
+          e.push(
+            `${ownerLabel} ${ownerId} relation target does not exist: ${t}`,
+          );
         else if (patternedIds.has(t)) {
           // A patterned target has no single instance to anchor to by
           // default -- but relation.targetInstance opts into anchoring to
@@ -594,14 +666,17 @@ export function validateSemantic(spec: any): string[] {
         e.push(...textFontUrlErrors(f));
         e.push(...threadFeatureErrors(f, componentsById, featuresById));
         if (f.target) {
-          if (f.target === fid) e.push(`feature ${fid} target cannot reference itself`);
+          if (f.target === fid)
+            e.push(`feature ${fid} target cannot reference itself`);
           else if (!known.has(f.target))
             e.push(`feature ${fid} target does not exist: ${f.target}`);
           else {
             if (componentsById.has(f.target)) {
               e.push(...featureFitErrors(f, componentsById.get(f.target)));
               e.push(...shellFitErrors(f, componentsById.get(f.target)));
-              e.push(...filletChamferFitErrors(f, componentsById.get(f.target)));
+              e.push(
+                ...filletChamferFitErrors(f, componentsById.get(f.target)),
+              );
               e.push(...textFitErrors(f, componentsById.get(f.target)));
             }
             // A feature's `target` is a real dependency even without an
@@ -624,9 +699,12 @@ export function validateSemantic(spec: any): string[] {
         checkRelationTarget(c.id, "component", c.relation);
         e.push(...componentDimensionErrors(c));
         for (const appliesId of c.appliesTo ?? []) {
-          if (appliesId === c.id) e.push(`component ${c.id} appliesTo cannot reference itself`);
+          if (appliesId === c.id)
+            e.push(`component ${c.id} appliesTo cannot reference itself`);
           else if (!componentIdSet.has(appliesId))
-            e.push(`component ${c.id} appliesTo references unknown component: ${appliesId}`);
+            e.push(
+              `component ${c.id} appliesTo references unknown component: ${appliesId}`,
+            );
         }
       }
       const memberTransformingGroups = new Map<string, string[]>();
@@ -643,7 +721,9 @@ export function validateSemantic(spec: any): string[] {
           );
         for (const memberId of memberIds) {
           if (!componentIdSet.has(memberId))
-            e.push(`group ${g.id} memberIds references unknown component: ${memberId}`);
+            e.push(
+              `group ${g.id} memberIds references unknown component: ${memberId}`,
+            );
           else if (
             g.position != null ||
             g.rotation != null ||
@@ -670,7 +750,9 @@ export function validateSemantic(spec: any): string[] {
       for (const cycle of relationCycles(relationEdges))
         e.push(`relation cycle detected: ${cycle.join(" -> ")}`);
       (spec.part.constraints ?? []).forEach((c: any, i: number) => {
-        e.push(...dimensionConstraintErrors(c, i, componentsById, featuresById));
+        e.push(
+          ...dimensionConstraintErrors(c, i, componentsById, featuresById),
+        );
         e.push(...clearanceConstraintErrors(c, i, componentsById));
       });
     } else e.push(...checkPart(spec.part));
@@ -683,13 +765,18 @@ export function validateSemantic(spec: any): string[] {
     const hwSet = new Set(hwIds);
     e.push(...dup(partIds, "project part"), ...dup(hwIds, "project hardware"));
     for (const r of spec.project.relationships ?? []) {
-      if (r.partA && !partSet.has(r.partA)) e.push(`relationship partA missing: ${r.partA}`);
-      if (r.partB && !partSet.has(r.partB)) e.push(`relationship partB missing: ${r.partB}`);
+      if (r.partA && !partSet.has(r.partA))
+        e.push(`relationship partA missing: ${r.partA}`);
+      if (r.partB && !partSet.has(r.partB))
+        e.push(`relationship partB missing: ${r.partB}`);
       if (r.hardware && !hwSet.has(r.hardware))
         e.push(`relationship hardware missing: ${r.hardware}`);
     }
     for (const p of spec.project.parts ?? [])
-      if (p.spec) e.push(...validateSemantic(p.spec).map((x) => `project.parts.${p.id}: ${x}`));
+      if (p.spec)
+        e.push(
+          ...validateSemantic(p.spec).map((x) => `project.parts.${p.id}: ${x}`),
+        );
     checkHw(spec.project.hardware, "project");
   }
   return e;

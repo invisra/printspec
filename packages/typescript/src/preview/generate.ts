@@ -47,7 +47,8 @@ export function generatePreviewScene(spec: unknown): PreviewGenerationResult {
   if (!part || !("parameters" in part))
     return {
       supported: false,
-      message: "Preview scenes currently support selected part-family specs only.",
+      message:
+        "Preview scenes currently support selected part-family specs only.",
       warnings: [],
     };
   const build = builders[part.type];

@@ -1,5 +1,8 @@
 import type { GeneratorResult, PrintSpec, ValidationResult } from "../types.js";
-import { generateComposablePartBrepJs, type ComposablePartGenerateOptions } from "./brepjs.composable.js";
+import {
+  generateComposablePartBrepJs,
+  type ComposablePartGenerateOptions,
+} from "./brepjs.composable.js";
 
 type ValidatePrintSpec = (spec: unknown) => ValidationResult;
 
@@ -83,7 +86,10 @@ function brepjsLBracketCuts(
       unsupportedAxis = true;
       continue;
     }
-    const depth = h.depth === "through" || h.depth == null ? throughDepth(axis) : n(h.depth);
+    const depth =
+      h.depth === "through" || h.depth == null
+        ? throughDepth(axis)
+        : n(h.depth);
     lines.push(
       axis === "z"
         ? `shape(cylinder(${n(h.diameter)} / 2, ${depth} + 0.2)).translate([${n(h.x)}, ${n(h.y)}, -0.1]).val`
@@ -96,7 +102,10 @@ function brepjsLBracketCuts(
       unsupportedAxis = true;
       continue;
     }
-    const depth = s.depth === "through" || s.depth == null ? throughDepth(axis) : n(s.depth);
+    const depth =
+      s.depth === "through" || s.depth == null
+        ? throughDepth(axis)
+        : n(s.depth);
     lines.push(
       axis === "z"
         ? `shape(box(${n(s.length)}, ${n(s.width)}, ${depth} + 0.2)).translate([${n(s.x)} - ${n(s.length)} / 2, ${n(s.y)} - ${n(s.width)} / 2, -0.1]).val`
@@ -125,7 +134,12 @@ export function generateBrepJsWithValidator(
   if (bad) return bad;
   const p: any = spec.part;
   if (!p)
-    return { supported: false, code: "", message: "Only part specs are supported.", warnings: [] };
+    return {
+      supported: false,
+      code: "",
+      message: "Only part specs are supported.",
+      warnings: [],
+    };
   const a = p.parameters;
 
   if (p.type === "composable_part") {
@@ -230,7 +244,10 @@ export function generateBrepJsWithValidator(
       : "";
     return {
       supported: true,
-      warnings: ["Cable arch is approximated as a rectangular bridge.", ...warnings(a)],
+      warnings: [
+        "Cable arch is approximated as a rectangular bridge.",
+        ...warnings(a),
+      ],
       code: `${brepjsHeader()}${mountingHoles.length ? brepjsZHolesHelper() : ""}${brepjsComment("Part family: cable_clip")}${params(a)}const baseLength = ${n(baseLength)};\nconst width = ${n(width)};\nconst thickness = ${n(thickness)};\nconst cableDiameter = ${n(cableDiameter)};\nconst clearance = ${n(clearance)};\n\nconst base = shape(box(baseLength, width, thickness))\n  .translate([-baseLength / 2, -width / 2, 0]).val;\nconst bridge = shape(box(baseLength * 0.65, width, thickness))\n  .translate([-baseLength * 0.325, -width / 2, thickness + cableDiameter / 2]).val;\nlet part = shape(base).fuse(bridge).val;\npart = shape(part)\n  .cut(\n    shape(cylinder((cableDiameter + clearance) / 2, width + 0.2))\n      .rotate(-90, { axis: [1, 0, 0] })\n      .translate([0, -width / 2 - 0.1, thickness + cableDiameter / 2]).val,\n  ).val;\n${mountHoles}\nexport default () => part;\n`,
     };
   }
@@ -245,8 +262,12 @@ export function generateBrepJsWithValidator(
 
   if (p.type === "l_bracket") {
     const cuts = brepjsLBracketCuts(a.holes, a.slots, a.thickness, a.width);
-    const w = ["Light-duty/non-structural bracket; review before use.", ...warnings(a)];
-    if (cuts.unsupportedAxis) w.push("hole/slot with axis 'y' is not implemented for l_bracket");
+    const w = [
+      "Light-duty/non-structural bracket; review before use.",
+      ...warnings(a),
+    ];
+    if (cuts.unsupportedAxis)
+      w.push("hole/slot with axis 'y' is not implemented for l_bracket");
     const cutAll = cuts.lines.length
       ? `part = shape(part).cutAll([\n  ${cuts.lines.join(",\n  ")},\n]).val;\n`
       : "";

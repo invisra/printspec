@@ -25,7 +25,9 @@ const norm = (s) =>
     .replace(/\r\n/g, "\n")
     .replace(/[ \t]+$/gm, "")
     .trimEnd() + "\n";
-const spec = read("examples/part-families/rounded-rectangular-plate.basic.json");
+const spec = read(
+  "examples/part-families/rounded-rectangular-plate.basic.json",
+);
 const project = read("examples/projects/simple-enclosure-project.json");
 test("shared valid fixtures pass", () => {
   for (const f of fs
@@ -39,7 +41,11 @@ test("shared invalid fixtures fail", () => {
   for (const f of fs
     .readdirSync(path.join(root, "tests/fixtures/invalid"))
     .filter((f) => f.endsWith(".json"))) {
-    assert.equal(validatePrintSpec(read("tests/fixtures/invalid/" + f)).valid, false, f);
+    assert.equal(
+      validatePrintSpec(read("tests/fixtures/invalid/" + f)).valid,
+      false,
+      f,
+    );
   }
 });
 test("normalization does not mutate and defaults holes", () => {
@@ -67,7 +73,10 @@ test("top-level hardware quantity accepts a whole-valued float, matching JSON's 
     ...structuredClone(spec),
     hardware: [{ id: "screw_1", kind: "screw", quantity }],
   });
-  assert.deepEqual(validatePrintSpec(withHardware(5.0)), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(withHardware(5.0)), {
+    valid: true,
+    errors: [],
+  });
   assert.equal(validatePrintSpec(withHardware(0.5)).valid, false);
 });
 test("generators validate and emit safe deterministic code", () => {
@@ -91,28 +100,43 @@ test("generator snapshots match fixtures", () => {
       "rounded-rectangular-plate.basic",
       "examples/part-families/rounded-rectangular-plate.basic.json",
     ],
-    ["spacer-block.four-hole", "examples/part-families/spacer-block.four-hole.json"],
+    [
+      "spacer-block.four-hole",
+      "examples/part-families/spacer-block.four-hole.json",
+    ],
     ["round-spacer.basic", "examples/part-families/round-spacer.basic.json"],
-    ["electronics-standoff.m3", "examples/part-families/electronics-standoff.m3.json"],
+    [
+      "electronics-standoff.m3",
+      "examples/part-families/electronics-standoff.m3.json",
+    ],
   ];
   for (const [name, file] of items) {
     const s = read(file);
     assert.equal(
       norm(generateOpenScad(s).code),
       norm(
-        fs.readFileSync(path.join(root, `tests/fixtures/generated/openscad/${name}.scad`), "utf8"),
+        fs.readFileSync(
+          path.join(root, `tests/fixtures/generated/openscad/${name}.scad`),
+          "utf8",
+        ),
       ),
     );
     assert.equal(
       norm(generateCadQuery(s).code),
       norm(
-        fs.readFileSync(path.join(root, `tests/fixtures/generated/cadquery/${name}.py`), "utf8"),
+        fs.readFileSync(
+          path.join(root, `tests/fixtures/generated/cadquery/${name}.py`),
+          "utf8",
+        ),
       ),
     );
     assert.equal(
       norm(generateBrepJs(s).code),
       norm(
-        fs.readFileSync(path.join(root, `tests/fixtures/generated/brepjs/${name}.brep.ts`), "utf8"),
+        fs.readFileSync(
+          path.join(root, `tests/fixtures/generated/brepjs/${name}.brep.ts`),
+          "utf8",
+        ),
       ),
     );
   }
@@ -120,10 +144,13 @@ test("generator snapshots match fixtures", () => {
 test("round spacer warnings and standoff semantic validation", () => {
   const s = read("examples/part-families/round-spacer.basic.json");
   s.part.parameters.chamfer = { distance: 0.5 };
-  assert.deepEqual(generateOpenScad(s).warnings, ["chamfer requested but not implemented"]);
+  assert.deepEqual(generateOpenScad(s).warnings, [
+    "chamfer requested but not implemented",
+  ]);
   assert.equal(
-    validatePrintSpec(read("tests/fixtures/invalid/electronics-standoff-base-too-small.json"))
-      .valid,
+    validatePrintSpec(
+      read("tests/fixtures/invalid/electronics-standoff-base-too-small.json"),
+    ).valid,
     false,
   );
 });
@@ -137,7 +164,10 @@ test("l_bracket cuts holes and slots on both legs via the schema's holes/slots a
     assert.match(r.code, /3\.2/);
   }
   assert.match(generateOpenScad(s).code, /rotate\(\[0, 90, 0\]\)/);
-  assert.match(generateCadQuery(s).code, /rotate\(\(0, 0, 0\), \(0, 1, 0\), 90\)/);
+  assert.match(
+    generateCadQuery(s).code,
+    /rotate\(\(0, 0, 0\), \(0, 1, 0\), 90\)/,
+  );
   assert.match(generateBrepJs(s).code, /rotate\(90, \{ axis: \[0, 1, 0\] \}\)/);
   const withYAxis = structuredClone(s);
   withYAxis.part.parameters.holes.push({
@@ -176,7 +206,12 @@ test("composable-part dimension constraints validate already-authored numbers, n
           operation: "add",
           dimensions: { length: 40, width: 40, thickness: 4 },
         },
-        { id: "boss", kind: "cylinder", operation: "add", dimensions: { diameter: 6, height: 5 } },
+        {
+          id: "boss",
+          kind: "cylinder",
+          operation: "add",
+          dimensions: { diameter: 6, height: 5 },
+        },
       ],
       features: [
         {
@@ -251,7 +286,9 @@ test("composable-part dimension constraints validate already-authored numbers, n
 
   // Literal-vs-literal (no refs at all) works too.
   assert.deepEqual(
-    validatePrintSpec(withConstraint({ type: "dimension", left: 5, operator: "<", right: 10 })),
+    validatePrintSpec(
+      withConstraint({ type: "dimension", left: 5, operator: "<", right: 10 }),
+    ),
     { valid: true, errors: [] },
   );
 
@@ -280,7 +317,9 @@ test("composable-part dimension constraints validate already-authored numbers, n
 test("composable-part groups validate ids, memberIds, and relation targets", () => {
   const strip = read("examples/composable/cable-tie-anchor-strip.json");
   assert.deepEqual(validatePrintSpec(strip), { valid: true, errors: [] });
-  const mount = read("examples/composable/vented-sensor-mount-with-standoffs.json");
+  const mount = read(
+    "examples/composable/vented-sensor-mount-with-standoffs.json",
+  );
   assert.deepEqual(validatePrintSpec(mount), { valid: true, errors: [] });
 
   const unknownMember = structuredClone(strip);
@@ -292,7 +331,10 @@ test("composable-part groups validate ids, memberIds, and relation targets", () 
 
   const dupGroupId = structuredClone(strip);
   dupGroupId.part.groups[1].id = dupGroupId.part.groups[0].id;
-  assert.match(validatePrintSpec(dupGroupId).errors.join(" "), /duplicate group id/);
+  assert.match(
+    validatePrintSpec(dupGroupId).errors.join(" "),
+    /duplicate group id/,
+  );
 
   const unknownGroupTarget = structuredClone(strip);
   unknownGroupTarget.part.groups[1].relation.target = "ghost";
@@ -310,7 +352,10 @@ test("composable-part groups validate ids, memberIds, and relation targets", () 
     dimensions: { length: 1, width: 1, height: 1 },
     relation: { type: "centered_on", target: "standoffs" },
   });
-  assert.deepEqual(validatePrintSpec(targetsGroup), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(targetsGroup), {
+    valid: true,
+    errors: [],
+  });
 
   // relation.offset was removed in favor of position as the sole offset.
   const withOffset = structuredClone(strip);
@@ -353,7 +398,10 @@ test("composable-part rejects a cycle formed only by feature target chains, with
       ],
     },
   };
-  assert.match(validatePrintSpec(spec).errors.join(" "), /relation cycle detected: f1 -> f2 -> f1/);
+  assert.match(
+    validatePrintSpec(spec).errors.join(" "),
+    /relation cycle detected: f1 -> f2 -> f1/,
+  );
 });
 const COMPOSABLE_EXAMPLES = [
   "adapter-plate-with-two-hole-patterns",
@@ -390,12 +438,19 @@ test("composable-part brepjs generator matches snapshots for every example fixtu
     assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] }, name);
     const brep = generateBrepJs(s);
     assert.equal(brep.supported, true, name);
-    assert.doesNotMatch(brep.code, /require\(|process\.|child_process|eval\(/, name);
+    assert.doesNotMatch(
+      brep.code,
+      /require\(|process\.|child_process|eval\(/,
+      name,
+    );
     assert.equal(
       norm(brep.code),
       norm(
         fs.readFileSync(
-          path.join(root, `tests/fixtures/generated/brepjs/composable/${name}.brep.ts`),
+          path.join(
+            root,
+            `tests/fixtures/generated/brepjs/composable/${name}.brep.ts`,
+          ),
           "utf8",
         ),
       ),
@@ -417,7 +472,9 @@ let brepjsStubDirPromise;
 async function brepjsStubDir() {
   if (!brepjsStubDirPromise) {
     brepjsStubDirPromise = (async () => {
-      const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), "printspec-brepjs-stub-"));
+      const tmpBase = fs.mkdtempSync(
+        path.join(os.tmpdir(), "printspec-brepjs-stub-"),
+      );
       const stubDir = path.join(tmpBase, "node_modules", "brepjs");
       fs.mkdirSync(stubDir, { recursive: true });
       fs.copyFileSync(
@@ -451,7 +508,8 @@ async function runBrepJsAgainstStub(code) {
   return mod.default();
 }
 after(async () => {
-  if (brepjsStubDirPromise) fs.rmSync(await brepjsStubDirPromise, { recursive: true, force: true });
+  if (brepjsStubDirPromise)
+    fs.rmSync(await brepjsStubDirPromise, { recursive: true, force: true });
 });
 test("composable-part brepjs generator output actually executes against a stub brepjs implementation", async () => {
   for (const name of COMPOSABLE_EXAMPLES) {
@@ -472,7 +530,10 @@ test("all 10 core part-family brepjs generator outputs actually execute against 
     const brep = generateBrepJs(s);
     if (!brep.supported) continue;
     const result = await runBrepJsAgainstStub(brep.code);
-    assert.ok(result && typeof result === "object", `${f}: default export should return a shape`);
+    assert.ok(
+      result && typeof result === "object",
+      `${f}: default export should return a shape`,
+    );
   }
 });
 test("composable-part brepjs generator resolves feature cuts against a grouped component's final position", () => {
@@ -483,8 +544,12 @@ test("composable-part brepjs generator resolves feature cuts against a grouped c
   // origin instead of at their actual (mirrored) locations.
   const s = read("examples/composable/cable-tie-anchor-strip.json");
   const code = generateBrepJs(s).code;
-  const leftCut = code.match(/const featureCut_tie_hole_left_\d+ = ([^\n]+);/)?.[1];
-  const rightCut = code.match(/const featureCut_tie_hole_right_\d+ = ([^\n]+);/)?.[1];
+  const leftCut = code.match(
+    /const featureCut_tie_hole_left_\d+ = ([^\n]+);/,
+  )?.[1];
+  const rightCut = code.match(
+    /const featureCut_tie_hole_right_\d+ = ([^\n]+);/,
+  )?.[1];
   assert.ok(leftCut, "left cut expression found");
   assert.ok(rightCut, "right cut expression found");
   assert.match(leftCut, /-18, 0, 3/);
@@ -538,7 +603,9 @@ test("composable-part brepjs generator rotates a relation anchor by the target's
   const code = generateBrepJs(spec).code;
   const bPlacement = code.match(/const comp_b_\d+ = ([^\n]+);/)?.[1];
   assert.ok(bPlacement, "b placement expression found");
-  const translateCalls = [...bPlacement.matchAll(/\.translate\(\[([^\]]+)\]\)/g)];
+  const translateCalls = [
+    ...bPlacement.matchAll(/\.translate\(\[([^\]]+)\]\)/g),
+  ];
   assert.ok(translateCalls.length > 0, "translate call found");
   const translateArgs = translateCalls.at(-1)[1];
   const [tx, ty, tz] = translateArgs.split(",").map(Number);
@@ -664,14 +731,20 @@ test("composable-part brepjs generator resolves relations and connectivity again
   const result = generateBrepJs(spec);
   assert.deepEqual(result.warnings, []);
   // on_top_of a 4mm-tall bracket anchors the boss at z=4.
-  assert.match(result.code, /shape\(cylinder\(2, 6\)\)\.translate\(\[0, 0, 4\]\)/);
+  assert.match(
+    result.code,
+    /shape\(cylinder\(2, 6\)\)\.translate\(\[0, 0, 4\]\)/,
+  );
 
   // A component with a gap from the extruded_profile must still trip the
   // connectivity check.
   const disconnected = structuredClone(spec);
   disconnected.part.components[1].relation = undefined;
   disconnected.part.components[1].position = { x: 500, y: 0, z: 0 };
-  assert.match(generateBrepJs(disconnected).warnings.join(" "), /single connected part/);
+  assert.match(
+    generateBrepJs(disconnected).warnings.join(" "),
+    /single connected part/,
+  );
 });
 test("composable-part extruded_profile and revolved_profile points support curved (arc/Bezier/spline) segments", () => {
   // A point's optional `curve` makes the edge to the *next* point an arc
@@ -700,7 +773,11 @@ test("composable-part extruded_profile and revolved_profile points support curve
             points: [
               { x: 0, y: 0 },
               { x: 10, y: 0 },
-              { x: 10, y: 10, curve: { type: "arc", through: { x: 5, y: 15 } } },
+              {
+                x: 10,
+                y: 10,
+                curve: { type: "arc", through: { x: 5, y: 15 } },
+              },
               { x: 0, y: 10 },
             ],
             height: 5,
@@ -729,7 +806,10 @@ test("composable-part extruded_profile and revolved_profile points support curve
   assert.deepEqual(validatePrintSpec(bezierSpec), { valid: true, errors: [] });
   const bezierResult = generateBrepJs(bezierSpec);
   assert.deepEqual(bezierResult.warnings, []);
-  assert.match(bezierResult.code, /unwrap\(bezier\(\[\[5, [\d.-]+, 0\], \[0, [\d.-]+, 0\], \[-5, [\d.-]+, 0\]\]\)\)/);
+  assert.match(
+    bezierResult.code,
+    /unwrap\(bezier\(\[\[5, [\d.-]+, 0\], \[0, [\d.-]+, 0\], \[-5, [\d.-]+, 0\]\]\)\)/,
+  );
 
   // Same curve types work on revolved_profile, in the (radius, z) half-plane.
   const revolveArcSpec = {
@@ -745,7 +825,11 @@ test("composable-part extruded_profile and revolved_profile points support curve
           operation: "add",
           dimensions: {
             points: [
-              { radius: 5, z: 0, curve: { type: "arc", through: { radius: 8, z: 5 } } },
+              {
+                radius: 5,
+                z: 0,
+                curve: { type: "arc", through: { radius: 8, z: 5 } },
+              },
               { radius: 10, z: 10 },
               { radius: 0, z: 10 },
               { radius: 0, z: 0 },
@@ -755,10 +839,16 @@ test("composable-part extruded_profile and revolved_profile points support curve
       ],
     },
   };
-  assert.deepEqual(validatePrintSpec(revolveArcSpec), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(revolveArcSpec), {
+    valid: true,
+    errors: [],
+  });
   const revolveArcResult = generateBrepJs(revolveArcSpec);
   assert.deepEqual(revolveArcResult.warnings, []);
-  assert.match(revolveArcResult.code, /threePointArc\(\[5, 0, 0\], \[8, 0, 5\], \[10, 0, 10\]\)/);
+  assert.match(
+    revolveArcResult.code,
+    /threePointArc\(\[5, 0, 0\], \[8, 0, 5\], \[10, 0, 10\]\)/,
+  );
 
   // spline works the same way on extruded_profile, through 2 points.
   const splineSpec = structuredClone(arcSpec);
@@ -783,10 +873,16 @@ test("composable-part extruded_profile and revolved_profile points support curve
     type: "spline",
     through: [{ radius: 8, z: 5 }],
   };
-  assert.deepEqual(validatePrintSpec(revolveSplineSpec), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(revolveSplineSpec), {
+    valid: true,
+    errors: [],
+  });
   const revolveSplineResult = generateBrepJs(revolveSplineSpec);
   assert.deepEqual(revolveSplineResult.warnings, []);
-  assert.match(revolveSplineResult.code, /unwrap\(bsplineApprox\(\[\[5, 0, 0\], \[8, 0, 5\], \[10, 0, 10\]\]\)\)/);
+  assert.match(
+    revolveSplineResult.code,
+    /unwrap\(bsplineApprox\(\[\[5, 0, 0\], \[8, 0, 5\], \[10, 0, 10\]\]\)\)/,
+  );
 });
 test("composable-part brepjs generator implements loft_profile via brepjs's real loft()", () => {
   // loft_profile blends between 2+ cross-sectional profiles at different Z
@@ -901,8 +997,14 @@ test("composable-part brepjs generator implements thread via brepjs's real threa
   assert.deepEqual(validatePrintSpec(external), { valid: true, errors: [] });
   const extResult = generateBrepJs(external);
   assert.deepEqual(extResult.warnings, []);
-  assert.match(extResult.code, /unwrap\(thread\(\{ radius: 6, pitch: 2, height: 6 \}\)\)/);
-  assert.match(extResult.code, /shape\(comp_a_\d+\)\.fuse\(featureCut_t_\d+\)\.val/);
+  assert.match(
+    extResult.code,
+    /unwrap\(thread\(\{ radius: 6, pitch: 2, height: 6 \}\)\)/,
+  );
+  assert.match(
+    extResult.code,
+    /shape\(comp_a_\d+\)\.fuse\(featureCut_t_\d+\)\.val/,
+  );
 
   // Internal thread on a tube's own bore: radius = innerDiameter / 2, cut
   // (not fused), with brepjs's inward:true so the tooth points toward the
@@ -919,7 +1021,10 @@ test("composable-part brepjs generator implements thread via brepjs's real threa
     intResult.code,
     /unwrap\(thread\(\{ radius: 6, pitch: 2, height: 6, inward: true \}\)\)/,
   );
-  assert.match(intResult.code, /shape\(comp_a_\d+\)\.cut\(featureCut_t_\d+\)\.val/);
+  assert.match(
+    intResult.code,
+    /shape\(comp_a_\d+\)\.cut\(featureCut_t_\d+\)\.val/,
+  );
 
   // Internal thread stacked on a hole feature (like counterbore/countersink
   // already stack on a hole): radius derived from the hole's own diameter.
@@ -930,10 +1035,20 @@ test("composable-part brepjs generator implements thread via brepjs's real threa
       type: "composable_part",
       label: "thread on hole test",
       components: [
-        { id: "block", kind: "box", operation: "add", dimensions: { length: 20, width: 20, height: 10 } },
+        {
+          id: "block",
+          kind: "box",
+          operation: "add",
+          dimensions: { length: 20, width: 20, height: 10 },
+        },
       ],
       features: [
-        { id: "bore", kind: "hole", target: "block", parameters: { diameter: 8, depth: 8 } },
+        {
+          id: "bore",
+          kind: "hole",
+          target: "block",
+          parameters: { diameter: 8, depth: 8 },
+        },
         {
           id: "tap",
           kind: "thread",
@@ -943,7 +1058,10 @@ test("composable-part brepjs generator implements thread via brepjs's real threa
       ],
     },
   };
-  assert.deepEqual(validatePrintSpec(stackedOnHole), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(stackedOnHole), {
+    valid: true,
+    errors: [],
+  });
   const stackedResult = generateBrepJs(stackedOnHole);
   assert.deepEqual(stackedResult.warnings, []);
   assert.match(
@@ -953,7 +1071,11 @@ test("composable-part brepjs generator implements thread via brepjs's real threa
 
   // Rejected: external thread targeting a kind with no outer cylindrical
   // surface (a box).
-  const badTarget = baseSpec("box", { length: 20, width: 20, height: 10 }, "external");
+  const badTarget = baseSpec(
+    "box",
+    { length: 20, width: 20, height: 10 },
+    "external",
+  );
   const badTargetErrors = validatePrintSpec(badTarget).errors.join(" ");
   assert.match(
     badTargetErrors,
@@ -961,7 +1083,11 @@ test("composable-part brepjs generator implements thread via brepjs's real threa
   );
 
   // Rejected: internal thread targeting a cylinder directly (no bore of its own).
-  const badMode = baseSpec("cylinder", { diameter: 12, height: 10 }, "internal");
+  const badMode = baseSpec(
+    "cylinder",
+    { diameter: 12, height: 10 },
+    "internal",
+  );
   const badModeErrors = validatePrintSpec(badMode).errors.join(" ");
   assert.match(
     badModeErrors,
@@ -974,12 +1100,20 @@ test("composable-part brepjs generator implements thread via brepjs's real threa
     crest: 0.5,
   });
   const badCrestErrors = validatePrintSpec(badCrest).errors.join(" ");
-  assert.match(badCrestErrors, /feature t \(thread\) crest must be less than toothHalfWidth \(0\.5 >= 0\.5\)/);
+  assert.match(
+    badCrestErrors,
+    /feature t \(thread\) crest must be less than toothHalfWidth \(0\.5 >= 0\.5\)/,
+  );
 
   // Rejected: thread height exceeds the target's own axial dimension.
-  const tooTall = baseSpec("boss", { diameter: 12, height: 10 }, "external", { height: 20 });
+  const tooTall = baseSpec("boss", { diameter: 12, height: 10 }, "external", {
+    height: 20,
+  });
   const tooTallErrors = validatePrintSpec(tooTall).errors.join(" ");
-  assert.match(tooTallErrors, /feature t \(thread\) height exceeds target a height \(20 > 10\)/);
+  assert.match(
+    tooTallErrors,
+    /feature t \(thread\) height exceeds target a height \(20 > 10\)/,
+  );
 });
 test("composable-part brepjs generator implements swept_profile via brepjs's real sweep()", () => {
   // swept_profile sweeps an arbitrary closed cross-section along a 3D path
@@ -1055,7 +1189,8 @@ test("composable-part brepjs generator implements swept_profile via brepjs's rea
     { x: 0, y: 0, z: 0 },
     { x: 10, y: 0, z: 10 },
   ]);
-  const badFirstSegmentErrors = validatePrintSpec(badFirstSegment).errors.join(" ");
+  const badFirstSegmentErrors =
+    validatePrintSpec(badFirstSegment).errors.join(" ");
   assert.match(
     badFirstSegmentErrors,
     /component channel \(swept_profile\) path's first two points must differ only in z/,
@@ -1067,7 +1202,8 @@ test("composable-part brepjs generator implements swept_profile via brepjs's rea
     { x: 0, y: 0, z: 10 },
     { x: 0, y: 0, z: 10 },
   ]);
-  const duplicatePointErrors = validatePrintSpec(duplicatePoint).errors.join(" ");
+  const duplicatePointErrors =
+    validatePrintSpec(duplicatePoint).errors.join(" ");
   assert.match(
     duplicatePointErrors,
     /component channel \(swept_profile\) path has two consecutive identical points at index 1/,
@@ -1102,7 +1238,10 @@ test("composable-part brepjs generator supports isolating one component/feature'
   const isolatePost = generateBrepJs(spec, { isolate: "post" });
   assert.equal(isolatePost.supported, true);
   assert.deepEqual(isolatePost.warnings, whole.warnings);
-  assert.match(isolatePost.code, /export default \(\) => comp_post_fuse_\d+;\n$/);
+  assert.match(
+    isolatePost.code,
+    /export default \(\) => comp_post_fuse_\d+;\n$/,
+  );
   // Every line before the final export is identical between the whole-part
   // and isolated code -- isolating only changes the tail (the whole-part
   // version has an extra "const part_N = ...fuse..." line the isolated
@@ -1114,7 +1253,10 @@ test("composable-part brepjs generator supports isolating one component/feature'
   // Isolating a feature (not just a component): the thread ridge alone.
   const isolateThread = generateBrepJs(spec, { isolate: "post_thread" });
   assert.equal(isolateThread.supported, true);
-  assert.match(isolateThread.code, /export default \(\) => featureCut_post_thread_\d+;\n$/);
+  assert.match(
+    isolateThread.code,
+    /export default \(\) => featureCut_post_thread_\d+;\n$/,
+  );
 
   // Isolating a group: fuses just that group's own live members' shapes,
   // not the group's transform wrapper (a group has no shape of its own).
@@ -1125,7 +1267,12 @@ test("composable-part brepjs generator supports isolating one component/feature'
       type: "composable_part",
       label: "isolate group test",
       components: [
-        { id: "a", kind: "box", operation: "add", dimensions: { length: 10, width: 10, height: 5 } },
+        {
+          id: "a",
+          kind: "box",
+          operation: "add",
+          dimensions: { length: 10, width: 10, height: 5 },
+        },
         {
           id: "b",
           kind: "box",
@@ -1140,7 +1287,10 @@ test("composable-part brepjs generator supports isolating one component/feature'
   assert.deepEqual(validatePrintSpec(groupSpec), { valid: true, errors: [] });
   const isolateGroup = generateBrepJs(groupSpec, { isolate: "g" });
   assert.equal(isolateGroup.supported, true);
-  assert.match(isolateGroup.code, /export default \(\) => shape\(comp_a_\d+\)\.fuse\(comp_b_\d+\)\.val;\n$/);
+  assert.match(
+    isolateGroup.code,
+    /export default \(\) => shape\(comp_a_\d+\)\.fuse\(comp_b_\d+\)\.val;\n$/,
+  );
 
   // Rejected: an id that doesn't exist, or a feature kind (shell/fillet/
   // chamfer) with no standalone shape of its own to isolate.
@@ -1158,10 +1308,20 @@ test("composable-part brepjs generator supports isolating one component/feature'
       type: "composable_part",
       label: "isolate shell test",
       components: [
-        { id: "a", kind: "box", operation: "add", dimensions: { length: 10, width: 10, height: 10 } },
+        {
+          id: "a",
+          kind: "box",
+          operation: "add",
+          dimensions: { length: 10, width: 10, height: 10 },
+        },
       ],
       features: [
-        { id: "hollow", kind: "shell", target: "a", parameters: { thickness: 1, openFaces: ["top"] } },
+        {
+          id: "hollow",
+          kind: "shell",
+          target: "a",
+          parameters: { thickness: 1, openFaces: ["top"] },
+        },
       ],
     },
   };
@@ -1184,7 +1344,10 @@ test("composable-part brepjs generator supports isolating one component/feature'
   };
   const isolatePlate = generateBrepJs(plateSpec, { isolate: "anything" });
   assert.equal(isolatePlate.supported, false);
-  assert.match(isolatePlate.message, /isolate is only supported for composable_part specs/);
+  assert.match(
+    isolatePlate.message,
+    /isolate is only supported for composable_part specs/,
+  );
 });
 test("composable-part brepjs generator applies inheritRotation to a component's own geometry", () => {
   // A component resting on_top_of a rotated target, with no rotation of its
@@ -1226,7 +1389,10 @@ test("composable-part brepjs generator applies inheritRotation to a component's 
   const rotateIdx = bExpr.indexOf("rotate(45, { axis: [0, 1, 0] })");
   const translateIdx = bExpr.lastIndexOf(".translate(");
   assert.ok(rotateIdx >= 0, "inherited rotate stage found");
-  assert.ok(rotateIdx < translateIdx, "rotate must precede the final translate");
+  assert.ok(
+    rotateIdx < translateIdx,
+    "rotate must precede the final translate",
+  );
 });
 test("composable-part brepjs generator applies inheritRotation to a feature's cutter, and transitively through a chain", () => {
   // Regression test for a real bug found while building this: a feature (or
@@ -1256,7 +1422,11 @@ test("composable-part brepjs generator applies inheritRotation to a feature's cu
           kind: "box",
           operation: "add",
           dimensions: { length: 16, width: 16, height: 3 },
-          relation: { type: "on_top_of", target: "support", inheritRotation: true },
+          relation: {
+            type: "on_top_of",
+            target: "support",
+            inheritRotation: true,
+          },
         },
       ],
       features: [
@@ -1264,7 +1434,11 @@ test("composable-part brepjs generator applies inheritRotation to a feature's cu
           id: "mount_hole",
           kind: "hole",
           target: "pad",
-          relation: { type: "centered_on", target: "pad", inheritRotation: true },
+          relation: {
+            type: "centered_on",
+            target: "pad",
+            inheritRotation: true,
+          },
           parameters: { diameter: 3, depth: "through" },
         },
       ],
@@ -1274,7 +1448,9 @@ test("composable-part brepjs generator applies inheritRotation to a feature's cu
   const result = generateBrepJs(spec);
   assert.deepEqual(result.warnings, []);
   const padExpr = result.code.match(/const comp_pad_\d+ = ([^\n]+);/)?.[1];
-  const holeExpr = result.code.match(/const featureCut_mount_hole_\d+ = ([^\n]+);/)?.[1];
+  const holeExpr = result.code.match(
+    /const featureCut_mount_hole_\d+ = ([^\n]+);/,
+  )?.[1];
   assert.ok(padExpr, "pad placement expression found");
   assert.ok(holeExpr, "hole cut expression found");
   // Both must carry the 20deg X rotation inherited from `support`, even
@@ -1364,13 +1540,19 @@ test("composable-part brepjs generator scopes a feature's cut to its target comp
   const result = generateBrepJs(spec);
   assert.deepEqual(result.warnings, []);
   // The cut must apply to plate_a's own component variable specifically...
-  assert.match(result.code, /shape\(comp_plate_a_\d+\)\.cut\(featureCut_pass_through_\d+\)/);
+  assert.match(
+    result.code,
+    /shape\(comp_plate_a_\d+\)\.cut\(featureCut_pass_through_\d+\)/,
+  );
   // ...and plate_b's component variable must never appear as a .cut() base
   // or argument -- only fused in untouched.
   const plateBVar = result.code.match(/const (comp_plate_b_\d+) =/)?.[1];
   assert.ok(plateBVar, "plate_b variable name found");
   assert.doesNotMatch(result.code, new RegExp(`\\.cut\\(${plateBVar}\\)`));
-  assert.doesNotMatch(result.code, new RegExp(`shape\\(${plateBVar}\\)\\.cut\\(`));
+  assert.doesNotMatch(
+    result.code,
+    new RegExp(`shape\\(${plateBVar}\\)\\.cut\\(`),
+  );
   assert.match(result.code, new RegExp(`\\.fuse\\(${plateBVar}\\)`));
 });
 test("composable-part brepjs generator resolves a stacked feature's cut through to its underlying component", () => {
@@ -1386,9 +1568,15 @@ test("composable-part brepjs generator resolves a stacked feature's cut through 
   assert.doesNotMatch(code, new RegExp(`shape\\(${rightVar}\\)\\.cut\\(`));
   // Both the hole and the counterbore cut chain onto the same (left) lineage.
   const cutLines = [
-    ...code.matchAll(/const (comp_standoff_left_cut_\d+) = shape\(([^)]+)\)\.cut\(/g),
+    ...code.matchAll(
+      /const (comp_standoff_left_cut_\d+) = shape\(([^)]+)\)\.cut\(/g,
+    ),
   ];
-  assert.equal(cutLines.length, 2, "expected two chained cuts on standoff_left");
+  assert.equal(
+    cutLines.length,
+    2,
+    "expected two chained cuts on standoff_left",
+  );
 });
 test("composable-part brepjs generator cuts every member when a feature targets a group", () => {
   const spec = {
@@ -1427,8 +1615,14 @@ test("composable-part brepjs generator cuts every member when a feature targets 
   assert.deepEqual(validatePrintSpec(spec), { valid: true, errors: [] });
   const result = generateBrepJs(spec);
   assert.deepEqual(result.warnings, []);
-  assert.match(result.code, /shape\(comp_top_\d+\)\.cut\(featureCut_bolt_hole_\d+\)/);
-  assert.match(result.code, /shape\(comp_bottom_\d+\)\.cut\(featureCut_bolt_hole_\d+\)/);
+  assert.match(
+    result.code,
+    /shape\(comp_top_\d+\)\.cut\(featureCut_bolt_hole_\d+\)/,
+  );
+  assert.match(
+    result.code,
+    /shape\(comp_bottom_\d+\)\.cut\(featureCut_bolt_hole_\d+\)/,
+  );
 });
 test("composable-part brepjs generator repeats a whole group's members via a group-level pattern", () => {
   // A group's own `pattern` repeats every member as one rigid unit -- the
@@ -1444,7 +1638,12 @@ test("composable-part brepjs generator repeats a whole group's members via a gro
       type: "composable_part",
       label: "group pattern test",
       components: [
-        { id: "standoff", kind: "boss", operation: "add", dimensions: { diameter: 6, height: 8 } },
+        {
+          id: "standoff",
+          kind: "boss",
+          operation: "add",
+          dimensions: { diameter: 6, height: 8 },
+        },
         {
           id: "mount_hole",
           kind: "cylinder",
@@ -1458,7 +1657,13 @@ test("composable-part brepjs generator repeats a whole group's members via a gro
         {
           id: "standoff_cluster",
           memberIds: ["standoff", "mount_hole"],
-          pattern: { type: "rectangular", countX: 2, countY: 2, spacingX: 40, spacingY: 30 },
+          pattern: {
+            type: "rectangular",
+            countX: 2,
+            countY: 2,
+            spacingX: 40,
+            spacingY: 30,
+          },
         },
       ],
     },
@@ -1489,13 +1694,24 @@ test("composable-part brepjs generator repeats a feature's own cut when its targ
       type: "composable_part",
       label: "feature on patterned group member test",
       components: [
-        { id: "standoff", kind: "boss", operation: "add", dimensions: { diameter: 6, height: 8 } },
+        {
+          id: "standoff",
+          kind: "boss",
+          operation: "add",
+          dimensions: { diameter: 6, height: 8 },
+        },
       ],
       groups: [
         {
           id: "cluster",
           memberIds: ["standoff"],
-          pattern: { type: "rectangular", countX: 2, countY: 2, spacingX: 40, spacingY: 40 },
+          pattern: {
+            type: "rectangular",
+            countX: 2,
+            countY: 2,
+            spacingX: 40,
+            spacingY: 40,
+          },
         },
       ],
       features: [
@@ -1511,9 +1727,15 @@ test("composable-part brepjs generator repeats a feature's own cut when its targ
   assert.deepEqual(validatePrintSpec(spec), { valid: true, errors: [] });
   const result = generateBrepJs(spec);
   assert.deepEqual(result.warnings, []);
-  const cutExpr = result.code.match(/const featureCut_mount_hole_\d+ = ([^\n]+);/)?.[1];
+  const cutExpr = result.code.match(
+    /const featureCut_mount_hole_\d+ = ([^\n]+);/,
+  )?.[1];
   assert.ok(cutExpr, "feature cut expression found");
-  assert.equal((cutExpr.match(/\.fuse\(/g) ?? []).length, 3, "4 instances chained via 3 fuses");
+  assert.equal(
+    (cutExpr.match(/\.fuse\(/g) ?? []).length,
+    3,
+    "4 instances chained via 3 fuses",
+  );
   for (const [x, y] of [
     [-20, -20],
     [-20, 20],
@@ -1540,13 +1762,24 @@ test("composable-part brepjs generator connectivity check accounts for a group's
           operation: "add",
           dimensions: { length: 60, width: 60, height: 4 },
         },
-        { id: "standoff", kind: "boss", operation: "add", dimensions: { diameter: 6, height: 8 } },
+        {
+          id: "standoff",
+          kind: "boss",
+          operation: "add",
+          dimensions: { diameter: 6, height: 8 },
+        },
       ],
       groups: [
         {
           id: "cluster",
           memberIds: ["standoff"],
-          pattern: { type: "rectangular", countX: 2, countY: 2, spacingX: 40, spacingY: 40 },
+          pattern: {
+            type: "rectangular",
+            countX: 2,
+            countY: 2,
+            spacingX: 40,
+            spacingY: 40,
+          },
           ...groupExtra,
         },
       ],
@@ -1554,10 +1787,16 @@ test("composable-part brepjs generator connectivity check accounts for a group's
   });
   const touching = spec({});
   assert.deepEqual(validatePrintSpec(touching), { valid: true, errors: [] });
-  assert.doesNotMatch(generateBrepJs(touching).warnings.join(" "), /single connected part/);
+  assert.doesNotMatch(
+    generateBrepJs(touching).warnings.join(" "),
+    /single connected part/,
+  );
 
   const pushedAway = spec({ position: { x: 500, y: 0, z: 0 } });
-  assert.match(generateBrepJs(pushedAway).warnings.join(" "), /single connected part/);
+  assert.match(
+    generateBrepJs(pushedAway).warnings.join(" "),
+    /single connected part/,
+  );
 });
 test("composable-part brepjs generator expands a feature's own pattern into a fused union of cuts", () => {
   // Regression test: a patterned feature (for example a rectangular bolt
@@ -1585,7 +1824,13 @@ test("composable-part brepjs generator expands a feature's own pattern into a fu
           kind: "hole",
           target: "plate",
           parameters: { diameter: 3, depth: "through" },
-          pattern: { type: "rectangular", countX: 2, countY: 2, spacingX: 20, spacingY: 20 },
+          pattern: {
+            type: "rectangular",
+            countX: 2,
+            countY: 2,
+            spacingX: 20,
+            spacingY: 20,
+          },
         },
       ],
     },
@@ -1625,7 +1870,14 @@ test("composable-part brepjs generator warns instead of silently dropping a feat
           dimensions: { length: 2, width: 2, height: 2 },
         },
       ],
-      features: [{ id: "stray", kind: "hole", target: "cutter", parameters: { diameter: 1 } }],
+      features: [
+        {
+          id: "stray",
+          kind: "hole",
+          target: "cutter",
+          parameters: { diameter: 1 },
+        },
+      ],
     },
   };
   assert.deepEqual(validatePrintSpec(spec), { valid: true, errors: [] });
@@ -1672,7 +1924,10 @@ test("composable-part brepjs generator warns instead of silently dropping a subt
       ],
     },
   };
-  assert.deepEqual(validatePrintSpec(appliesToOrphan), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(appliesToOrphan), {
+    valid: true,
+    errors: [],
+  });
   const r1 = generateBrepJs(appliesToOrphan);
   assert.match(
     r1.warnings.join(" "),
@@ -1702,7 +1957,10 @@ test("composable-part brepjs generator warns instead of silently dropping a subt
       ],
     },
   };
-  assert.deepEqual(validatePrintSpec(declaredBeforeAnyAdd), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(declaredBeforeAnyAdd), {
+    valid: true,
+    errors: [],
+  });
   const r2 = generateBrepJs(declaredBeforeAnyAdd);
   assert.match(
     r2.warnings.join(" "),
@@ -1725,7 +1983,12 @@ test("composable-part brepjs generator implements sphere, based at Z=0 like ever
       type: "composable_part",
       label: "sphere test",
       components: [
-        { id: "stem", kind: "cylinder", operation: "add", dimensions: { diameter: 8, height: 15 } },
+        {
+          id: "stem",
+          kind: "cylinder",
+          operation: "add",
+          dimensions: { diameter: 8, height: 15 },
+        },
         {
           id: "knob",
           kind: "sphere",
@@ -1761,7 +2024,12 @@ test("composable-part brepjs generator implements torus, based at Z=0 like every
       type: "composable_part",
       label: "torus test",
       components: [
-        { id: "plate", kind: "plate", operation: "add", dimensions: { length: 40, width: 40, thickness: 3 } },
+        {
+          id: "plate",
+          kind: "plate",
+          operation: "add",
+          dimensions: { length: 40, width: 40, thickness: 3 },
+        },
         {
           id: "ring",
           kind: "torus",
@@ -1791,7 +2059,12 @@ test("composable-part rejects an inverted torus (tubeDiameter >= outerDiameter)"
       type: "composable_part",
       label: "inverted torus test",
       components: [
-        { id: "ring", kind: "torus", operation: "add", dimensions: { outerDiameter: 10, tubeDiameter: 20 } },
+        {
+          id: "ring",
+          kind: "torus",
+          operation: "add",
+          dimensions: { outerDiameter: 10, tubeDiameter: 20 },
+        },
       ],
     },
   };
@@ -1816,7 +2089,12 @@ test("composable-part clearance constraint: structural checks are semantic-valid
       type: "composable_part",
       label: "clearance constraint test",
       components: [
-        { id: "a", kind: "box", operation: "add", dimensions: { length: 10, width: 10, height: 10 } },
+        {
+          id: "a",
+          kind: "box",
+          operation: "add",
+          dimensions: { length: 10, width: 10, height: 10 },
+        },
         {
           id: "b",
           kind: "box",
@@ -1825,7 +2103,9 @@ test("composable-part clearance constraint: structural checks are semantic-valid
           position: aPos,
         },
       ],
-      constraints: [{ type: "clearance", id: "gap", a: "a", b: "b", minDistance }],
+      constraints: [
+        { type: "clearance", id: "gap", a: "a", b: "b", minDistance },
+      ],
     },
   });
   // Structurally valid (both exist, are distinct, have a well-defined AABB)
@@ -1842,7 +2122,10 @@ test("composable-part clearance constraint: structural checks are semantic-valid
   // touching in this synthetic test).
   const satisfied = spec({ x: 15, y: 0, z: 0 }, 2);
   assert.deepEqual(validatePrintSpec(satisfied), { valid: true, errors: [] });
-  assert.doesNotMatch(generateBrepJs(satisfied).warnings.join(" "), /clearance\) failed/);
+  assert.doesNotMatch(
+    generateBrepJs(satisfied).warnings.join(" "),
+    /clearance\) failed/,
+  );
 
   // Structural errors: unknown ref, self-reference, and a rib/wedge target
   // (no well-defined AABB) are semantic-validation errors, not warnings.
@@ -1886,7 +2169,12 @@ test("composable-part brepjs generator implements ellipsoid, based at Z=0 like e
       type: "composable_part",
       label: "ellipsoid test",
       components: [
-        { id: "base", kind: "plate", operation: "add", dimensions: { length: 40, width: 30, thickness: 4 } },
+        {
+          id: "base",
+          kind: "plate",
+          operation: "add",
+          dimensions: { length: 40, width: 30, thickness: 4 },
+        },
         {
           id: "dome",
           kind: "ellipsoid",
@@ -2002,7 +2290,12 @@ test("composable-part brepjs generator implements intersect, trimming a target t
       type: "composable_part",
       label: "intersect test",
       components: [
-        { id: "shaft", kind: "boss", operation: "add", dimensions: { diameter: 10, height: 20 } },
+        {
+          id: "shaft",
+          kind: "boss",
+          operation: "add",
+          dimensions: { diameter: 10, height: 20 },
+        },
         {
           id: "flatCut",
           kind: "box",
@@ -2017,7 +2310,10 @@ test("composable-part brepjs generator implements intersect, trimming a target t
   assert.deepEqual(validatePrintSpec(spec), { valid: true, errors: [] });
   const result = generateBrepJs(spec);
   assert.deepEqual(result.warnings, []);
-  assert.match(result.code, /shape\(comp_shaft_\d+\)\.intersect\(intersect_flatCut_\d+\)\.val/);
+  assert.match(
+    result.code,
+    /shape\(comp_shaft_\d+\)\.intersect\(intersect_flatCut_\d+\)\.val/,
+  );
 });
 test("composable-part brepjs generator warns instead of silently dropping an intersect component that applies to nothing", () => {
   // Same orphan-appliesTo gap as subtract, on intersect's shared code path.
@@ -2034,7 +2330,12 @@ test("composable-part brepjs generator warns instead of silently dropping an int
           operation: "intersect",
           dimensions: { length: 2, width: 2, height: 2 },
         },
-        { id: "plate", kind: "box", operation: "add", dimensions: { length: 20, width: 20, height: 4 } },
+        {
+          id: "plate",
+          kind: "box",
+          operation: "add",
+          dimensions: { length: 20, width: 20, height: 4 },
+        },
       ],
     },
   };
@@ -2060,7 +2361,12 @@ test("composable-part brepjs generator applies interleaved subtract/intersect co
       type: "composable_part",
       label: "interleaved subtract/intersect test",
       components: [
-        { id: "block", kind: "box", operation: "add", dimensions: { length: 20, width: 20, height: 20 } },
+        {
+          id: "block",
+          kind: "box",
+          operation: "add",
+          dimensions: { length: 20, width: 20, height: 20 },
+        },
         {
           id: "trim",
           kind: "box",
@@ -2084,7 +2390,9 @@ test("composable-part brepjs generator applies interleaved subtract/intersect co
   // The intersect must be applied (comp_block_intersect) before the
   // subtract that follows it cuts from that already-trimmed result, not the
   // original comp_block_0.
-  const cutLine = result.code.split("\n").find((l) => l.includes(".cut(cut_notch"));
+  const cutLine = result.code
+    .split("\n")
+    .find((l) => l.includes(".cut(cut_notch"));
   assert.ok(cutLine, "subtract line found");
   assert.match(cutLine, /comp_block_intersect_\d+\)\.cut\(/);
 });
@@ -2121,7 +2429,10 @@ test("composable-part brepjs generator implements shell for a box target across 
   assert.deepEqual(result.warnings, []);
   assert.match(result.code, /\.shell\(\[/);
   // one atDistance(0, point) selector per requested face, each on the a's own shape
-  assert.equal((result.code.match(/faceFinder\(\)\.atDistance\(0, /g) ?? []).length, 6);
+  assert.equal(
+    (result.code.match(/faceFinder\(\)\.atDistance\(0, /g) ?? []).length,
+    6,
+  );
   const executed = await runBrepJsAgainstStub(result.code);
   assert.ok(executed && typeof executed === "object");
 });
@@ -2162,7 +2473,10 @@ test("composable-part brepjs generator restricts shell openFaces support by targ
     /does not reliably support openFaces \[front\]; those were dropped from the shell/,
   );
   assert.match(result.code, /\.shell\(\[/);
-  assert.equal((result.code.match(/faceFinder\(\)\.atDistance\(0, /g) ?? []).length, 1);
+  assert.equal(
+    (result.code.match(/faceFinder\(\)\.atDistance\(0, /g) ?? []).length,
+    1,
+  );
 });
 test("composable-part brepjs generator warns and skips shell entirely for a target kind it can't reliably shell", () => {
   // tube's top/bottom faces are annuli that don't cover the local origin
@@ -2283,7 +2597,14 @@ test("composable-part brepjs generator implements bounded fillet/chamfer across 
           dimensions: { length: 20, width: 20, height: 10 },
         },
       ],
-      features: [{ id: "f", kind: "fillet", target: "a", parameters: { radius: 2, edges } }],
+      features: [
+        {
+          id: "f",
+          kind: "fillet",
+          target: "a",
+          parameters: { radius: 2, edges },
+        },
+      ],
     },
   });
   for (const edges of ["vertical", "top", "bottom"]) {
@@ -2322,7 +2643,14 @@ test("composable-part brepjs generator implements 'all' edges fillet/chamfer via
       type: "composable_part",
       label: "all edges test",
       components: [{ id: "a", kind, operation: "add", dimensions }],
-      features: [{ id: "f", kind: "fillet", target: "a", parameters: { radius: 2, edges } }],
+      features: [
+        {
+          id: "f",
+          kind: "fillet",
+          target: "a",
+          parameters: { radius: 2, edges },
+        },
+      ],
     },
   });
 
@@ -2330,7 +2658,10 @@ test("composable-part brepjs generator implements 'all' edges fillet/chamfer via
   assert.deepEqual(validatePrintSpec(boxSpec), { valid: true, errors: [] });
   const boxResult = generateBrepJs(boxSpec);
   assert.deepEqual(boxResult.warnings, []);
-  assert.match(boxResult.code, /\.fillet\(edgeFinder\(\)\.findAll\(comp_a_\d+\), 2\)/);
+  assert.match(
+    boxResult.code,
+    /\.fillet\(edgeFinder\(\)\.findAll\(comp_a_\d+\), 2\)/,
+  );
 
   // plate/tab share box's exact construction (centeredBox()), so "all" is
   // supported there too.
@@ -2347,9 +2678,17 @@ test("composable-part brepjs generator implements 'all' edges fillet/chamfer via
     cylinderResult.warnings.join(" "),
     /does not support edges "all" in the composable_part brepjs generator/,
   );
-  const roundedBoxSpec = spec("rounded_box", { length: 20, width: 20, height: 10, radius: 2 });
+  const roundedBoxSpec = spec("rounded_box", {
+    length: 20,
+    width: 20,
+    height: 10,
+    radius: 2,
+  });
   const roundedBoxResult = generateBrepJs(roundedBoxSpec);
-  assert.match(roundedBoxResult.warnings.join(" "), /does not support edges "all"/);
+  assert.match(
+    roundedBoxResult.warnings.join(" "),
+    /does not support edges "all"/,
+  );
 
   // A chamfer with "all" works the same way.
   const chamferSpec = {
@@ -2358,14 +2697,31 @@ test("composable-part brepjs generator implements 'all' edges fillet/chamfer via
     part: {
       type: "composable_part",
       label: "all edges chamfer test",
-      components: [{ id: "a", kind: "box", operation: "add", dimensions: { length: 20, width: 20, height: 10 } }],
-      features: [{ id: "f", kind: "chamfer", target: "a", parameters: { distance: 2, edges: "all" } }],
+      components: [
+        {
+          id: "a",
+          kind: "box",
+          operation: "add",
+          dimensions: { length: 20, width: 20, height: 10 },
+        },
+      ],
+      features: [
+        {
+          id: "f",
+          kind: "chamfer",
+          target: "a",
+          parameters: { distance: 2, edges: "all" },
+        },
+      ],
     },
   };
   assert.deepEqual(validatePrintSpec(chamferSpec), { valid: true, errors: [] });
   const chamferResult = generateBrepJs(chamferSpec);
   assert.deepEqual(chamferResult.warnings, []);
-  assert.match(chamferResult.code, /\.chamfer\(edgeFinder\(\)\.findAll\(comp_a_\d+\), 2\)/);
+  assert.match(
+    chamferResult.code,
+    /\.chamfer\(edgeFinder\(\)\.findAll\(comp_a_\d+\), 2\)/,
+  );
 
   // A patterned target's "all" fillet needs no special per-instance
   // handling (unlike top/bottom) -- edgeFinder().findAll() walks the whole
@@ -2386,10 +2742,20 @@ test("composable-part brepjs generator implements 'all' edges fillet/chamfer via
           pattern: { type: "linear", axis: "x", count: 3, spacing: 20 },
         },
       ],
-      features: [{ id: "f", kind: "fillet", target: "a", parameters: { radius: 2, edges: "all" } }],
+      features: [
+        {
+          id: "f",
+          kind: "fillet",
+          target: "a",
+          parameters: { radius: 2, edges: "all" },
+        },
+      ],
     },
   };
-  assert.deepEqual(validatePrintSpec(patternedSpec), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(patternedSpec), {
+    valid: true,
+    errors: [],
+  });
   const patternedResult = generateBrepJs(patternedSpec);
   assert.deepEqual(patternedResult.warnings, []);
   assert.match(patternedResult.code, /edgeFinder\(\)\.findAll\(comp_a_\d+\)/);
@@ -2418,7 +2784,12 @@ test("composable-part brepjs generator supports newer component kinds as subtrac
       type: "composable_part",
       label: "subtract with newer kinds test",
       components: [
-        { id: "block", kind: "box", operation: "add", dimensions: { length: 40, width: 40, height: 20 } },
+        {
+          id: "block",
+          kind: "box",
+          operation: "add",
+          dimensions: { length: 40, width: 40, height: 20 },
+        },
         groove,
       ],
     },
@@ -2434,7 +2805,10 @@ test("composable-part brepjs generator supports newer component kinds as subtrac
   assert.deepEqual(validatePrintSpec(torusSpec), { valid: true, errors: [] });
   const torusResult = generateBrepJs(torusSpec);
   assert.deepEqual(torusResult.warnings, []);
-  assert.match(torusResult.code, /shape\(comp_block_\d+\)\.cut\(cut_groove_\d+\)\.val/);
+  assert.match(
+    torusResult.code,
+    /shape\(comp_block_\d+\)\.cut\(cut_groove_\d+\)\.val/,
+  );
 
   const ellipsoidSpec = spec({
     id: "groove",
@@ -2443,10 +2817,16 @@ test("composable-part brepjs generator supports newer component kinds as subtrac
     position: { x: 0, y: 0, z: -5 },
     dimensions: { lengthX: 20, lengthY: 20, lengthZ: 20 },
   });
-  assert.deepEqual(validatePrintSpec(ellipsoidSpec), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(ellipsoidSpec), {
+    valid: true,
+    errors: [],
+  });
   const ellipsoidResult = generateBrepJs(ellipsoidSpec);
   assert.deepEqual(ellipsoidResult.warnings, []);
-  assert.match(ellipsoidResult.code, /shape\(comp_block_\d+\)\.intersect\(intersect_groove_\d+\)\.val/);
+  assert.match(
+    ellipsoidResult.code,
+    /shape\(comp_block_\d+\)\.intersect\(intersect_groove_\d+\)\.val/,
+  );
 });
 test("composable-part brepjs generator's vertical edge selector accounts for a rotated target's own orientation", () => {
   // Regression guard: a bare 'Z' direction would be wrong for a rotated
@@ -2471,13 +2851,21 @@ test("composable-part brepjs generator's vertical edge selector accounts for a r
         },
       ],
       features: [
-        { id: "f", kind: "fillet", target: "a", parameters: { radius: 2, edges: "vertical" } },
+        {
+          id: "f",
+          kind: "fillet",
+          target: "a",
+          parameters: { radius: 2, edges: "vertical" },
+        },
       ],
     },
   };
   const code = generateBrepJs(spec).code;
   // local Z axis [0,0,1] rotated 30deg extrinsically about X.
-  assert.match(code, /inDirection\(\[0, -0\.49999999999999994, 0\.8660254037844387\]\)/);
+  assert.match(
+    code,
+    /inDirection\(\[0, -0\.49999999999999994, 0\.8660254037844387\]\)/,
+  );
 });
 test("composable-part brepjs generator restricts fillet/chamfer edges support by target kind, warning for unsupported combinations", () => {
   const spec = (kind, dims, edges) => ({
@@ -2487,11 +2875,22 @@ test("composable-part brepjs generator restricts fillet/chamfer edges support by
       type: "composable_part",
       label: "edges support matrix test",
       components: [{ id: "a", kind, operation: "add", dimensions: dims }],
-      features: [{ id: "f", kind: "chamfer", target: "a", parameters: { distance: 1, edges } }],
+      features: [
+        {
+          id: "f",
+          kind: "chamfer",
+          target: "a",
+          parameters: { distance: 1, edges },
+        },
+      ],
     },
   });
   // cylinder has no straight edges: "vertical" is unsupported.
-  const cylinderVertical = spec("cylinder", { diameter: 20, height: 10 }, "vertical");
+  const cylinderVertical = spec(
+    "cylinder",
+    { diameter: 20, height: 10 },
+    "vertical",
+  );
   assert.match(
     generateBrepJs(cylinderVertical).warnings.join(" "),
     /feature f \(chamfer\) targets component a \(kind "cylinder"\), which does not support edges "vertical".*the chamfer was not applied/,
@@ -2499,7 +2898,8 @@ test("composable-part brepjs generator restricts fillet/chamfer edges support by
   assert.doesNotMatch(generateBrepJs(cylinderVertical).code, /\.chamfer\(/);
   // cylinder DOES support top/bottom.
   assert.deepEqual(
-    generateBrepJs(spec("cylinder", { diameter: 20, height: 10 }, "top")).warnings,
+    generateBrepJs(spec("cylinder", { diameter: 20, height: 10 }, "top"))
+      .warnings,
     [],
   );
   // extruded_profile supports "vertical" (a pure direction filter) but not
@@ -2514,9 +2914,14 @@ test("composable-part brepjs generator restricts fillet/chamfer edges support by
     ],
     height: 5,
   };
-  assert.deepEqual(generateBrepJs(spec("extruded_profile", profileDims, "vertical")).warnings, []);
+  assert.deepEqual(
+    generateBrepJs(spec("extruded_profile", profileDims, "vertical")).warnings,
+    [],
+  );
   assert.match(
-    generateBrepJs(spec("extruded_profile", profileDims, "top")).warnings.join(" "),
+    generateBrepJs(spec("extruded_profile", profileDims, "top")).warnings.join(
+      " ",
+    ),
     /does not support edges "top"/,
   );
   // tube is unsupported for either selector.
@@ -2552,7 +2957,14 @@ test("composable-part brepjs generator fillets/chamfers a target with multiple p
           pattern: { type: "linear", count: 3, spacing: 20, axis: "x" },
         },
       ],
-      features: [{ id: "f", kind: "fillet", target: "a", parameters: { radius: 1, edges } }],
+      features: [
+        {
+          id: "f",
+          kind: "fillet",
+          target: "a",
+          parameters: { radius: 1, edges },
+        },
+      ],
     },
   });
   for (const edges of ["vertical", "top"]) {
@@ -2567,11 +2979,17 @@ test("composable-part brepjs generator fillets/chamfers a target with multiple p
   // "top"/"bottom" specifically: 3 separate face+edgesOfFace lookups (one
   // per pattern instance, at world x = -20, 0, 20), combined via spread.
   const topCode = generateBrepJs(patternedSpec("top")).code;
-  assert.equal((topCode.match(/faceFinder\(\)\.atDistance\(0, /g) ?? []).length, 3);
+  assert.equal(
+    (topCode.match(/faceFinder\(\)\.atDistance\(0, /g) ?? []).length,
+    3,
+  );
   assert.match(topCode, /\[-20, 0, 10\]/);
   assert.match(topCode, /\[0, 0, 10\]/);
   assert.match(topCode, /\[20, 0, 10\]/);
-  assert.match(topCode, /\.fillet\(\[\.\.\.edges_f_\d+, \.\.\.edges_f_\d+, \.\.\.edges_f_\d+\]/);
+  assert.match(
+    topCode,
+    /\.fillet\(\[\.\.\.edges_f_\d+, \.\.\.edges_f_\d+, \.\.\.edges_f_\d+\]/,
+  );
 
   // Also works when the pattern comes from a transforming GROUP rather
   // than the component's own `pattern`.
@@ -2596,13 +3014,26 @@ test("composable-part brepjs generator fillets/chamfers a target with multiple p
           pattern: { type: "linear", count: 3, spacing: 20, axis: "y" },
         },
       ],
-      features: [{ id: "f", kind: "fillet", target: "a", parameters: { radius: 1, edges: "top" } }],
+      features: [
+        {
+          id: "f",
+          kind: "fillet",
+          target: "a",
+          parameters: { radius: 1, edges: "top" },
+        },
+      ],
     },
   };
-  assert.deepEqual(validatePrintSpec(groupPatternSpec), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(groupPatternSpec), {
+    valid: true,
+    errors: [],
+  });
   const groupResult = generateBrepJs(groupPatternSpec);
   assert.deepEqual(groupResult.warnings, []);
-  assert.equal((groupResult.code.match(/faceFinder\(\)\.atDistance\(0, /g) ?? []).length, 3);
+  assert.equal(
+    (groupResult.code.match(/faceFinder\(\)\.atDistance\(0, /g) ?? []).length,
+    3,
+  );
   const groupExecuted = await runBrepJsAgainstStub(groupResult.code);
   assert.ok(groupExecuted && typeof groupExecuted === "object");
 });
@@ -2623,7 +3054,12 @@ test("composable-part brepjs generator still rejects shelling a target with mult
         },
       ],
       features: [
-        { id: "f", kind: "shell", target: "a", parameters: { thickness: 1, openFaces: ["top"] } },
+        {
+          id: "f",
+          kind: "shell",
+          target: "a",
+          parameters: { thickness: 1, openFaces: ["top"] },
+        },
       ],
     },
   };
@@ -2650,7 +3086,14 @@ test("composable-part rejects a fillet/chamfer feature whose radius\\/distance i
           dimensions: { length: 10, width: 10, height: 6 },
         },
       ],
-      features: [{ id: "f", kind, target: "a", parameters: { [param]: value, edges: "top" } }],
+      features: [
+        {
+          id: "f",
+          kind,
+          target: "a",
+          parameters: { [param]: value, edges: "top" },
+        },
+      ],
     },
   });
   assert.match(
@@ -2698,7 +3141,11 @@ test("composable-part brepjs generator implements text embossing and engraving",
     assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] }, mode);
     const result = generateBrepJs(s);
     assert.deepEqual(result.warnings, [], mode);
-    assert.match(result.code, /import \{ loadFont, sketchText \} from 'brepjs\/text';/, mode);
+    assert.match(
+      result.code,
+      /import \{ loadFont, sketchText \} from 'brepjs\/text';/,
+      mode,
+    );
     assert.match(
       result.code,
       /unwrap\(await loadFont\("https:\/\/example\.com\/font\.ttf", "font_0"\)\);/,
@@ -2711,7 +3158,9 @@ test("composable-part brepjs generator implements text embossing and engraving",
     );
     assert.match(
       result.code,
-      mode === "emboss" ? /\.fuse\(featureCut_t_\d+\)/ : /\.cut\(featureCut_t_\d+\)/,
+      mode === "emboss"
+        ? /\.fuse\(featureCut_t_\d+\)/
+        : /\.cut\(featureCut_t_\d+\)/,
       mode,
     );
     const executed = await runBrepJsAgainstStub(result.code);
@@ -2757,8 +3206,14 @@ test("composable-part brepjs generator dedupes loadFont calls by fontUrl across 
   ]);
   const twoUrlsCode = generateBrepJs(twoUrls).code;
   assert.equal((twoUrlsCode.match(/loadFont\(/g) ?? []).length, 2);
-  assert.match(twoUrlsCode, /loadFont\("https:\/\/example\.com\/font-a\.ttf", "font_0"\)/);
-  assert.match(twoUrlsCode, /loadFont\("https:\/\/example\.com\/font-b\.ttf", "font_1"\)/);
+  assert.match(
+    twoUrlsCode,
+    /loadFont\("https:\/\/example\.com\/font-a\.ttf", "font_0"\)/,
+  );
+  assert.match(
+    twoUrlsCode,
+    /loadFont\("https:\/\/example\.com\/font-b\.ttf", "font_1"\)/,
+  );
 });
 test("composable-part brepjs generator only emits the 'brepjs\\/text' import when a spec has a text feature", () => {
   const noText = {
@@ -2819,7 +3274,9 @@ test("composable-part rejects a text feature with a malformed or unfetchable-sch
   // file:// is syntactically valid but real-kernel-verified to never work
   // (Node's fetch() throws on it outright).
   assert.match(
-    validatePrintSpec(spec("file:///home/user/fonts/Custom.ttf")).errors.join(" "),
+    validatePrintSpec(spec("file:///home/user/fonts/Custom.ttf")).errors.join(
+      " ",
+    ),
     /feature t \(text\) fontUrl must be an http\(s\):\/\/ URL or a data: URI \(got "file:"\)/,
   );
   // an allowed-but-irrelevant scheme (e.g. ftp:) is rejected the same way.
@@ -2874,7 +3331,10 @@ test("composable-part rejects a text feature whose engrave depth exceeds its tar
   // emboss has no depth ceiling -- the same depth is fine in emboss mode.
   const embossVariant = structuredClone(spec);
   embossVariant.part.features[0].parameters.mode = "emboss";
-  assert.deepEqual(validatePrintSpec(embossVariant), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(embossVariant), {
+    valid: true,
+    errors: [],
+  });
 });
 test("composable-part brepjs generator warns when add components don't form a single connected part", () => {
   // Approximate bounding-box connectivity check: a component positioned
@@ -2889,23 +3349,45 @@ test("composable-part brepjs generator warns when add components don't form a si
     ...extra,
   });
   const spec = (components, groups) => {
-    const part = { type: "composable_part", label: "connectivity test", components };
+    const part = {
+      type: "composable_part",
+      label: "connectivity test",
+      components,
+    };
     if (groups) part.groups = groups;
     return { printspecVersion: "0.2.0", units: "mm", part };
   };
 
-  const disconnected = spec([box("a"), box("b", { position: { x: 100, y: 0, z: 0 } })]);
-  assert.deepEqual(validatePrintSpec(disconnected), { valid: true, errors: [] });
+  const disconnected = spec([
+    box("a"),
+    box("b", { position: { x: 100, y: 0, z: 0 } }),
+  ]);
+  assert.deepEqual(validatePrintSpec(disconnected), {
+    valid: true,
+    errors: [],
+  });
   assert.match(
     generateBrepJs(disconnected).warnings.join(" "),
     /components do not appear to form a single connected part.*\[a\] and \[b\]/,
   );
 
-  const touching = spec([box("a"), box("b", { position: { x: 10, y: 0, z: 0 } })]);
-  assert.doesNotMatch(generateBrepJs(touching).warnings.join(" "), /single connected part/);
+  const touching = spec([
+    box("a"),
+    box("b", { position: { x: 10, y: 0, z: 0 } }),
+  ]);
+  assert.doesNotMatch(
+    generateBrepJs(touching).warnings.join(" "),
+    /single connected part/,
+  );
 
-  const overlapping = spec([box("a"), box("b", { position: { x: 5, y: 0, z: 0 } })]);
-  assert.doesNotMatch(generateBrepJs(overlapping).warnings.join(" "), /single connected part/);
+  const overlapping = spec([
+    box("a"),
+    box("b", { position: { x: 5, y: 0, z: 0 } }),
+  ]);
+  assert.doesNotMatch(
+    generateBrepJs(overlapping).warnings.join(" "),
+    /single connected part/,
+  );
 
   // Three components forming two clusters: a+b touch each other, c is far
   // away -- the warning must group a and b together, not flag every pair.
@@ -2914,7 +3396,10 @@ test("composable-part brepjs generator warns when add components don't form a si
     box("b", { position: { x: 10, y: 0, z: 0 } }),
     box("c", { position: { x: 200, y: 0, z: 0 } }),
   ]);
-  assert.match(generateBrepJs(twoClusters).warnings.join(" "), /\[a, b\] and \[c\]/);
+  assert.match(
+    generateBrepJs(twoClusters).warnings.join(" "),
+    /\[a, b\] and \[c\]/,
+  );
 
   // The check accounts for group position, not just each component's own
   // (pre-group) position.
@@ -2922,10 +3407,16 @@ test("composable-part brepjs generator warns when add components don't form a si
     [box("base"), box("member")],
     [{ id: "g", memberIds: ["member"], position: { x: 500, y: 0, z: 0 } }],
   );
-  assert.match(generateBrepJs(groupedFar).warnings.join(" "), /single connected part/);
+  assert.match(
+    generateBrepJs(groupedFar).warnings.join(" "),
+    /single connected part/,
+  );
   const groupedTouching = structuredClone(groupedFar);
   groupedTouching.part.groups[0].position.x = 10;
-  assert.doesNotMatch(generateBrepJs(groupedTouching).warnings.join(" "), /single connected part/);
+  assert.doesNotMatch(
+    generateBrepJs(groupedTouching).warnings.join(" "),
+    /single connected part/,
+  );
 });
 test("composable-part connectivity check catches a gap hidden inside a component's own pattern spread", () => {
   // Regression test for a real bug: patternOffsets()'s per-instance formula
@@ -2944,7 +3435,12 @@ test("composable-part connectivity check catches a gap hidden inside a component
       type: "composable_part",
       label: "own-pattern connectivity test",
       components: [
-        { id: "plate", kind: "plate", operation: "add", dimensions: { length: 20, width: 20, thickness: 4 } },
+        {
+          id: "plate",
+          kind: "plate",
+          operation: "add",
+          dimensions: { length: 20, width: 20, thickness: 4 },
+        },
         {
           id: "boss",
           kind: "boss",
@@ -2965,7 +3461,10 @@ test("composable-part connectivity check catches a gap hidden inside a component
   // not be flagged.
   const tight = structuredClone(spec);
   tight.part.components[1].pattern.spacing = 8;
-  assert.doesNotMatch(generateBrepJs(tight).warnings.join(" "), /single connected part/);
+  assert.doesNotMatch(
+    generateBrepJs(tight).warnings.join(" "),
+    /single connected part/,
+  );
 });
 test("composable-part rejects an inverted tube (innerDiameter >= outerDiameter)", () => {
   // Regression test: an inverted tube previously validated cleanly but
@@ -3017,7 +3516,12 @@ test("composable-part warns when a stacked feature targets a patterned feature b
       type: "composable_part",
       label: "stacked feature on patterned target test",
       components: [
-        { id: "plate", kind: "plate", operation: "add", dimensions: { length: 60, width: 20, thickness: 8 } },
+        {
+          id: "plate",
+          kind: "plate",
+          operation: "add",
+          dimensions: { length: 60, width: 20, thickness: 8 },
+        },
       ],
       features: [
         {
@@ -3028,7 +3532,12 @@ test("composable-part warns when a stacked feature targets a patterned feature b
           pattern: { type: "linear", count: 3, spacing: 15, axis: "x" },
           parameters: { diameter: 4, depth: "through" },
         },
-        { id: "cb", kind: "counterbore", target: "hole", parameters: { diameter: 8, depth: 3 } },
+        {
+          id: "cb",
+          kind: "counterbore",
+          target: "hole",
+          parameters: { diameter: 8, depth: 3 },
+        },
       ],
     },
   };
@@ -3039,8 +3548,16 @@ test("composable-part warns when a stacked feature targets a patterned feature b
   );
   // Giving the stacked feature the same pattern silences the warning.
   const fixed = structuredClone(spec);
-  fixed.part.features[1].pattern = { type: "linear", count: 3, spacing: 15, axis: "x" };
-  assert.doesNotMatch(generateBrepJs(fixed).warnings.join(" "), /has no pattern of its own/);
+  fixed.part.features[1].pattern = {
+    type: "linear",
+    count: 3,
+    spacing: 15,
+    axis: "x",
+  };
+  assert.doesNotMatch(
+    generateBrepJs(fixed).warnings.join(" "),
+    /has no pattern of its own/,
+  );
   // Targeting a member of a patterned *group* already auto-propagates
   // correctly (see docs/composable-parts.md, "Patterns") and must not
   // trigger this warning even with no pattern of its own.
@@ -3051,14 +3568,30 @@ test("composable-part warns when a stacked feature targets a patterned feature b
       type: "composable_part",
       label: "feature on patterned group member",
       components: [
-        { id: "plate", kind: "plate", operation: "add", dimensions: { length: 60, width: 60, thickness: 8 } },
-        { id: "standoff", kind: "boss", operation: "add", dimensions: { diameter: 8, height: 6 } },
+        {
+          id: "plate",
+          kind: "plate",
+          operation: "add",
+          dimensions: { length: 60, width: 60, thickness: 8 },
+        },
+        {
+          id: "standoff",
+          kind: "boss",
+          operation: "add",
+          dimensions: { diameter: 8, height: 6 },
+        },
       ],
       groups: [
         {
           id: "cluster",
           memberIds: ["standoff"],
-          pattern: { type: "rectangular", countX: 2, countY: 2, spacingX: 40, spacingY: 40 },
+          pattern: {
+            type: "rectangular",
+            countX: 2,
+            countY: 2,
+            spacingX: 40,
+            spacingY: 40,
+          },
         },
       ],
       features: [
@@ -3071,8 +3604,14 @@ test("composable-part warns when a stacked feature targets a patterned feature b
       ],
     },
   };
-  assert.deepEqual(validatePrintSpec(groupTargeted), { valid: true, errors: [] });
-  assert.doesNotMatch(generateBrepJs(groupTargeted).warnings.join(" "), /has no pattern of its own/);
+  assert.deepEqual(validatePrintSpec(groupTargeted), {
+    valid: true,
+    errors: [],
+  });
+  assert.doesNotMatch(
+    generateBrepJs(groupTargeted).warnings.join(" "),
+    /has no pattern of its own/,
+  );
 });
 test("composable-part relation.targetInstance anchors to one specific pattern instance", () => {
   // relation.targetInstance is the addressed alternative to the "no pattern
@@ -3088,7 +3627,12 @@ test("composable-part relation.targetInstance anchors to one specific pattern in
       type: "composable_part",
       label: "targetInstance test",
       components: [
-        { id: "plate", kind: "plate", operation: "add", dimensions: { length: 60, width: 20, thickness: 8 } },
+        {
+          id: "plate",
+          kind: "plate",
+          operation: "add",
+          dimensions: { length: 60, width: 20, thickness: 8 },
+        },
       ],
       features: [
         {
@@ -3117,7 +3661,10 @@ test("composable-part relation.targetInstance anchors to one specific pattern in
   assert.doesNotMatch(result.warnings.join(" "), /has no pattern of its own/);
   // Instance 2 of a 3-count linear pattern (spacing 15, centered) is at
   // x=15, not the pattern's center (x=0).
-  assert.match(result.code, /featureCut_cb_\d+ = .*translate\(\[15, 0, 8\]\)\.val/);
+  assert.match(
+    result.code,
+    /featureCut_cb_\d+ = .*translate\(\[15, 0, 8\]\)\.val/,
+  );
 
   // Out of bounds.
   assert.match(
@@ -3137,7 +3684,11 @@ test("composable-part relation.targetInstance anchors to one specific pattern in
   // unhandled anchor-resolution shape -- see docs/composable-parts.md).
   const groupTarget = spec(0);
   groupTarget.part.groups = [
-    { id: "grp", memberIds: ["plate"], pattern: { type: "linear", count: 2, spacing: 40, axis: "x" } },
+    {
+      id: "grp",
+      memberIds: ["plate"],
+      pattern: { type: "linear", count: 2, spacing: 40, axis: "x" },
+    },
   ];
   groupTarget.part.features[1].relation.target = "grp";
   assert.match(
@@ -3154,11 +3705,21 @@ test("composable-part relations reject ambiguous targets and group transform con
     ...extra,
   });
   const spec = (components, groups) => {
-    const part = { type: "composable_part", label: "ambiguity test", components };
+    const part = {
+      type: "composable_part",
+      label: "ambiguity test",
+      components,
+    };
     if (groups) part.groups = groups;
     return { printspecVersion: "0.2.0", units: "mm", part };
   };
-  const rectPattern = { type: "rectangular", countX: 2, countY: 2, spacingX: 20, spacingY: 20 };
+  const rectPattern = {
+    type: "rectangular",
+    countX: 2,
+    countY: 2,
+    spacingX: 20,
+    spacingY: 20,
+  };
 
   // A relation may not anchor to a patterned component (no single instance
   // to anchor to), but CSG (appliesTo) against a patterned target is fine.
@@ -3183,7 +3744,13 @@ test("composable-part relations reject ambiguous targets and group transform con
   // A group's relation may not target its own member.
   const groupTargetsOwnMember = spec(
     [box("a"), box("b")],
-    [{ id: "grp", memberIds: ["a"], relation: { type: "on_top_of", target: "a" } }],
+    [
+      {
+        id: "grp",
+        memberIds: ["a"],
+        relation: { type: "on_top_of", target: "a" },
+      },
+    ],
   );
   assert.match(
     validatePrintSpec(groupTargetsOwnMember).errors.join(" "),
@@ -3191,9 +3758,18 @@ test("composable-part relations reject ambiguous targets and group transform con
   );
   const groupTargetsOther = spec(
     [box("a"), box("b")],
-    [{ id: "grp", memberIds: ["a"], relation: { type: "on_top_of", target: "b" } }],
+    [
+      {
+        id: "grp",
+        memberIds: ["a"],
+        relation: { type: "on_top_of", target: "b" },
+      },
+    ],
   );
-  assert.deepEqual(validatePrintSpec(groupTargetsOther), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(groupTargetsOther), {
+    valid: true,
+    errors: [],
+  });
 
   // A component may not belong to more than one group that itself has a
   // position/rotation/relation, since it would be ambiguous which (or how
@@ -3217,7 +3793,10 @@ test("composable-part relations reject ambiguous targets and group transform con
       { id: "g2", memberIds: ["a"] },
     ],
   );
-  assert.deepEqual(validatePrintSpec(oneTransformingOneTag), { valid: true, errors: [] });
+  assert.deepEqual(validatePrintSpec(oneTransformingOneTag), {
+    valid: true,
+    errors: [],
+  });
 
   // A grouped component's world position depends on its transforming
   // group's own resolved transform (see worldPosition() in
@@ -3250,23 +3829,45 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
     ["wall-mount-bracket.basic.json", "wall-mount-bracket.schema.json"],
     ["l-bracket.basic.json", "l-bracket.schema.json"],
     ["project-enclosure-tray.basic.json", "project-enclosure-tray.schema.json"],
-    ["rounded-rectangular-plate.basic.json", "rounded-rectangular-plate.schema.json"],
+    [
+      "rounded-rectangular-plate.basic.json",
+      "rounded-rectangular-plate.schema.json",
+    ],
   ];
   for (const [file, schemaFile] of families) {
-    const props = read("schemas/" + schemaFile).properties.parameters.properties;
+    const props = read("schemas/" + schemaFile).properties.parameters
+      .properties;
     const s = read("examples/part-families/" + file);
     const expectChamferWarning = "chamfer" in props;
     // Only rounded_rectangular_plate actually implements cornerRadius.
-    const expectCornerRadiusWarning = file !== "rounded-rectangular-plate.basic.json";
+    const expectCornerRadiusWarning =
+      file !== "rounded-rectangular-plate.basic.json";
     if (expectChamferWarning) s.part.parameters.chamfer = { distance: 0.5 };
     s.part.parameters.cornerRadius = 1;
-    for (const generate of [generateOpenScad, generateCadQuery, generateBrepJs]) {
+    for (const generate of [
+      generateOpenScad,
+      generateCadQuery,
+      generateBrepJs,
+    ]) {
       const w = generate(s).warnings.join(" ");
       if (expectChamferWarning)
-        assert.match(w, /chamfer requested but not implemented/, `${file} chamfer`);
+        assert.match(
+          w,
+          /chamfer requested but not implemented/,
+          `${file} chamfer`,
+        );
       if (expectCornerRadiusWarning)
-        assert.match(w, /cornerRadius requested but not implemented/, `${file} cornerRadius`);
-      else assert.doesNotMatch(w, /cornerRadius requested but not implemented/, file);
+        assert.match(
+          w,
+          /cornerRadius requested but not implemented/,
+          `${file} cornerRadius`,
+        );
+      else
+        assert.doesNotMatch(
+          w,
+          /cornerRadius requested but not implemented/,
+          file,
+        );
     }
   }
 });
@@ -3298,7 +3899,8 @@ test("validatePrintSpec narrows a recognized part.type to just its own schema in
   const result = validatePrintSpec(spec);
   assert.equal(result.valid, false);
   assert.equal(result.errors.length, 2, result.errors.join("; "));
-  for (const e of result.errors) assert.match(e, /position: must have required property/);
+  for (const e of result.errors)
+    assert.match(e, /position: must have required property/);
   // Same narrowing directly against validateComposablePartSpec (unaffected
   // by this change, since it never went through the part-level oneOf) for
   // parity confirmation -- paths differ only by the "/part" prefix, since
@@ -3343,15 +3945,27 @@ test("typescript cli commands", () => {
     ["to-openscad", "examples/part-families/round-spacer.basic.json"],
     ["to-cadquery", "examples/part-families/electronics-standoff.m3.json"],
     ["to-brepjs", "examples/part-families/spacer-block.four-hole.json"],
-    ["bom", "examples/projects/simple-enclosure-project.json", "--format", "markdown"],
+    [
+      "bom",
+      "examples/projects/simple-enclosure-project.json",
+      "--format",
+      "markdown",
+    ],
   ]) {
-    const r = spawnSync("node", [cli, ...args], { cwd: root, encoding: "utf8" });
+    const r = spawnSync("node", [cli, ...args], {
+      cwd: root,
+      encoding: "utf8",
+    });
     assert.equal(r.status, 0, `${args.join(" ")} ${r.stderr}`);
     assert.ok((r.stdout + r.stderr).length > 0);
   }
   const bad = spawnSync(
     "node",
-    [cli, "validate", "tests/fixtures/invalid/round-spacer-inner-too-large.json"],
+    [
+      cli,
+      "validate",
+      "tests/fixtures/invalid/round-spacer-inner-too-large.json",
+    ],
     { cwd: root, encoding: "utf8" },
   );
   assert.equal(bad.status, 1);
@@ -3359,7 +3973,10 @@ test("typescript cli commands", () => {
   const malformed = path.join(root, "tests/fixtures/invalid-json.tmp.json");
   fs.writeFileSync(malformed, "{bad json");
   try {
-    const r = spawnSync("node", [cli, "validate", malformed], { cwd: root, encoding: "utf8" });
+    const r = spawnSync("node", [cli, "validate", malformed], {
+      cwd: root,
+      encoding: "utf8",
+    });
     assert.equal(r.status, 1);
     assert.match(r.stderr, /invalid-json\.tmp\.json/);
     assert.match(r.stderr, /parse error/);
@@ -3371,7 +3988,10 @@ test("typescript cli commands", () => {
 test("typescript cli version commands", () => {
   const cli = path.join(root, "packages/typescript/dist/cli.js");
   for (const args of [["--version"], ["version"]]) {
-    const r = spawnSync("node", [cli, ...args], { cwd: root, encoding: "utf8" });
+    const r = spawnSync("node", [cli, ...args], {
+      cwd: root,
+      encoding: "utf8",
+    });
     assert.equal(r.status, 0, r.stderr);
     assert.match(
       r.stdout,
@@ -3384,10 +4004,16 @@ test("typescript cli version commands", () => {
 
 test("typescript cli friendly user errors", () => {
   const cli = path.join(root, "packages/typescript/dist/cli.js");
-  const help = spawnSync("node", [cli, "--help"], { cwd: root, encoding: "utf8" });
+  const help = spawnSync("node", [cli, "--help"], {
+    cwd: root,
+    encoding: "utf8",
+  });
   assert.equal(help.status, 0, help.stderr);
   assert.match(help.stdout, /usage: printspec/);
-  const badCommand = spawnSync("node", [cli, "wat"], { cwd: root, encoding: "utf8" });
+  const badCommand = spawnSync("node", [cli, "wat"], {
+    cwd: root,
+    encoding: "utf8",
+  });
   assert.equal(badCommand.status, 1);
   assert.match(badCommand.stderr, /unknown command wat/);
   assert.doesNotMatch(badCommand.stderr, /Error:|\n\s+at /);
@@ -3402,7 +4028,10 @@ test("typescript cli friendly user errors", () => {
   const malformed = path.join(root, "tests/fixtures/invalid-json.tmp.json");
   fs.writeFileSync(malformed, "{bad json");
   try {
-    const r = spawnSync("node", [cli, "validate", malformed], { cwd: root, encoding: "utf8" });
+    const r = spawnSync("node", [cli, "validate", malformed], {
+      cwd: root,
+      encoding: "utf8",
+    });
     assert.equal(r.status, 1);
     assert.match(r.stderr, /invalid-json\.tmp\.json/);
     assert.match(r.stderr, /parse error/);
@@ -3422,7 +4051,11 @@ test("form metadata helpers and cli expose schema UI metadata", async () => {
     .map((f) => read("schemas/" + f))
     .filter((s) => s.properties?.type?.const && s.properties?.parameters);
   assert.equal(families.length, schemaFiles.length);
-  assert.ok(families.some((f) => f.type === "rounded_rectangular_plate" && f.generatorSupported));
+  assert.ok(
+    families.some(
+      (f) => f.type === "rounded_rectangular_plate" && f.generatorSupported,
+    ),
+  );
   const rr = getPartFamilyFormMetadata("rounded_rectangular_plate");
   assert.deepEqual(
     rr.fields.slice(0, 4).map((f) => f.name),
@@ -3438,10 +4071,16 @@ test("form metadata helpers and cli expose schema UI metadata", async () => {
   });
   assert.equal(meta.status, 0, meta.stderr);
   assert.equal(JSON.parse(meta.stdout).partType, "spacer_block");
-  const list = spawnSync("node", [cli, "list-part-families"], { cwd: root, encoding: "utf8" });
+  const list = spawnSync("node", [cli, "list-part-families"], {
+    cwd: root,
+    encoding: "utf8",
+  });
   assert.equal(list.status, 0, list.stderr);
   assert.ok(JSON.parse(list.stdout).some((f) => f.type === "spacer_block"));
-  const bad = spawnSync("node", [cli, "form-metadata", "missing"], { cwd: root, encoding: "utf8" });
+  const bad = spawnSync("node", [cli, "form-metadata", "missing"], {
+    cwd: root,
+    encoding: "utf8",
+  });
   assert.equal(bad.status, 1);
 });
 
@@ -3469,12 +4108,15 @@ test("schema UI metadata quality", () => {
     const names = new Set(Object.keys(props));
     const ui = params["x-printspec-ui"];
     assert.ok(ui?.order, file);
-    for (const name of ui.order) assert.ok(names.has(name), `${file} order ${name}`);
+    for (const name of ui.order)
+      assert.ok(names.has(name), `${file} order ${name}`);
     for (const group of ui.groups ?? [])
-      for (const name of group.fields) assert.ok(names.has(name), `${file} group ${name}`);
+      for (const name of group.fields)
+        assert.ok(names.has(name), `${file} group ${name}`);
     for (const req of params.required ?? [])
       assert.ok(
-        ui.order.includes(req) || (ui.groups ?? []).some((g) => g.fields.includes(req)),
+        ui.order.includes(req) ||
+          (ui.groups ?? []).some((g) => g.fields.includes(req)),
         `${file} required ${req}`,
       );
     if (rich.has(partType)) {
@@ -3482,7 +4124,8 @@ test("schema UI metadata quality", () => {
         assert.ok(field.title, `${file} ${name} title`);
         assert.ok(field.description, `${file} ${name} description`);
         assert.ok(field["x-printspec-control"], `${file} ${name} control`);
-        if (field.type === "number") assert.ok(field["x-printspec-unit"], `${file} ${name} unit`);
+        if (field.type === "number")
+          assert.ok(field["x-printspec-unit"], `${file} ${name} unit`);
       }
     }
   }
@@ -3507,7 +4150,8 @@ test("bundle helpers create deterministic files and refuse traversal", async () 
   const withBrepJs = createBundle(spec, { includeBrepJs: true });
   assert.ok(withBrepJs.files.some((f) => f.path === "cad/model.brep.ts"));
   assert.equal(
-    JSON.parse(b.files.find((f) => f.path === "bundle-manifest.json").content).kind,
+    JSON.parse(b.files.find((f) => f.path === "bundle-manifest.json").content)
+      .kind,
     "part",
   );
   assert.match(
@@ -3530,7 +4174,8 @@ test("bundle helpers create deterministic files and refuse traversal", async () 
 });
 
 test("bundle project and typescript cli write expected files", async () => {
-  const { createBundle } = await import("../../packages/typescript/dist/index.js");
+  const { createBundle } =
+    await import("../../packages/typescript/dist/index.js");
   const b = createBundle(project, { includePartCad: true });
   const paths = b.files.map((f) => f.path);
   assert.ok(paths.includes("bom/bom.md"));
@@ -3565,8 +4210,10 @@ test("bundle project and typescript cli write expected files", async () => {
 });
 
 test("all ten core 0.2.0 family examples validate and generate outputs", async () => {
-  const { createBundle } = await import("../../packages/typescript/dist/index.js");
-  const { generatePreviewScene } = await import("../../packages/typescript/dist/preview/index.js");
+  const { createBundle } =
+    await import("../../packages/typescript/dist/index.js");
+  const { generatePreviewScene } =
+    await import("../../packages/typescript/dist/preview/index.js");
   const files = [
     "round-spacer.basic.json",
     "spacer-block.four-hole.json",
@@ -3589,7 +4236,10 @@ test("all ten core 0.2.0 family examples validate and generate outputs", async (
     assert.equal(scad.supported, true, type);
     assert.match(
       scad.code,
-      new RegExp(type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "|difference|cylinder|cube"),
+      new RegExp(
+        type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
+          "|difference|cylinder|cube",
+      ),
       type,
     );
     assert.doesNotMatch(
@@ -3625,7 +4275,9 @@ test("all ten core 0.2.0 family examples validate and generate outputs", async (
       "bundle-manifest.json",
     ])
       assert.ok(
-        bundle.files.some((f) => f.path === required && f.content && f.mediaType),
+        bundle.files.some(
+          (f) => f.path === required && f.content && f.mediaType,
+        ),
         `${type} ${required}`,
       );
   }
@@ -3633,7 +4285,8 @@ test("all ten core 0.2.0 family examples validate and generate outputs", async (
 });
 
 test("generatorSupported metadata matches actual generator support for every family", async () => {
-  const { listPartFamilies } = await import("../../packages/typescript/dist/index.js");
+  const { listPartFamilies } =
+    await import("../../packages/typescript/dist/index.js");
   const byType = new Map();
   for (const f of fs
     .readdirSync(path.join(root, "examples/part-families"))
@@ -3649,8 +4302,16 @@ test("generatorSupported metadata matches actual generator support for every fam
     const scadSupported = generateOpenScad(example).supported;
     const cqSupported = generateCadQuery(example).supported;
     const brepSupported = generateBrepJs(example).supported;
-    assert.equal(scadSupported, cqSupported, `${family.type}: openscad/cadquery support disagree`);
-    assert.equal(scadSupported, brepSupported, `${family.type}: openscad/brepjs support disagree`);
+    assert.equal(
+      scadSupported,
+      cqSupported,
+      `${family.type}: openscad/cadquery support disagree`,
+    );
+    assert.equal(
+      scadSupported,
+      brepSupported,
+      `${family.type}: openscad/brepjs support disagree`,
+    );
     assert.equal(
       family.generatorSupported,
       scadSupported,

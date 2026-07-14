@@ -102,9 +102,15 @@ def test_generator_snapshots_match_fixtures():
             "rounded-rectangular-plate.basic",
             "examples/part-families/rounded-rectangular-plate.basic.json",
         ),
-        ("spacer-block.four-hole", "examples/part-families/spacer-block.four-hole.json"),
+        (
+            "spacer-block.four-hole",
+            "examples/part-families/spacer-block.four-hole.json",
+        ),
         ("round-spacer.basic", "examples/part-families/round-spacer.basic.json"),
-        ("electronics-standoff.m3", "examples/part-families/electronics-standoff.m3.json"),
+        (
+            "electronics-standoff.m3",
+            "examples/part-families/electronics-standoff.m3.json",
+        ),
     ]
     for name, file in items:
         s = read(Path(file))
@@ -422,8 +428,18 @@ def test_composable_part_rejects_a_cycle_formed_only_by_feature_target_chains():
                 }
             ],
             "features": [
-                {"id": "f1", "kind": "hole", "target": "f2", "parameters": {"diameter": 2}},
-                {"id": "f2", "kind": "hole", "target": "f1", "parameters": {"diameter": 2}},
+                {
+                    "id": "f1",
+                    "kind": "hole",
+                    "target": "f2",
+                    "parameters": {"diameter": 2},
+                },
+                {
+                    "id": "f2",
+                    "kind": "hole",
+                    "target": "f1",
+                    "parameters": {"diameter": 2},
+                },
             ],
         },
     }
@@ -573,13 +589,24 @@ def test_composable_part_fillet_chamfer_all_edges_schema_validates():
                     }
                 ],
                 "features": [
-                    {"id": "f", "kind": kind, "target": "a", "parameters": {param: 2, "edges": edges}}
+                    {
+                        "id": "f",
+                        "kind": kind,
+                        "target": "a",
+                        "parameters": {param: 2, "edges": edges},
+                    }
                 ],
             },
         }
 
-    assert validate_printspec(spec("fillet", "radius", "all")) == {"valid": True, "errors": []}
-    assert validate_printspec(spec("chamfer", "distance", "all")) == {"valid": True, "errors": []}
+    assert validate_printspec(spec("fillet", "radius", "all")) == {
+        "valid": True,
+        "errors": [],
+    }
+    assert validate_printspec(spec("chamfer", "distance", "all")) == {
+        "valid": True,
+        "errors": [],
+    }
     assert validate_printspec(spec("fillet", "radius", "diagonal"))["valid"] is False
 
 
@@ -676,12 +703,22 @@ def test_composable_part_relations_reject_ambiguous_targets_and_group_transform_
         return c
 
     def spec(components, groups=None):
-        part = {"type": "composable_part", "label": "ambiguity test", "components": components}
+        part = {
+            "type": "composable_part",
+            "label": "ambiguity test",
+            "components": components,
+        }
         if groups:
             part["groups"] = groups
         return {"printspecVersion": "0.2.0", "units": "mm", "part": part}
 
-    rect_pattern = {"type": "rectangular", "countX": 2, "countY": 2, "spacingX": 20, "spacingY": 20}
+    rect_pattern = {
+        "type": "rectangular",
+        "countX": 2,
+        "countY": 2,
+        "spacingX": 20,
+        "spacingY": 20,
+    }
 
     # A relation may not anchor to a patterned component (no single instance
     # to anchor to), but CSG (appliesTo) against a patterned target is fine.
@@ -712,7 +749,11 @@ def test_composable_part_relations_reject_ambiguous_targets_and_group_transform_
     group_targets_own_member = spec(
         [box("a"), box("b")],
         groups=[
-            {"id": "grp", "memberIds": ["a"], "relation": {"type": "on_top_of", "target": "a"}}
+            {
+                "id": "grp",
+                "memberIds": ["a"],
+                "relation": {"type": "on_top_of", "target": "a"},
+            }
         ],
     )
     assert "group grp relation target is one of its own members: a" in " ".join(
@@ -721,7 +762,11 @@ def test_composable_part_relations_reject_ambiguous_targets_and_group_transform_
     group_targets_other = spec(
         [box("a"), box("b")],
         groups=[
-            {"id": "grp", "memberIds": ["a"], "relation": {"type": "on_top_of", "target": "b"}}
+            {
+                "id": "grp",
+                "memberIds": ["a"],
+                "relation": {"type": "on_top_of", "target": "b"},
+            }
         ],
     )
     assert validate_printspec(group_targets_other) == {"valid": True, "errors": []}
@@ -792,7 +837,13 @@ def test_composable_part_group_pattern_semantic_checks():
         }
         return {"printspecVersion": "0.2.0", "units": "mm", "part": part}
 
-    rect_pattern = {"type": "rectangular", "countX": 2, "countY": 2, "spacingX": 20, "spacingY": 20}
+    rect_pattern = {
+        "type": "rectangular",
+        "countX": 2,
+        "countY": 2,
+        "spacingX": 20,
+        "spacingY": 20,
+    }
 
     # A patterned group (no single instance to anchor to) may not be a
     # relation target -- the same restriction as a patterned component or
@@ -857,7 +908,11 @@ def test_composable_part_group_rejects_inherit_rotation():
                 {
                     "id": "g",
                     "memberIds": ["b"],
-                    "relation": {"type": "on_top_of", "target": "a", "inheritRotation": True},
+                    "relation": {
+                        "type": "on_top_of",
+                        "target": "a",
+                        "inheritRotation": True,
+                    },
                 }
             ],
         },
@@ -886,7 +941,11 @@ def test_composable_part_rejects_an_inverted_tube():
                         "id": "badTube",
                         "kind": "tube",
                         "operation": "add",
-                        "dimensions": {"outerDiameter": 10, "innerDiameter": inner, "height": 10},
+                        "dimensions": {
+                            "outerDiameter": 10,
+                            "innerDiameter": inner,
+                            "height": 10,
+                        },
                     }
                 ],
             },
@@ -914,7 +973,12 @@ def test_composable_part_sphere_torus_ellipsoid_schemas_validate():
             "type": "composable_part",
             "label": "sphere test",
             "components": [
-                {"id": "ball", "kind": "sphere", "operation": "add", "dimensions": {"diameter": 20}}
+                {
+                    "id": "ball",
+                    "kind": "sphere",
+                    "operation": "add",
+                    "dimensions": {"diameter": 20},
+                }
             ],
         },
     }
@@ -973,7 +1037,12 @@ def test_composable_part_clearance_constraint_structural_checks():
     # two components' authored positions actually are.
     def spec(constraint_b, extra_components=None):
         components = [
-            {"id": "a", "kind": "box", "operation": "add", "dimensions": {"length": 10, "width": 10, "height": 10}},
+            {
+                "id": "a",
+                "kind": "box",
+                "operation": "add",
+                "dimensions": {"length": 10, "width": 10, "height": 10},
+            },
             {
                 "id": "b",
                 "kind": "box",
@@ -989,7 +1058,15 @@ def test_composable_part_clearance_constraint_structural_checks():
                 "type": "composable_part",
                 "label": "clearance structural test",
                 "components": components,
-                "constraints": [{"type": "clearance", "id": "gap", "a": "a", "b": constraint_b, "minDistance": 2}],
+                "constraints": [
+                    {
+                        "type": "clearance",
+                        "id": "gap",
+                        "a": "a",
+                        "b": constraint_b,
+                        "minDistance": 2,
+                    }
+                ],
             },
         }
 
@@ -997,9 +1074,8 @@ def test_composable_part_clearance_constraint_structural_checks():
     # minDistance -- semantic validation never resolves position.
     assert validate_printspec(spec("b")) == {"valid": True, "errors": []}
 
-    assert (
-        "constraint gap b references unknown component: nope"
-        in " ".join(validate_printspec(spec("nope"))["errors"])
+    assert "constraint gap b references unknown component: nope" in " ".join(
+        validate_printspec(spec("nope"))["errors"]
     )
 
     self_ref = spec("a")
@@ -1007,7 +1083,12 @@ def test_composable_part_clearance_constraint_structural_checks():
         validate_printspec(self_ref)["errors"]
     )
 
-    rib = {"id": "r", "kind": "rib", "operation": "add", "dimensions": {"length": 10, "height": 5, "thickness": 2}}
+    rib = {
+        "id": "r",
+        "kind": "rib",
+        "operation": "add",
+        "dimensions": {"length": 10, "height": 5, "thickness": 2},
+    }
     assert (
         'constraint gap b references component r (kind "rib"), which has no well-defined bounding box'
         in " ".join(validate_printspec(spec("r", [rib]))["errors"])
@@ -1027,25 +1108,48 @@ def test_composable_part_relation_target_instance_validation():
             "type": "composable_part",
             "label": "targetInstance validation test",
             "components": [
-                {"id": "plate", "kind": "plate", "operation": "add", "dimensions": {"length": 60, "width": 20, "thickness": 8}},
+                {
+                    "id": "plate",
+                    "kind": "plate",
+                    "operation": "add",
+                    "dimensions": {"length": 60, "width": 20, "thickness": 8},
+                },
             ],
             "features": [
                 {
                     "id": "hole",
                     "kind": "hole",
                     "target": "plate",
-                    "relation": {"type": "attached_to_face", "target": "plate", "face": "top"},
-                    "pattern": {"type": "linear", "count": 3, "spacing": 15, "axis": "x"},
+                    "relation": {
+                        "type": "attached_to_face",
+                        "target": "plate",
+                        "face": "top",
+                    },
+                    "pattern": {
+                        "type": "linear",
+                        "count": 3,
+                        "spacing": 15,
+                        "axis": "x",
+                    },
                     "parameters": {"diameter": 4, "depth": "through"},
                 },
-                {"id": "cb", "kind": "counterbore", "target": "hole", "relation": rel, "parameters": {"diameter": 8, "depth": 3}},
+                {
+                    "id": "cb",
+                    "kind": "counterbore",
+                    "target": "hole",
+                    "relation": rel,
+                    "parameters": {"diameter": 8, "depth": 3},
+                },
             ],
         }
         if extra_groups:
             part["groups"] = extra_groups
         return {"printspecVersion": "0.2.0", "units": "mm", "part": part}
 
-    assert validate_printspec(spec({"targetInstance": 1})) == {"valid": True, "errors": []}
+    assert validate_printspec(spec({"targetInstance": 1})) == {
+        "valid": True,
+        "errors": [],
+    }
     assert (
         "feature cb relation targetInstance 5 is out of bounds for hole's pattern (3 instance(s))"
         in " ".join(validate_printspec(spec({"targetInstance": 5}))["errors"])
@@ -1054,7 +1158,13 @@ def test_composable_part_relation_target_instance_validation():
         "feature cb relation targetInstance is only valid when target is patterned: plate"
         in " ".join(validate_printspec(spec({"target": "plate", "targetInstance": 0}))["errors"])
     )
-    grp = [{"id": "grp", "memberIds": ["plate"], "pattern": {"type": "linear", "count": 2, "spacing": 40, "axis": "x"}}]
+    grp = [
+        {
+            "id": "grp",
+            "memberIds": ["plate"],
+            "pattern": {"type": "linear", "count": 2, "spacing": 40, "axis": "x"},
+        }
+    ]
     assert (
         "feature cb relation targetInstance is not supported for a group target: grp"
         in " ".join(validate_printspec(spec({"target": "grp", "targetInstance": 0}, grp))["errors"])
@@ -1077,7 +1187,12 @@ def test_composable_part_revolved_profile_schema_validates():
                 "type": "composable_part",
                 "label": "revolved_profile test",
                 "components": [
-                    {"id": "pulley", "kind": "revolved_profile", "operation": "add", "dimensions": dims}
+                    {
+                        "id": "pulley",
+                        "kind": "revolved_profile",
+                        "operation": "add",
+                        "dimensions": dims,
+                    }
                 ],
             },
         }
@@ -1089,7 +1204,10 @@ def test_composable_part_revolved_profile_schema_validates():
         {"radius": 0, "z": 0},
     ]
     assert validate_printspec(spec(solid_points)) == {"valid": True, "errors": []}
-    assert validate_printspec(spec(solid_points, {"sweepAngle": 90})) == {"valid": True, "errors": []}
+    assert validate_printspec(spec(solid_points, {"sweepAngle": 90})) == {
+        "valid": True,
+        "errors": [],
+    }
 
     ring_points = [
         {"radius": 12, "z": 3},
@@ -1134,12 +1252,18 @@ def test_composable_part_profile_curve_schema_validates():
         {"x": 10, "y": 10, "curve": {"type": "arc", "through": {"x": 5, "y": 15}}},
         {"x": 0, "y": 10},
     ]
-    assert validate_printspec(extruded_spec(arc_points)) == {"valid": True, "errors": []}
+    assert validate_printspec(extruded_spec(arc_points)) == {
+        "valid": True,
+        "errors": [],
+    }
 
     bezier_points = [dict(p) for p in arc_points]
     bezier_points[2] = dict(bezier_points[2])
     bezier_points[2]["curve"] = {"type": "bezier", "controlPoints": [{"x": 5, "y": 20}]}
-    assert validate_printspec(extruded_spec(bezier_points)) == {"valid": True, "errors": []}
+    assert validate_printspec(extruded_spec(bezier_points)) == {
+        "valid": True,
+        "errors": [],
+    }
 
     spline_points = [dict(p) for p in arc_points]
     spline_points[2] = dict(spline_points[2])
@@ -1147,7 +1271,10 @@ def test_composable_part_profile_curve_schema_validates():
         "type": "spline",
         "through": [{"x": 3, "y": 18}, {"x": 7, "y": 18}],
     }
-    assert validate_printspec(extruded_spec(spline_points)) == {"valid": True, "errors": []}
+    assert validate_printspec(extruded_spec(spline_points)) == {
+        "valid": True,
+        "errors": [],
+    }
 
     def revolve_spec(points):
         return {
@@ -1157,23 +1284,41 @@ def test_composable_part_profile_curve_schema_validates():
                 "type": "composable_part",
                 "label": "curve revolve test",
                 "components": [
-                    {"id": "hub", "kind": "revolved_profile", "operation": "add", "dimensions": {"points": points}}
+                    {
+                        "id": "hub",
+                        "kind": "revolved_profile",
+                        "operation": "add",
+                        "dimensions": {"points": points},
+                    }
                 ],
             },
         }
 
     revolve_arc_points = [
-        {"radius": 5, "z": 0, "curve": {"type": "arc", "through": {"radius": 8, "z": 5}}},
+        {
+            "radius": 5,
+            "z": 0,
+            "curve": {"type": "arc", "through": {"radius": 8, "z": 5}},
+        },
         {"radius": 10, "z": 10},
         {"radius": 0, "z": 10},
         {"radius": 0, "z": 0},
     ]
-    assert validate_printspec(revolve_spec(revolve_arc_points)) == {"valid": True, "errors": []}
+    assert validate_printspec(revolve_spec(revolve_arc_points)) == {
+        "valid": True,
+        "errors": [],
+    }
 
     revolve_spline_points = [dict(p) for p in revolve_arc_points]
     revolve_spline_points[0] = dict(revolve_spline_points[0])
-    revolve_spline_points[0]["curve"] = {"type": "spline", "through": [{"radius": 8, "z": 5}]}
-    assert validate_printspec(revolve_spec(revolve_spline_points)) == {"valid": True, "errors": []}
+    revolve_spline_points[0]["curve"] = {
+        "type": "spline",
+        "through": [{"radius": 8, "z": 5}],
+    }
+    assert validate_printspec(revolve_spec(revolve_spline_points)) == {
+        "valid": True,
+        "errors": [],
+    }
 
 
 def test_composable_part_loft_profile_schema_validates():
@@ -1199,9 +1344,21 @@ def test_composable_part_loft_profile_schema_validates():
             },
         }
 
-    square = [{"x": -5, "y": -5}, {"x": 5, "y": -5}, {"x": 5, "y": 5}, {"x": -5, "y": 5}]
-    bigger_square = [{"x": -10, "y": -10}, {"x": 10, "y": -10}, {"x": 10, "y": 10}, {"x": -10, "y": 10}]
-    assert validate_printspec(spec([{"points": square, "z": 0}, {"points": bigger_square, "z": 10}])) == {
+    square = [
+        {"x": -5, "y": -5},
+        {"x": 5, "y": -5},
+        {"x": 5, "y": 5},
+        {"x": -5, "y": 5},
+    ]
+    bigger_square = [
+        {"x": -10, "y": -10},
+        {"x": 10, "y": -10},
+        {"x": 10, "y": 10},
+        {"x": -10, "y": 10},
+    ]
+    assert validate_printspec(
+        spec([{"points": square, "z": 0}, {"points": bigger_square, "z": 10}])
+    ) == {
         "valid": True,
         "errors": [],
     }
@@ -1251,9 +1408,7 @@ def test_composable_part_thread_feature_semantic_checks():
         features = []
         target = "a"
         if hole_params is not None:
-            features.append(
-                {"id": "h", "kind": "hole", "target": "a", "parameters": hole_params}
-            )
+            features.append({"id": "h", "kind": "hole", "target": "a", "parameters": hole_params})
             target = "h"
         params = {"pitch": 2, "height": 6, "mode": mode}
         params.update(extra_params or {})
@@ -1274,22 +1429,35 @@ def test_composable_part_thread_feature_semantic_checks():
     assert validate_printspec(spec("tube", "internal"))["valid"] is True
 
     # Valid: internal thread stacked on a hole feature, like counterbore/countersink.
-    assert validate_printspec(
-        spec("box", "internal", hole_params={"diameter": 6, "depth": 8})
-    )["valid"] is True
+    assert (
+        validate_printspec(spec("box", "internal", hole_params={"diameter": 6, "depth": 8}))[
+            "valid"
+        ]
+        is True
+    )
 
     # Invalid: external thread on a box (no outer cylindrical surface).
     errors = " ".join(validate_printspec(spec("box", "external"))["errors"])
-    assert "feature t (thread, external) target a is a box, which has no outer surface to thread" in errors
+    assert (
+        "feature t (thread, external) target a is a box, which has no outer surface to thread"
+        in errors
+    )
 
     # Invalid: internal thread targeting a cylinder directly (no bore of its own).
     errors = " ".join(validate_printspec(spec("cylinder", "internal"))["errors"])
-    assert "feature t (thread, internal) target a is a cylinder, which has no inner bore to thread" in errors
+    assert (
+        "feature t (thread, internal) target a is a cylinder, which has no inner bore to thread"
+        in errors
+    )
 
     # Invalid: crest must be less than toothHalfWidth.
     errors = " ".join(
         validate_printspec(
-            spec("cylinder", "external", extra_params={"toothHalfWidth": 0.5, "crest": 0.5})
+            spec(
+                "cylinder",
+                "external",
+                extra_params={"toothHalfWidth": 0.5, "crest": 0.5},
+            )
         )["errors"]
     )
     assert "feature t (thread) crest must be less than toothHalfWidth (0.5 >= 0.5)" in errors
@@ -1329,7 +1497,12 @@ def test_composable_part_swept_profile_schema_validates():
     # composable_part), so Python's job is the same shared semantic
     # validation TypeScript's generator test in tests/typescript/printspec.test.js
     # also checks.
-    profile = [{"x": -2, "y": -2}, {"x": 2, "y": -2}, {"x": 2, "y": 2}, {"x": -2, "y": 2}]
+    profile = [
+        {"x": -2, "y": -2},
+        {"x": 2, "y": -2},
+        {"x": 2, "y": 2},
+        {"x": -2, "y": 2},
+    ]
 
     def spec(path):
         return {
@@ -1351,14 +1524,18 @@ def test_composable_part_swept_profile_schema_validates():
 
     # Valid: first segment parallel to Z, then a bend.
     assert validate_printspec(
-        spec([{"x": 0, "y": 0, "z": 0}, {"x": 0, "y": 0, "z": 10}, {"x": 10, "y": 0, "z": 10}])
+        spec(
+            [
+                {"x": 0, "y": 0, "z": 0},
+                {"x": 0, "y": 0, "z": 10},
+                {"x": 10, "y": 0, "z": 10},
+            ]
+        )
     ) == {"valid": True, "errors": []}
 
     # Invalid: first segment not parallel to Z (moves in X too).
     errors = " ".join(
-        validate_printspec(
-            spec([{"x": 0, "y": 0, "z": 0}, {"x": 10, "y": 0, "z": 10}])
-        )["errors"]
+        validate_printspec(spec([{"x": 0, "y": 0, "z": 0}, {"x": 10, "y": 0, "z": 10}]))["errors"]
     )
     assert (
         "component channel (swept_profile) path's first two points must differ only in z" in errors
@@ -1395,7 +1572,10 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
         ("wall-mount-bracket.basic.json", "wall-mount-bracket.schema.json"),
         ("l-bracket.basic.json", "l-bracket.schema.json"),
         ("project-enclosure-tray.basic.json", "project-enclosure-tray.schema.json"),
-        ("rounded-rectangular-plate.basic.json", "rounded-rectangular-plate.schema.json"),
+        (
+            "rounded-rectangular-plate.basic.json",
+            "rounded-rectangular-plate.schema.json",
+        ),
     ]
     for file, schema_file in families:
         props = read(Path("schemas") / schema_file)["properties"]["parameters"]["properties"]
@@ -1482,7 +1662,12 @@ def test_python_cli_commands():
         ["validate", "examples/part-families/rounded-rectangular-plate.basic.json"],
         ["to-openscad", "examples/part-families/round-spacer.basic.json"],
         ["to-cadquery", "examples/part-families/electronics-standoff.m3.json"],
-        ["bom", "examples/projects/simple-enclosure-project.json", "--format", "markdown"],
+        [
+            "bom",
+            "examples/projects/simple-enclosure-project.json",
+            "--format",
+            "markdown",
+        ],
     ]:
         r = subprocess.run(
             [sys.executable, "-m", "printspec.cli", *args],
@@ -1616,7 +1801,13 @@ def test_python_form_metadata_helpers_and_cli():
     with pytest.raises(ValueError):
         get_part_family_form_metadata("missing")
     r = subprocess.run(
-        [sys.executable, "-m", "printspec.cli", "form-metadata", "rounded_rectangular_plate"],
+        [
+            sys.executable,
+            "-m",
+            "printspec.cli",
+            "form-metadata",
+            "rounded_rectangular_plate",
+        ],
         cwd=root,
         text=True,
         capture_output=True,

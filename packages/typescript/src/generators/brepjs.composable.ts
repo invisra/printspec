@@ -157,7 +157,8 @@ function applyTransform(expr: string, rotation: Vec3, position: Vec3): string {
     [rotation[2], "[0, 0, 1]"],
   ];
   for (const [deg, axis] of axes)
-    if (deg !== 0) out = `shape(${out}).rotate(${n(deg)}, { axis: ${axis} }).val`;
+    if (deg !== 0)
+      out = `shape(${out}).rotate(${n(deg)}, { axis: ${axis} }).val`;
   if (position[0] !== 0 || position[1] !== 0 || position[2] !== 0)
     out = `shape(${out}).translate([${n(position[0])}, ${n(position[1])}, ${n(position[2])}]).val`;
   return out;
@@ -248,8 +249,15 @@ function buildComponentGeometry(kind: string, dims: any): string {
       const { minX, maxX, minY, maxY } = pointsBoundingBox(dims.points);
       const cx = (minX + maxX) / 2;
       const cy = (minY + maxY) / 2;
-      const shift = (p: { x: number; y: number }): [string, string] => [n(p.x - cx), n(p.y - cy)];
-      const lines = buildProfileEdges(dims.points, shift, ([x, y]) => `[${x}, ${y}, 0]`);
+      const shift = (p: { x: number; y: number }): [string, string] => [
+        n(p.x - cx),
+        n(p.y - cy),
+      ];
+      const lines = buildProfileEdges(
+        dims.points,
+        shift,
+        ([x, y]) => `[${x}, ${y}, 0]`,
+      );
       return (
         `unwrap(extrude(unwrap(face(unwrap(wireLoop([\n` +
         `${lines.join("\n")}\n` +
@@ -308,9 +316,16 @@ function buildComponentGeometry(kind: string, dims: any): string {
         n(p.radius),
         n(p.z - minZ),
       ];
-      const lines = buildProfileEdges(dims.points, shift, ([r, z]) => `[${r}, 0, ${z}]`);
+      const lines = buildProfileEdges(
+        dims.points,
+        shift,
+        ([r, z]) => `[${r}, 0, ${z}]`,
+      );
       const sweepAngle = dims.sweepAngle ?? 360;
-      const options = sweepAngle === 360 ? "" : `, { angle: ${n((sweepAngle * Math.PI) / 180)} }`;
+      const options =
+        sweepAngle === 360
+          ? ""
+          : `, { angle: ${n((sweepAngle * Math.PI) / 180)} }`;
       return (
         `unwrap(revolve(unwrap(face(unwrap(wireLoop([\n` +
         `${lines.join("\n")}\n` +
@@ -337,18 +352,24 @@ function buildComponentGeometry(kind: string, dims: any): string {
       // every other kind.
       const zs = dims.profiles.map((p: { z: number }) => p.z);
       const minZ = Math.min(...zs);
-      const wires = dims.profiles.map((profile: { points: any[]; z: number }) => {
-        const { minX, maxX, minY, maxY } = pointsBoundingBox(profile.points);
-        const cx = (minX + maxX) / 2;
-        const cy = (minY + maxY) / 2;
-        const shift = (p: { x: number; y: number }): [string, string] => [
-          n(p.x - cx),
-          n(p.y - cy),
-        ];
-        const z = n(profile.z - minZ);
-        const edges = buildProfileEdges(profile.points, shift, ([x, y]) => `[${x}, ${y}, ${z}]`);
-        return `unwrap(wireLoop([\n${edges.join("\n")}\n]))`;
-      });
+      const wires = dims.profiles.map(
+        (profile: { points: any[]; z: number }) => {
+          const { minX, maxX, minY, maxY } = pointsBoundingBox(profile.points);
+          const cx = (minX + maxX) / 2;
+          const cy = (minY + maxY) / 2;
+          const shift = (p: { x: number; y: number }): [string, string] => [
+            n(p.x - cx),
+            n(p.y - cy),
+          ];
+          const z = n(profile.z - minZ);
+          const edges = buildProfileEdges(
+            profile.points,
+            shift,
+            ([x, y]) => `[${x}, ${y}, ${z}]`,
+          );
+          return `unwrap(wireLoop([\n${edges.join("\n")}\n]))`;
+        },
+      );
       return `unwrap(loft([\n${wires.map((w: string) => `  ${w},`).join("\n")}\n]))`;
     }
     case "swept_profile": {
@@ -386,9 +407,18 @@ function buildComponentGeometry(kind: string, dims: any): string {
       );
       const spineEdges = pathPoints
         .slice(0, -1)
-        .map((from: string, i: number) => `  line(${from}, ${pathPoints[i + 1]}),`);
-      const profileShift = (p: { x: number; y: number }): [string, string] => [n(p.x), n(p.y)];
-      const profileEdges = buildProfileEdges(dims.profile, profileShift, ([x, y]) => `[${x}, ${y}, 0]`);
+        .map(
+          (from: string, i: number) => `  line(${from}, ${pathPoints[i + 1]}),`,
+        );
+      const profileShift = (p: { x: number; y: number }): [string, string] => [
+        n(p.x),
+        n(p.y),
+      ];
+      const profileEdges = buildProfileEdges(
+        dims.profile,
+        profileShift,
+        ([x, y]) => `[${x}, ${y}, 0]`,
+      );
       return (
         `unwrap(sweep(\n` +
         `  unwrap(wireLoop([\n${profileEdges.join("\n")}\n  ])),\n` +
@@ -440,7 +470,8 @@ function buildPatternedCutExpr(cutExpr: string, pattern: any): string {
 // rotation convention as everywhere else. z is the default/no-op case.
 function orientAlongAxis(expr: string, axis: string): string {
   if (axis === "x") return `shape(${expr}).rotate(90, { axis: [0, 1, 0] }).val`;
-  if (axis === "y") return `shape(${expr}).rotate(-90, { axis: [1, 0, 0] }).val`;
+  if (axis === "y")
+    return `shape(${expr}).rotate(-90, { axis: [1, 0, 0] }).val`;
   return expr;
 }
 
@@ -538,7 +569,8 @@ function resolveThreadRadius(
   if (component) {
     const dims = component.dimensions ?? {};
     if (mode === "external") {
-      if (component.kind === "cylinder" || component.kind === "boss") return dims.diameter / 2;
+      if (component.kind === "cylinder" || component.kind === "boss")
+        return dims.diameter / 2;
       if (component.kind === "tube") return dims.outerDiameter / 2;
       return null;
     }
@@ -560,11 +592,17 @@ function resolveThreadRadius(
 // see docs/composable-parts.md.
 function threadCutExpr(params: any, radius: number): string {
   const mode = params.mode ?? "external";
-  const opts = [`radius: ${n(radius)}`, `pitch: ${n(params.pitch)}`, `height: ${n(params.height)}`];
+  const opts = [
+    `radius: ${n(radius)}`,
+    `pitch: ${n(params.pitch)}`,
+    `height: ${n(params.height)}`,
+  ];
   if (params.depth != null) opts.push(`depth: ${n(params.depth)}`);
-  if (params.toothHalfWidth != null) opts.push(`toothHalfWidth: ${n(params.toothHalfWidth)}`);
+  if (params.toothHalfWidth != null)
+    opts.push(`toothHalfWidth: ${n(params.toothHalfWidth)}`);
   if (params.crest != null) opts.push(`crest: ${n(params.crest)}`);
-  if (params.sectionsPerTurn != null) opts.push(`sectionsPerTurn: ${Math.trunc(params.sectionsPerTurn)}`);
+  if (params.sectionsPerTurn != null)
+    opts.push(`sectionsPerTurn: ${Math.trunc(params.sectionsPerTurn)}`);
   if (params.lefthand) opts.push(`lefthand: true`);
   if (mode === "internal") opts.push(`inward: true`);
   return `unwrap(thread({ ${opts.join(", ")} }))`;
@@ -633,8 +671,10 @@ function buildFeatureCut(
 // its target(s), not cut from them, unlike every other feature kind
 // buildFeatureCut() handles.
 function featureAddsMaterial(feature: any): boolean {
-  if (feature.kind === "text") return (feature.parameters?.mode ?? "emboss") === "emboss";
-  if (feature.kind === "thread") return (feature.parameters?.mode ?? "external") === "external";
+  if (feature.kind === "text")
+    return (feature.parameters?.mode ?? "emboss") === "emboss";
+  if (feature.kind === "thread")
+    return (feature.parameters?.mode ?? "external") === "external";
   return false;
 }
 
@@ -856,7 +896,12 @@ function buildBoundedEdgesExpr(
   const edgeVars: string[] = [];
   for (const ownOffset of instanceOffsets.own) {
     for (const groupOffset of instanceOffsets.group) {
-      const worldPt = worldPointForGroupInstance(targetId, localPt, groupOffset, ownOffset);
+      const worldPt = worldPointForGroupInstance(
+        targetId,
+        localPt,
+        groupOffset,
+        ownOffset,
+      );
       const faceVar = assign(
         `face_${featureId}`,
         `unwrap(faceFinder().atDistance(0, [${n(worldPt[0])}, ${n(worldPt[1])}, ${n(worldPt[2])}]).findUnique(${currentVar}))`,
@@ -928,7 +973,9 @@ export function generateComposablePartBrepJs(
     const group = groupsById.get(targetId);
     if (group) return group.memberIds ?? [];
     const targetFeature = featuresById.get(targetId);
-    return targetFeature?.target ? resolveFeatureCsgTargets(targetFeature.target) : [];
+    return targetFeature?.target
+      ? resolveFeatureCsgTargets(targetFeature.target)
+      : [];
   }
   // Only a group with its own position/rotation/relation/pattern moves its
   // members; semantic validation guarantees a component belongs to at most
@@ -937,8 +984,14 @@ export function generateComposablePartBrepJs(
   // needs it.
   const transformingGroupOf = new Map<string, string>();
   for (const g of groups)
-    if (g.position != null || g.rotation != null || g.relation != null || g.pattern != null)
-      for (const memberId of g.memberIds ?? []) transformingGroupOf.set(memberId, g.id);
+    if (
+      g.position != null ||
+      g.rotation != null ||
+      g.relation != null ||
+      g.pattern != null
+    )
+      for (const memberId of g.memberIds ?? [])
+        transformingGroupOf.set(memberId, g.id);
 
   // A component with its own `pattern`, or belonging to a transforming
   // group that has one, has multiple instances already fused into its
@@ -950,7 +1003,10 @@ export function generateComposablePartBrepJs(
   // instance and leave the rest untouched.
   const targetHasMultipleInstances = (targetId: string): boolean => {
     const gid = transformingGroupOf.get(targetId);
-    return !!(componentsById.get(targetId)?.pattern || (gid && groupsById.get(gid)?.pattern));
+    return !!(
+      componentsById.get(targetId)?.pattern ||
+      (gid && groupsById.get(gid)?.pattern)
+    );
   };
 
   // The two independent pattern axes a target's instances can come from:
@@ -967,19 +1023,22 @@ export function generateComposablePartBrepJs(
   // confirmed throws outright on a compound of disjoint solids regardless
   // of how the faces to remove were found, so shell has no equivalent and
   // stays hard-blocked via targetHasMultipleInstances() above.
-  const targetPatternInstanceOffsets = (targetId: string): { own: Vec3[]; group: Vec3[] } => {
+  const targetPatternInstanceOffsets = (
+    targetId: string,
+  ): { own: Vec3[]; group: Vec3[] } => {
     const own = patternOffsets(componentsById.get(targetId)?.pattern);
     const gid = transformingGroupOf.get(targetId);
     const group = gid ? patternOffsets(groupsById.get(gid)?.pattern) : [ZERO];
     return { own, group };
   };
 
-  const { resolveOwn, worldPointForGroupInstance, worldRotatePoint } = buildResolver(
-    nodesById,
-    (id) => featureIdSet.has(id),
-    dimsOf,
-    transformingGroupOf,
-  );
+  const { resolveOwn, worldPointForGroupInstance, worldRotatePoint } =
+    buildResolver(
+      nodesById,
+      (id) => featureIdSet.has(id),
+      dimsOf,
+      transformingGroupOf,
+    );
 
   const connectivityWarning = checkAssemblyConnectivity(
     components,
@@ -1026,7 +1085,8 @@ export function generateComposablePartBrepJs(
     const targetRel = targetNode
       ? effectiveRelation(targetNode, featureIdSet.has(targetId))
       : undefined;
-    if (targetRel?.inheritRotation) out = applyInheritedRotation(out, targetRel.target);
+    if (targetRel?.inheritRotation)
+      out = applyInheritedRotation(out, targetRel.target);
     return out;
   }
 
@@ -1035,7 +1095,8 @@ export function generateComposablePartBrepJs(
     const own = resolveOwn(c.id);
     let oriented = applyTransform(local, own.rotation, ZERO);
     const rel = effectiveRelation(c, false);
-    if (rel?.inheritRotation) oriented = applyInheritedRotation(oriented, rel.target);
+    if (rel?.inheritRotation)
+      oriented = applyInheritedRotation(oriented, rel.target);
     const placed = applyTransform(oriented, ZERO, own.position);
     const gid = transformingGroupOf.get(c.id);
     if (!gid) return placed;
@@ -1049,7 +1110,8 @@ export function generateComposablePartBrepJs(
     // that component's own rotation). All instances then get the group's
     // rotation and position applied once, together.
     const groupOffsets = patternOffsets(groupsById.get(gid)?.pattern);
-    if (groupOffsets.length <= 1) return applyTransform(placed, g.rotation, g.position);
+    if (groupOffsets.length <= 1)
+      return applyTransform(placed, g.rotation, g.position);
     const instanceAt = (o: Vec3) =>
       applyTransform(applyTransform(placed, ZERO, o), g.rotation, g.position);
     let combined = instanceAt(groupOffsets[0]);
@@ -1080,10 +1142,13 @@ export function generateComposablePartBrepJs(
   for (const f of features) {
     if (f.kind !== "text") continue;
     const url = f.parameters?.fontUrl;
-    if (url && !fontFamilyByUrl.has(url)) fontFamilyByUrl.set(url, `font_${fontFamilyByUrl.size}`);
+    if (url && !fontFamilyByUrl.has(url))
+      fontFamilyByUrl.set(url, `font_${fontFamilyByUrl.size}`);
   }
   for (const [url, family] of fontFamilyByUrl)
-    lines.push(`unwrap(await loadFont(${JSON.stringify(url)}, ${JSON.stringify(family)}));`);
+    lines.push(
+      `unwrap(await loadFont(${JSON.stringify(url)}, ${JSON.stringify(family)}));`,
+    );
 
   const indexById = new Map<string, number>();
   components.forEach((c, i) => indexById.set(c.id, i));
@@ -1136,7 +1201,10 @@ export function generateComposablePartBrepJs(
     const operandVar = assign(`${method}_${c.id}`, placedComponentExpr(c));
     for (const targetId of liveTargets) {
       const current = shapesById.get(targetId)!;
-      const newVar = assign(`comp_${targetId}_${method}`, `shape(${current}).${method}(${operandVar}).val`);
+      const newVar = assign(
+        `comp_${targetId}_${method}`,
+        `shape(${current}).${method}(${operandVar}).val`,
+      );
       shapesById.set(targetId, newVar);
     }
   }
@@ -1153,8 +1221,13 @@ export function generateComposablePartBrepJs(
   // members' geometry. depth guards against runaway recursion; semantic
   // validation already guarantees the underlying relation graph has no
   // cycles, so this is just a straightforward chain walk.
-  function findTargetPatternGroup(node: any, isFeature: boolean, depth = 0): any | undefined {
-    if (depth > components.length + features.length + groups.length) return undefined;
+  function findTargetPatternGroup(
+    node: any,
+    isFeature: boolean,
+    depth = 0,
+  ): any | undefined {
+    if (depth > components.length + features.length + groups.length)
+      return undefined;
     const rel = effectiveRelation(node, isFeature);
     if (!rel) return undefined;
     const asGroup = groupsById.get(rel.target);
@@ -1163,7 +1236,8 @@ export function generateComposablePartBrepJs(
     if (gid) return groupsById.get(gid);
     if (featureIdSet.has(rel.target)) {
       const targetFeature = nodesById.get(rel.target);
-      if (targetFeature) return findTargetPatternGroup(targetFeature, true, depth + 1);
+      if (targetFeature)
+        return findTargetPatternGroup(targetFeature, true, depth + 1);
     }
     return undefined;
   }
@@ -1270,7 +1344,13 @@ export function generateComposablePartBrepJs(
       }
       continue;
     }
-    const cutExpr = buildFeatureCut(f, warnings, fontFamilyByUrl, componentsById, featuresById);
+    const cutExpr = buildFeatureCut(
+      f,
+      warnings,
+      fontFamilyByUrl,
+      componentsById,
+      featuresById,
+    );
     if (!cutExpr) continue;
     const embossing = featureAddsMaterial(f);
     const targets = f.target ? resolveFeatureCsgTargets(f.target) : [];
@@ -1296,7 +1376,8 @@ export function generateComposablePartBrepJs(
     // Also excluded: an explicit relation.targetInstance, which is exactly
     // the deliberate, addressed version of this same "just one instance"
     // choice (see resolveOwn() above) -- not an accidental omission.
-    const explicitTargetInstance = effectiveRelation(f, true)?.targetInstance != null;
+    const explicitTargetInstance =
+      effectiveRelation(f, true)?.targetInstance != null;
     if (
       f.target &&
       !f.pattern &&
@@ -1338,7 +1419,10 @@ export function generateComposablePartBrepJs(
     const op = embossing ? "fuse" : "cut";
     for (const targetId of liveTargets) {
       const current = shapesById.get(targetId)!;
-      const newVar = assign(`comp_${targetId}_${op}`, `shape(${current}).${op}(${cutVar}).val`);
+      const newVar = assign(
+        `comp_${targetId}_${op}`,
+        `shape(${current}).${op}(${cutVar}).val`,
+      );
       shapesById.set(targetId, newVar);
     }
   }
@@ -1357,7 +1441,9 @@ export function generateComposablePartBrepJs(
   // already required either way) -- so, uniquely among this generator's
   // imports, it's only emitted when the spec actually has a text feature.
   const textImportLine =
-    fontFamilyByUrl.size > 0 ? "import { loadFont, sketchText } from 'brepjs/text';\n" : "";
+    fontFamilyByUrl.size > 0
+      ? "import { loadFont, sketchText } from 'brepjs/text';\n"
+      : "";
   const header = `// Generated by printspec 0.2.0\n// Review generated CAD before manufacturing.\n// composable_part: geometry is approximate where noted below; review before manufacturing.\nimport { box, cylinder, cone, sphere, torus, ellipsoid, shape, line, threePointArc, bezier, bsplineApprox, wire, wireLoop, face, extrude, revolve, loft, sweep, thread, unwrap, faceFinder, edgeFinder, edgesOfFace } from 'brepjs';\n${textImportLine}\n`;
   const finish = (exportExpr: string): ComposablePartResult => {
     const body = lines.join("\n");
@@ -1366,7 +1452,8 @@ export function generateComposablePartBrepJs(
   };
 
   if (options?.isolate != null) {
-    let isolateVar = shapesById.get(options.isolate) ?? featureShapesById.get(options.isolate);
+    let isolateVar =
+      shapesById.get(options.isolate) ?? featureShapesById.get(options.isolate);
     if (isolateVar == null) {
       // A group id isolates the fuse of its own live members' shapes (the
       // same subset resolveFeatureCsgTargets() would use for a feature
@@ -1377,7 +1464,9 @@ export function generateComposablePartBrepJs(
         .map((id: string) => shapesById.get(id))
         .filter((v: string | undefined): v is string => v != null);
       if (liveMemberVars.length > 0)
-        isolateVar = liveMemberVars.reduce((acc: string, v: string) => `shape(${acc}).fuse(${v}).val`);
+        isolateVar = liveMemberVars.reduce(
+          (acc: string, v: string) => `shape(${acc}).fuse(${v}).val`,
+        );
     }
     if (isolateVar == null)
       return {

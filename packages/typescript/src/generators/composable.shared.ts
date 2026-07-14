@@ -55,13 +55,17 @@ export function allProfileCoordinatePairs(
     out.push(coordsOf(p));
     const curve = (p as any).curve;
     if (curve?.type === "arc") out.push(coordsOf(curve.through));
-    if (curve?.type === "bezier") for (const cp of curve.controlPoints) out.push(coordsOf(cp));
-    if (curve?.type === "spline") for (const tp of curve.through) out.push(coordsOf(tp));
+    if (curve?.type === "bezier")
+      for (const cp of curve.controlPoints) out.push(coordsOf(cp));
+    if (curve?.type === "spline")
+      for (const tp of curve.through) out.push(coordsOf(tp));
   }
   return out;
 }
 
-export function pointsBoundingBox(points: { x: number; y: number; curve?: any }[]): {
+export function pointsBoundingBox(
+  points: { x: number; y: number; curve?: any }[],
+): {
   minX: number;
   maxX: number;
   minY: number;
@@ -86,7 +90,9 @@ export function pointsBoundingBox(points: { x: number; y: number; curve?: any }[
 // solid's footprint (it's rotationally symmetric around Z by construction),
 // and the Z span determines its height, the same as every other kind's
 // aabbExtents.
-export function revolveProfileExtents(points: { radius: number; z: number; curve?: any }[]): {
+export function revolveProfileExtents(
+  points: { radius: number; z: number; curve?: any }[],
+): {
   maxRadius: number;
   minZ: number;
   maxZ: number;
@@ -94,14 +100,21 @@ export function revolveProfileExtents(points: { radius: number; z: number; curve
   const coords = allProfileCoordinatePairs(points, (p) => [p.radius, p.z]);
   const radii = coords.map((c) => c[0]);
   const zs = coords.map((c) => c[1]);
-  return { maxRadius: Math.max(...radii), minZ: Math.min(...zs), maxZ: Math.max(...zs) };
+  return {
+    maxRadius: Math.max(...radii),
+    minZ: Math.min(...zs),
+    maxZ: Math.max(...zs),
+  };
 }
 
 // AABB half-extents (X, Y) and full Z extent (base is always Z=0) for kinds
 // with a clean footprint/depth split. rib/wedge/swept_profile return null,
 // the same set of kinds excluded from hole/slot bounds-checking in
 // semantic.ts/semantic.py.
-export function aabbExtents(kind: string, dims: any): { hx: number; hy: number; z: number } | null {
+export function aabbExtents(
+  kind: string,
+  dims: any,
+): { hx: number; hy: number; z: number } | null {
   switch (kind) {
     case "box":
     case "rounded_box":
@@ -113,7 +126,11 @@ export function aabbExtents(kind: string, dims: any): { hx: number; hy: number; 
     case "boss":
       return { hx: dims.diameter / 2, hy: dims.diameter / 2, z: dims.height };
     case "tube":
-      return { hx: dims.outerDiameter / 2, hy: dims.outerDiameter / 2, z: dims.height };
+      return {
+        hx: dims.outerDiameter / 2,
+        hy: dims.outerDiameter / 2,
+        z: dims.height,
+      };
     case "extruded_profile": {
       const { minX, maxX, minY, maxY } = pointsBoundingBox(dims.points);
       return { hx: (maxX - minX) / 2, hy: (maxY - minY) / 2, z: dims.height };
@@ -121,7 +138,11 @@ export function aabbExtents(kind: string, dims: any): { hx: number; hy: number; 
     case "sphere":
       return { hx: dims.diameter / 2, hy: dims.diameter / 2, z: dims.diameter };
     case "torus":
-      return { hx: dims.outerDiameter / 2, hy: dims.outerDiameter / 2, z: dims.tubeDiameter };
+      return {
+        hx: dims.outerDiameter / 2,
+        hy: dims.outerDiameter / 2,
+        z: dims.tubeDiameter,
+      };
     case "ellipsoid":
       return { hx: dims.lengthX / 2, hy: dims.lengthY / 2, z: dims.lengthZ };
     case "revolved_profile": {
@@ -155,7 +176,12 @@ export function aabbExtents(kind: string, dims: any): { hx: number; hy: number; 
 // docs/composable-parts.md. Returns ZERO when the target's AABB is
 // undefined (rib/wedge/swept_profile/group/feature target), which callers
 // treat as the offset_from fallback (anchor at the target's own origin).
-export function localAnchor(relType: string, face: string | undefined, kind: string, dims: any): Vec3 {
+export function localAnchor(
+  relType: string,
+  face: string | undefined,
+  kind: string,
+  dims: any,
+): Vec3 {
   const ext = aabbExtents(kind, dims);
   if (!ext) return ZERO;
   const { hx, hy, z } = ext;
@@ -202,9 +228,13 @@ export type EffectiveRelation = {
 // A feature with a `target` but no explicit `relation` implicitly anchors to
 // that target's origin (the "offset_from" rule) -- components and groups
 // have no such fallback, since they have no `target` field.
-export function effectiveRelation(node: any, isFeature: boolean): EffectiveRelation | undefined {
+export function effectiveRelation(
+  node: any,
+  isFeature: boolean,
+): EffectiveRelation | undefined {
   if (node.relation?.target) return node.relation;
-  if (isFeature && node.target) return { type: "offset_from", target: node.target };
+  if (isFeature && node.target)
+    return { type: "offset_from", target: node.target };
   return undefined;
 }
 
@@ -239,10 +269,15 @@ export function patternOffsets(pattern: any): Vec3[] {
     for (let i = 0; i < count; i++) {
       const angleDeg =
         pattern.sweepAngle != null
-          ? (pattern.startAngle ?? 0) + (count === 1 ? 0 : (i * pattern.sweepAngle) / (count - 1))
+          ? (pattern.startAngle ?? 0) +
+            (count === 1 ? 0 : (i * pattern.sweepAngle) / (count - 1))
           : (pattern.startAngle ?? 0) + (i * 360) / count;
       const rad = (angleDeg * Math.PI) / 180;
-      offsets.push([pattern.radius * Math.cos(rad), pattern.radius * Math.sin(rad), 0]);
+      offsets.push([
+        pattern.radius * Math.cos(rad),
+        pattern.radius * Math.sin(rad),
+        0,
+      ]);
     }
     return offsets;
   }
@@ -303,7 +338,9 @@ export function buildResolver(
       // handling.
       const targetInstanceOffset =
         rel.targetInstance != null
-          ? (patternOffsets(nodesById.get(rel.target)?.pattern)[rel.targetInstance] ?? ZERO)
+          ? (patternOffsets(nodesById.get(rel.target)?.pattern)[
+              rel.targetInstance
+            ] ?? ZERO)
           : ZERO;
       const targetInstanceWorldPosition = addV(
         worldPosition(rel.target),
@@ -316,10 +353,16 @@ export function buildResolver(
         const local = targetShape
           ? localAnchor(rel.type, rel.face, targetShape.kind, targetShape.dims)
           : ZERO;
-        anchor = addV(targetInstanceWorldPosition, worldRotatePoint(rel.target, local));
+        anchor = addV(
+          targetInstanceWorldPosition,
+          worldRotatePoint(rel.target, local),
+        );
       }
     }
-    const resolved: Resolved = { position: addV(anchor, ownOffset), rotation: ownRotation };
+    const resolved: Resolved = {
+      position: addV(anchor, ownOffset),
+      rotation: ownRotation,
+    };
     ownCache.set(id, resolved);
     return resolved;
   }
@@ -330,7 +373,10 @@ export function buildResolver(
     const own = resolveOwn(id);
     const gid = transformingGroupOf.get(id);
     const result = gid
-      ? addV(resolveOwn(gid).position, rotateExtrinsic(own.position, resolveOwn(gid).rotation))
+      ? addV(
+          resolveOwn(gid).position,
+          rotateExtrinsic(own.position, resolveOwn(gid).rotation),
+        )
       : own.position;
     worldCache.set(id, result);
     return result;
@@ -391,11 +437,17 @@ export function buildResolver(
     ownPatternOffset: Vec3 = ZERO,
   ): Vec3 {
     const own = resolveOwn(id);
-    const ownPlaced = addV(rotateByOwnAndInherited(id, addV(p, ownPatternOffset)), own.position);
+    const ownPlaced = addV(
+      rotateByOwnAndInherited(id, addV(p, ownPatternOffset)),
+      own.position,
+    );
     const gid = transformingGroupOf.get(id);
     if (!gid) return ownPlaced;
     const g = resolveOwn(gid);
-    return addV(rotateExtrinsic(addV(ownPlaced, groupOffset), g.rotation), g.position);
+    return addV(
+      rotateExtrinsic(addV(ownPlaced, groupOffset), g.rotation),
+      g.position,
+    );
   }
 
   return { resolveOwn, worldPointForGroupInstance, worldRotatePoint };
@@ -430,7 +482,14 @@ export function instanceAabb(
   for (const x of [-hx, hx])
     for (const y of [-hy, hy])
       for (const zc of [0, z])
-        corners.push(worldPointForGroupInstance(c.id, [x, y, zc], groupOffset, ownPatternOffset));
+        corners.push(
+          worldPointForGroupInstance(
+            c.id,
+            [x, y, zc],
+            groupOffset,
+            ownPatternOffset,
+          ),
+        );
   const axis = (i: number) => corners.map((p) => p[i]);
   return {
     min: [Math.min(...axis(0)), Math.min(...axis(1)), Math.min(...axis(2))],
@@ -460,13 +519,22 @@ export function instanceAabbsOf(
   const boxes: WorldAabb[] = [];
   for (const groupOffset of groupOffsets)
     for (const ownOffset of ownPatternOffsets) {
-      const box = instanceAabb(c, worldPointForGroupInstance, groupOffset, ownOffset);
+      const box = instanceAabb(
+        c,
+        worldPointForGroupInstance,
+        groupOffset,
+        ownOffset,
+      );
       if (box) boxes.push(box);
     }
   return boxes;
 }
 
-export function aabbsTouchOrOverlap(a: WorldAabb, b: WorldAabb, epsilon = 1e-6): boolean {
+export function aabbsTouchOrOverlap(
+  a: WorldAabb,
+  b: WorldAabb,
+  epsilon = 1e-6,
+): boolean {
   return (
     a.min[0] <= b.max[0] + epsilon &&
     a.max[0] >= b.min[0] - epsilon &&
@@ -501,9 +569,16 @@ export function checkAssemblyConnectivity(
   const instanceBoxesById = new Map<string, WorldAabb[]>();
   for (const c of addComponents) {
     const gid = transformingGroupOf.get(c.id);
-    const groupOffsets = gid ? patternOffsets(groupsById.get(gid)?.pattern) : [ZERO];
+    const groupOffsets = gid
+      ? patternOffsets(groupsById.get(gid)?.pattern)
+      : [ZERO];
     const ownPatternOffsets = patternOffsets(c.pattern);
-    const boxes = instanceAabbsOf(c, worldPointForGroupInstance, groupOffsets, ownPatternOffsets);
+    const boxes = instanceAabbsOf(
+      c,
+      worldPointForGroupInstance,
+      groupOffsets,
+      ownPatternOffsets,
+    );
     if (boxes.length > 0) instanceBoxesById.set(c.id, boxes);
   }
   const ids = [...instanceBoxesById.keys()];
@@ -522,7 +597,12 @@ export function checkAssemblyConnectivity(
     a.some((boxA) => b.some((boxB) => aabbsTouchOrOverlap(boxA, boxB)));
   for (let i = 0; i < ids.length; i++)
     for (let j = i + 1; j < ids.length; j++)
-      if (anyInstancesTouch(instanceBoxesById.get(ids[i])!, instanceBoxesById.get(ids[j])!)) {
+      if (
+        anyInstancesTouch(
+          instanceBoxesById.get(ids[i])!,
+          instanceBoxesById.get(ids[j])!,
+        )
+      ) {
         const [ra, rb] = [find(ids[i]), find(ids[j])];
         if (ra !== rb) parent.set(ra, rb);
       }
@@ -535,7 +615,9 @@ export function checkAssemblyConnectivity(
     clusters.set(root, list);
   }
   if (clusters.size <= 1) return null;
-  const groups = [...clusters.values()].map((g) => `[${g.sort().join(", ")}]`).sort();
+  const groups = [...clusters.values()]
+    .map((g) => `[${g.sort().join(", ")}]`)
+    .sort();
   return (
     `components do not appear to form a single connected part (approximate bounding-box check): ` +
     `${groups.join(" and ")} don't touch or overlap each other -- review positions/relations if ` +
@@ -547,7 +629,8 @@ export function checkAssemblyConnectivity(
 // they touch or overlap on every axis, otherwise the straight-line distance
 // between their nearest corners/edges/faces.
 export function aabbDistance(a: WorldAabb, b: WorldAabb): number {
-  const gap = (i: number) => Math.max(0, b.min[i] - a.max[i], a.min[i] - b.max[i]);
+  const gap = (i: number) =>
+    Math.max(0, b.min[i] - a.max[i], a.min[i] - b.max[i]);
   const gx = gap(0);
   const gy = gap(1);
   const gz = gap(2);
@@ -579,8 +662,15 @@ export function checkClearanceConstraints(
   const warnings: string[] = [];
   const instanceBoxesOf = (component: any): WorldAabb[] => {
     const gid = transformingGroupOf.get(component.id);
-    const groupOffsets = gid ? patternOffsets(groupsById.get(gid)?.pattern) : [ZERO];
-    return instanceAabbsOf(component, worldPointForGroupInstance, groupOffsets, patternOffsets(component.pattern));
+    const groupOffsets = gid
+      ? patternOffsets(groupsById.get(gid)?.pattern)
+      : [ZERO];
+    return instanceAabbsOf(
+      component,
+      worldPointForGroupInstance,
+      groupOffsets,
+      patternOffsets(component.pattern),
+    );
   };
   constraints.forEach((c, i) => {
     if (c?.type !== "clearance") return;
@@ -592,7 +682,9 @@ export function checkClearanceConstraints(
     const boxesB = instanceBoxesOf(compB);
     if (boxesA.length === 0 || boxesB.length === 0) return;
     let minGap = Infinity;
-    for (const boxA of boxesA) for (const boxB of boxesB) minGap = Math.min(minGap, aabbDistance(boxA, boxB));
+    for (const boxA of boxesA)
+      for (const boxB of boxesB)
+        minGap = Math.min(minGap, aabbDistance(boxA, boxB));
     if (minGap < c.minDistance)
       warnings.push(
         `constraint ${label} (clearance) failed: ${c.a}/${c.b} are only ${n(minGap)}mm apart ` +
