@@ -143,7 +143,11 @@ def _feature_fit_errors(feature, target_component):
                 f"({_js_number_str(size)} > {_js_number_str(bound)})"
             )
     depth = params.get("depth")
-    if depth_key and isinstance(depth, (int, float)) and dims.get(depth_key) is not None:
+    if (
+        depth_key
+        and isinstance(depth, (int, float))
+        and dims.get(depth_key) is not None
+    ):
         bound = dims[depth_key]
         if depth > bound:
             e.append(
@@ -169,7 +173,9 @@ def _bounded_dimension_error(feature, target_component, value, label):
     dims = target_component.get("dimensions") or {}
     footprint_key = _FOOTPRINT_DIM.get(target_component.get("kind"))
     depth_key = _DEPTH_DIM.get(target_component.get("kind"))
-    bounds = [dims[k] for k in (footprint_key, depth_key) if k and dims.get(k) is not None]
+    bounds = [
+        dims[k] for k in (footprint_key, depth_key) if k and dims.get(k) is not None
+    ]
     if not bounds:
         return None
     bound = min(bounds) / 2
@@ -274,14 +280,22 @@ def _component_dimension_errors(component):
         path = dims["path"]
         if len(path) >= 2:
             p0, p1 = path[0], path[1]
-            if p0.get("x") != p1.get("x") or p0.get("y") != p1.get("y") or p0.get("z") == p1.get("z"):
+            if (
+                p0.get("x") != p1.get("x")
+                or p0.get("y") != p1.get("y")
+                or p0.get("z") == p1.get("z")
+            ):
                 e.append(
                     f"component {cid} (swept_profile) path's first two points must differ only in z "
                     f"(the first segment must run parallel to the Z axis, matching the profile's fixed orientation)"
                 )
         for i in range(len(path) - 1):
             a, b = path[i], path[i + 1]
-            if a.get("x") == b.get("x") and a.get("y") == b.get("y") and a.get("z") == b.get("z"):
+            if (
+                a.get("x") == b.get("x")
+                and a.get("y") == b.get("y")
+                and a.get("z") == b.get("z")
+            ):
                 e.append(
                     f"component {cid} (swept_profile) path has two consecutive identical points at index {i}"
                 )
@@ -370,7 +384,9 @@ def _thread_feature_errors(feature, components_by_id, features_by_id):
     depth_bound = None
     depth_label = ""
     if component is not None:
-        valid_kinds = _THREAD_EXTERNAL_KINDS if mode == "external" else _THREAD_INTERNAL_KINDS
+        valid_kinds = (
+            _THREAD_EXTERNAL_KINDS if mode == "external" else _THREAD_INTERNAL_KINDS
+        )
         if component.get("kind") not in valid_kinds:
             surface = "outer surface" if mode == "external" else "inner bore"
             e.append(
@@ -395,8 +411,14 @@ def _thread_feature_errors(feature, components_by_id, features_by_id):
             if isinstance(depth, (int, float)):
                 depth_bound = depth
                 depth_label = f"target {target_id}'s hole depth"
-    if depth_bound is not None and isinstance(params.get("height"), (int, float)) and params["height"] > depth_bound:
-        e.append(f"feature {fid} (thread) height exceeds {depth_label} ({params['height']} > {depth_bound})")
+    if (
+        depth_bound is not None
+        and isinstance(params.get("height"), (int, float))
+        and params["height"] > depth_bound
+    ):
+        e.append(
+            f"feature {fid} (thread) height exceeds {depth_label} ({params['height']} > {depth_bound})"
+        )
     return e
 
 
@@ -422,7 +444,11 @@ def _resolve_constraint_operand(operand, components_by_id, features_by_id):
     feature = features_by_id.get(ref)
     if component is None and feature is None:
         return {"error": f"references unknown component/feature: {ref}"}
-    bag = component.get("dimensions") if component is not None else feature.get("parameters")
+    bag = (
+        component.get("dimensions")
+        if component is not None
+        else feature.get("parameters")
+    )
     value = (bag or {}).get(key)
     if not isinstance(value, (int, float)) or isinstance(value, bool):
         kind = "dimension" if component is not None else "parameter"
@@ -449,8 +475,12 @@ def _dimension_constraint_errors(constraint, index, components_by_id, features_b
     if (constraint or {}).get("type") != "dimension":
         return []
     label = constraint.get("id") or f"#{index}"
-    left = _resolve_constraint_operand(constraint.get("left"), components_by_id, features_by_id)
-    right = _resolve_constraint_operand(constraint.get("right"), components_by_id, features_by_id)
+    left = _resolve_constraint_operand(
+        constraint.get("left"), components_by_id, features_by_id
+    )
+    right = _resolve_constraint_operand(
+        constraint.get("right"), components_by_id, features_by_id
+    )
     e = []
     if "error" in left:
         e.append(f"constraint {label} left {left['error']}")
@@ -462,7 +492,9 @@ def _dimension_constraint_errors(constraint, index, components_by_id, features_b
     right_value = right["value"]
     margin = constraint.get("margin") or 0
     right_with_margin = right_value + margin
-    holds = _CONSTRAINT_OPERATORS[constraint.get("operator")](left_value, right_with_margin)
+    holds = _CONSTRAINT_OPERATORS[constraint.get("operator")](
+        left_value, right_with_margin
+    )
     if not holds:
         margin_note = f" + {margin}" if margin else ""
         e.append(
@@ -501,7 +533,7 @@ def _clearance_constraint_errors(constraint, index, components_by_id):
         elif component.get("kind") in _NO_AABB_KINDS:
             e.append(
                 f"constraint {label} {side} references component {ref} "
-                f"(kind \"{component.get('kind')}\"), which has no well-defined bounding box "
+                f'(kind "{component.get("kind")}"), which has no well-defined bounding box '
                 f"to check a clearance against"
             )
 
@@ -522,9 +554,12 @@ def _part(part, prefix="part"):
         e.append(f"{prefix}.parameters.cornerRadius exceeds half of min(length,width)")
     if (
         part.get("type") == "simple_box"
-        and p.get("wallThickness", 0) >= min(p.get("outerLength", 0), p.get("outerWidth", 0)) / 2
+        and p.get("wallThickness", 0)
+        >= min(p.get("outerLength", 0), p.get("outerWidth", 0)) / 2
     ):
-        e.append(f"{prefix}.parameters.wallThickness must be less than half of outer dimensions")
+        e.append(
+            f"{prefix}.parameters.wallThickness must be less than half of outer dimensions"
+        )
     if (
         part.get("type") == "round_spacer"
         and p.get("innerDiameter") is not None
@@ -533,10 +568,16 @@ def _part(part, prefix="part"):
         e.append(f"{prefix}.parameters.innerDiameter must be less than outerDiameter")
     if part.get("type") == "electronics_standoff":
         if p.get("holeDiameter", 0) >= p.get("outerDiameter", 0):
-            e.append(f"{prefix}.parameters.holeDiameter must be less than outerDiameter")
+            e.append(
+                f"{prefix}.parameters.holeDiameter must be less than outerDiameter"
+            )
         if (p.get("baseDiameter") is None) != (p.get("baseHeight") is None):
-            e.append(f"{prefix}.parameters.baseDiameter and baseHeight must be provided together")
-        if p.get("baseDiameter") is not None and p.get("baseDiameter") < p.get("outerDiameter", 0):
+            e.append(
+                f"{prefix}.parameters.baseDiameter and baseHeight must be provided together"
+            )
+        if p.get("baseDiameter") is not None and p.get("baseDiameter") < p.get(
+            "outerDiameter", 0
+        ):
             e.append(
                 f"{prefix}.parameters.baseDiameter must be greater than or equal to outerDiameter"
             )
@@ -551,7 +592,11 @@ def validate_semantic(spec):
     e = []
 
     def hw(items, label):
-        e.extend(_dups([h.get("id") for h in items or [] if h.get("id")], f"{label} hardware"))
+        e.extend(
+            _dups(
+                [h.get("id") for h in items or [] if h.get("id")], f"{label} hardware"
+            )
+        )
         for h in items or []:
             if not _is_integer_number(h.get("quantity")) or h.get("quantity") < 1:
                 e.append(f"{label}.hardware quantity must be integer >= 1")
@@ -578,7 +623,9 @@ def validate_semantic(spec):
             components = part.get("components") or []
             groups = part.get("groups") or []
             component_ids = [c.get("id") for c in components]
-            feature_ids = [f.get("id") for f in part.get("features") or [] if f.get("id")]
+            feature_ids = [
+                f.get("id") for f in part.get("features") or [] if f.get("id")
+            ]
             group_ids = [g.get("id") for g in groups]
             e.extend(_dups(component_ids, "component"))
             e.extend(_dups(feature_ids, "feature"))
@@ -624,9 +671,13 @@ def validate_semantic(spec):
                 if not t:
                     return
                 if t == owner_id:
-                    e.append(f"{owner_label} {owner_id} relation target cannot reference itself")
+                    e.append(
+                        f"{owner_label} {owner_id} relation target cannot reference itself"
+                    )
                 elif t not in known:
-                    e.append(f"{owner_label} {owner_id} relation target does not exist: {t}")
+                    e.append(
+                        f"{owner_label} {owner_id} relation target does not exist: {t}"
+                    )
                 elif t in patterned_ids:
                     # A patterned target has no single instance to anchor to
                     # by default -- but relation.targetInstance opts into
@@ -651,7 +702,9 @@ def validate_semantic(spec):
                         )
                     else:
                         target_node = components_by_id.get(t) or features_by_id.get(t)
-                        count = _pattern_instance_count((target_node or {}).get("pattern"))
+                        count = _pattern_instance_count(
+                            (target_node or {}).get("pattern")
+                        )
                         if target_instance >= count:
                             e.append(
                                 f"{owner_label} {owner_id} relation targetInstance {target_instance} is "
@@ -681,7 +734,9 @@ def validate_semantic(spec):
                         if target in components_by_id:
                             e.extend(_feature_fit_errors(f, components_by_id[target]))
                             e.extend(_shell_fit_errors(f, components_by_id[target]))
-                            e.extend(_fillet_chamfer_fit_errors(f, components_by_id[target]))
+                            e.extend(
+                                _fillet_chamfer_fit_errors(f, components_by_id[target])
+                            )
                             e.extend(_text_fit_errors(f, components_by_id[target]))
                         # A feature's `target` is a real dependency even
                         # without an explicit `relation`: it's both the
@@ -729,7 +784,9 @@ def validate_semantic(spec):
                     )
                 for member_id in member_ids:
                     if member_id not in component_id_set:
-                        e.append(f"group {gid} memberIds references unknown component: {member_id}")
+                        e.append(
+                            f"group {gid} memberIds references unknown component: {member_id}"
+                        )
                     elif (
                         g.get("position") is not None
                         or g.get("rotation") is not None
@@ -753,7 +810,9 @@ def validate_semantic(spec):
             for cycle in _relation_cycles(relation_edges):
                 e.append(f"relation cycle detected: {' -> '.join(cycle)}")
             for i, c in enumerate(part.get("constraints") or []):
-                e.extend(_dimension_constraint_errors(c, i, components_by_id, features_by_id))
+                e.extend(
+                    _dimension_constraint_errors(c, i, components_by_id, features_by_id)
+                )
                 e.extend(_clearance_constraint_errors(c, i, components_by_id))
         else:
             e.extend(_part(part))
@@ -776,7 +835,10 @@ def validate_semantic(spec):
         for p in proj.get("parts") or []:
             if p.get("spec"):
                 e.extend(
-                    [f"project.parts.{p.get('id')}: {x}" for x in validate_semantic(p["spec"])]
+                    [
+                        f"project.parts.{p.get('id')}: {x}"
+                        for x in validate_semantic(p["spec"])
+                    ]
                 )
         hw(proj.get("hardware"), "project")
     return e
