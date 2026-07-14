@@ -26,12 +26,7 @@ def read(p):
 
 
 def norm(s):
-    return (
-        "\n".join(
-            line.rstrip() for line in s.replace("\r\n", "\n").split("\n")
-        ).rstrip()
-        + "\n"
-    )
+    return "\n".join(line.rstrip() for line in s.replace("\r\n", "\n").split("\n")).rstrip() + "\n"
 
 
 spec = read(Path("examples/part-families/rounded-rectangular-plate.basic.json"))
@@ -342,9 +337,7 @@ def test_composable_part_dimension_constraints_validate_already_authored_numbers
     # No `id`: the constraint's array index is used in the message instead.
     assert "constraint #0 failed: 10 < 5 is false" in " ".join(
         validate_printspec(
-            with_constraint(
-                {"type": "dimension", "left": 10, "operator": "<", "right": 5}
-            )
+            with_constraint({"type": "dimension", "left": 10, "operator": "<", "right": 5})
         )["errors"]
     )
 
@@ -381,9 +374,8 @@ def test_composable_part_groups_validate_ids_member_ids_and_relation_targets():
 
     unknown_group_target = json.loads(json.dumps(strip))
     unknown_group_target["part"]["groups"][1]["relation"]["target"] = "ghost"
-    assert (
-        "group post_right_assembly relation target does not exist: ghost"
-        in " ".join(validate_printspec(unknown_group_target)["errors"])
+    assert "group post_right_assembly relation target does not exist: ghost" in " ".join(
+        validate_printspec(unknown_group_target)["errors"]
     )
 
     # A component's relation may target a group id (not just another component).
@@ -451,9 +443,7 @@ def test_composable_part_rejects_a_cycle_formed_only_by_feature_target_chains():
             ],
         },
     }
-    assert "relation cycle detected: f1 -> f2 -> f1" in " ".join(
-        validate_printspec(spec)["errors"]
-    )
+    assert "relation cycle detected: f1 -> f2 -> f1" in " ".join(validate_printspec(spec)["errors"])
 
 
 def test_composable_part_open_top_enclosure_shell_example_validates():
@@ -647,9 +637,7 @@ def test_composable_part_text_feature_font_url_and_engrave_depth_validation():
                         "dimensions": {"length": 20, "width": 20, "height": 6},
                     }
                 ],
-                "features": [
-                    {"id": "t", "kind": "text", "target": "a", "parameters": params}
-                ],
+                "features": [{"id": "t", "kind": "text", "target": "a", "parameters": params}],
             },
         }
 
@@ -667,17 +655,13 @@ def test_composable_part_text_feature_font_url_and_engrave_depth_validation():
     assert (
         'feature t (text) fontUrl must be an http(s):// URL or a data: URI (got "file:")'
         in " ".join(
-            validate_printspec(spec(font_url="file:///home/user/fonts/Custom.ttf"))[
-                "errors"
-            ]
+            validate_printspec(spec(font_url="file:///home/user/fonts/Custom.ttf"))["errors"]
         )
     )
     # an allowed-but-irrelevant scheme (e.g. ftp:) is rejected the same way.
     assert (
         'feature t (text) fontUrl must be an http(s):// URL or a data: URI (got "ftp:")'
-        in " ".join(
-            validate_printspec(spec(font_url="ftp://example.com/font.ttf"))["errors"]
-        )
+        in " ".join(validate_printspec(spec(font_url="ftp://example.com/font.ttf"))["errors"])
     )
     # an empty-host http(s):// URL (e.g. "http://") is rejected too, for
     # parity with JS's new URL() throwing outright on it -- Python's
@@ -696,13 +680,10 @@ def test_composable_part_text_feature_font_url_and_engrave_depth_validation():
         "errors": [],
     }
     # engrave depth exceeding the target's own depth dimension is rejected.
-    assert (
-        "feature t engrave depth must be less than target a height (8 >= 6)"
-        in " ".join(
-            validate_printspec(
-                spec(font_url="https://example.com/font.ttf", depth=8, mode="engrave")
-            )["errors"]
-        )
+    assert "feature t engrave depth must be less than target a height (8 >= 6)" in " ".join(
+        validate_printspec(spec(font_url="https://example.com/font.ttf", depth=8, mode="engrave"))[
+            "errors"
+        ]
     )
     # emboss has no depth ceiling -- the same depth is fine in emboss mode.
     assert validate_printspec(
@@ -1175,9 +1156,7 @@ def test_composable_part_relation_target_instance_validation():
     )
     assert (
         "feature cb relation targetInstance is only valid when target is patterned: plate"
-        in " ".join(
-            validate_printspec(spec({"target": "plate", "targetInstance": 0}))["errors"]
-        )
+        in " ".join(validate_printspec(spec({"target": "plate", "targetInstance": 0}))["errors"])
     )
     grp = [
         {
@@ -1188,11 +1167,7 @@ def test_composable_part_relation_target_instance_validation():
     ]
     assert (
         "feature cb relation targetInstance is not supported for a group target: grp"
-        in " ".join(
-            validate_printspec(spec({"target": "grp", "targetInstance": 0}, grp))[
-                "errors"
-            ]
-        )
+        in " ".join(validate_printspec(spec({"target": "grp", "targetInstance": 0}, grp))["errors"])
     )
 
 
@@ -1400,9 +1375,7 @@ def test_composable_part_loft_profile_schema_validates():
         {"x": 0, "y": 10},
         {"x": -8.660254, "y": 5},
     ]
-    assert validate_printspec(
-        spec([{"points": square, "z": 0}, {"points": hexagon, "z": 15}])
-    ) == {
+    assert validate_printspec(spec([{"points": square, "z": 0}, {"points": hexagon, "z": 15}])) == {
         "valid": True,
         "errors": [],
     }
@@ -1435,15 +1408,11 @@ def test_composable_part_thread_feature_semantic_checks():
         features = []
         target = "a"
         if hole_params is not None:
-            features.append(
-                {"id": "h", "kind": "hole", "target": "a", "parameters": hole_params}
-            )
+            features.append({"id": "h", "kind": "hole", "target": "a", "parameters": hole_params})
             target = "h"
         params = {"pitch": 2, "height": 6, "mode": mode}
         params.update(extra_params or {})
-        features.append(
-            {"id": "t", "kind": "thread", "target": target, "parameters": params}
-        )
+        features.append({"id": "t", "kind": "thread", "target": target, "parameters": params})
         return {
             "printspecVersion": "0.2.0",
             "units": "mm",
@@ -1461,9 +1430,9 @@ def test_composable_part_thread_feature_semantic_checks():
 
     # Valid: internal thread stacked on a hole feature, like counterbore/countersink.
     assert (
-        validate_printspec(
-            spec("box", "internal", hole_params={"diameter": 6, "depth": 8})
-        )["valid"]
+        validate_printspec(spec("box", "internal", hole_params={"diameter": 6, "depth": 8}))[
+            "valid"
+        ]
         is True
     )
 
@@ -1491,16 +1460,11 @@ def test_composable_part_thread_feature_semantic_checks():
             )
         )["errors"]
     )
-    assert (
-        "feature t (thread) crest must be less than toothHalfWidth (0.5 >= 0.5)"
-        in errors
-    )
+    assert "feature t (thread) crest must be less than toothHalfWidth (0.5 >= 0.5)" in errors
 
     # Invalid: thread height exceeds the target component's own height.
     errors = " ".join(
-        validate_printspec(spec("cylinder", "external", extra_params={"height": 20}))[
-            "errors"
-        ]
+        validate_printspec(spec("cylinder", "external", extra_params={"height": 20}))["errors"]
     )
     assert "feature t (thread) height exceeds target a height (20 > 10)" in errors
 
@@ -1571,13 +1535,10 @@ def test_composable_part_swept_profile_schema_validates():
 
     # Invalid: first segment not parallel to Z (moves in X too).
     errors = " ".join(
-        validate_printspec(
-            spec([{"x": 0, "y": 0, "z": 0}, {"x": 10, "y": 0, "z": 10}])
-        )["errors"]
+        validate_printspec(spec([{"x": 0, "y": 0, "z": 0}, {"x": 10, "y": 0, "z": 10}]))["errors"]
     )
     assert (
-        "component channel (swept_profile) path's first two points must differ only in z"
-        in errors
+        "component channel (swept_profile) path's first two points must differ only in z" in errors
     )
 
     # Invalid: two consecutive identical path points.
@@ -1617,9 +1578,7 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
         ),
     ]
     for file, schema_file in families:
-        props = read(Path("schemas") / schema_file)["properties"]["parameters"][
-            "properties"
-        ]
+        props = read(Path("schemas") / schema_file)["properties"]["parameters"]["properties"]
         s = read(Path("examples/part-families") / file)
         expect_chamfer_warning = "chamfer" in props
         # Only rounded_rectangular_plate actually implements cornerRadius.
@@ -1632,9 +1591,7 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
             if expect_chamfer_warning:
                 assert "chamfer requested but not implemented" in w, f"{file} chamfer"
             if expect_corner_radius_warning:
-                assert "cornerRadius requested but not implemented" in w, (
-                    f"{file} cornerRadius"
-                )
+                assert "cornerRadius requested but not implemented" in w, f"{file} cornerRadius"
             else:
                 assert "cornerRadius requested but not implemented" not in w, file
 
@@ -1696,9 +1653,7 @@ def test_validate_printspec_and_validate_part_family_spec_narrow_the_same_way():
         {"printspecVersion": "0.2.0", "units": "mm", "part": bad_part}
     )
     assert printspec_result["valid"] is False
-    assert [e[len("/part") :] for e in printspec_result["errors"]] == family_result[
-        "errors"
-    ]
+    assert [e[len("/part") :] for e in printspec_result["errors"]] == family_result["errors"]
 
 
 def test_python_cli_commands():
@@ -1830,8 +1785,7 @@ def test_python_form_metadata_helpers_and_cli():
 
     families = list_part_families()
     assert any(
-        f["type"] == "rounded_rectangular_plate" and f["generatorSupported"]
-        for f in families
+        f["type"] == "rounded_rectangular_plate" and f["generatorSupported"] for f in families
     )
     meta = get_part_family_form_metadata("rounded_rectangular_plate")
     assert [f["name"] for f in meta["fields"][:4]] == [
@@ -1881,17 +1835,11 @@ def test_python_bundle_helpers_and_zip(tmp_path):
     assert b["supported"]
     paths = [f["path"] for f in b["files"]]
     assert paths == sorted(paths)
+    assert "printspec.json" in paths and "cad/model.scad" in paths and "cad/model.py" in paths
     assert (
-        "printspec.json" in paths
-        and "cad/model.scad" in paths
-        and "cad/model.py" in paths
-    )
-    assert (
-        json.loads(
-            next(
-                f["content"] for f in b["files"] if f["path"] == "bundle-manifest.json"
-            )
-        )["kind"]
+        json.loads(next(f["content"] for f in b["files"] if f["path"] == "bundle-manifest.json"))[
+            "kind"
+        ]
         == "part"
     )
     out = tmp_path / "bundle"
@@ -1905,9 +1853,7 @@ def test_python_bundle_helpers_and_zip(tmp_path):
         write_bundle_to_directory(
             {
                 "supported": True,
-                "files": [
-                    {"path": "../evil", "content": "x", "mediaType": "text/plain"}
-                ],
+                "files": [{"path": "../evil", "content": "x", "mediaType": "text/plain"}],
                 "warnings": [],
             },
             tmp_path / "bad",
@@ -1923,9 +1869,7 @@ def test_python_project_bundle_and_cli(tmp_path):
     b = create_bundle(project, {"includePartCad": True})
     paths = [f["path"] for f in b["files"]]
     assert (
-        "bom/bom.md" in paths
-        and "partcad.yaml" in paths
-        and "parts/base/printspec.json" in paths
+        "bom/bom.md" in paths and "partcad.yaml" in paths and "parts/base/printspec.json" in paths
     )
     assert len(b["warnings"]) >= 2
     env = {**os.environ, "PYTHONPATH": "packages/python"}
