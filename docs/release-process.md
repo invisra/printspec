@@ -1,6 +1,6 @@
 # Release process
 
-printspec schema `v0.2.0` is experimental. Publishing is manual for now; this document is a checklist for preparing release candidates without pushing artifacts to npm or PyPI accidentally.
+printspec npm package `v0.3.0` and schema/Python `v0.2.0` are experimental. The release tracks are intentionally independent. Publishing is manual for now; this document is a checklist for preparing release candidates without pushing artifacts to npm or PyPI accidentally.
 
 ## Pre-release checklist
 
@@ -32,7 +32,7 @@ printspec schema `v0.2.0` is experimental. Publishing is manual for now; this do
 
 ## Version policy
 
-Before `1.0`, breaking changes are possible. Once a versioned schema directory has been published, treat that directory as immutable. Package patch releases may advance independently from the schema version when schemas do not change. For example, npm package `@invisra/printspec@0.2.5` can remain on schema `$id` paths and `printspecVersion` `0.2.0` when the release only fixes package contents. For schema changes, publish a new versioned schema directory instead of rewriting an existing one.
+Before `1.0`, breaking changes are possible. The release workflow accepts separate npm and schema inputs; the Python package currently follows the schema version. Once a versioned schema directory has been published, treat that directory as immutable. Package patch releases may advance independently from the schema version when schemas do not change. For example, npm package `@invisra/printspec@0.2.5` can remain on schema `$id` paths and `printspecVersion` `0.2.0` when the release only fixes package contents. For schema changes, publish a new versioned schema directory instead of rewriting an existing one.
 
 
 ## Schema immutability warning
