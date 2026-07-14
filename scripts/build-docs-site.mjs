@@ -10,53 +10,119 @@
 // Run via `npm run build:docs-site` (bundled into `npm run build:schema-site`
 // alongside scripts/sync-schemas.mjs and scripts/build-schema-validator.mjs).
 
-import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { marked } from "marked";
-import { root, SCHEMA_VERSION, PUBLIC_SCHEMA_DIR, PUBLIC_DOCS_DIR } from "./lib/project-info.mjs";
+import {
+  root,
+  SCHEMA_VERSION,
+  PUBLIC_SCHEMA_DIR,
+  PUBLIC_DOCS_DIR,
+} from "./lib/project-info.mjs";
 import { escapeHtml, page } from "./lib/site-template.mjs";
 
 // Each entry: source path (relative to repo root), output slug (becomes
 // <slug>.html), and a category used to group the docs index page.
 const DOC_SOURCES = [
-  { src: "docs/getting-started.md", slug: "getting-started", category: "Start here" },
-  { src: "docs/composable-parts.md", slug: "composable-parts", category: "Start here" },
+  {
+    src: "docs/getting-started.md",
+    slug: "getting-started",
+    category: "Start here",
+  },
+  {
+    src: "docs/composable-parts.md",
+    slug: "composable-parts",
+    category: "Start here",
+  },
   { src: "docs/generators.md", slug: "generators", category: "Start here" },
-  { src: "docs/part-families.md", slug: "part-families", category: "Start here" },
+  {
+    src: "docs/part-families.md",
+    slug: "part-families",
+    category: "Start here",
+  },
 
   { src: "docs/validation.md", slug: "validation", category: "Reference" },
-  { src: "docs/form-metadata.md", slug: "form-metadata", category: "Reference" },
-  { src: "docs/units-and-coordinates.md", slug: "units-and-coordinates", category: "Reference" },
+  {
+    src: "docs/form-metadata.md",
+    slug: "form-metadata",
+    category: "Reference",
+  },
+  {
+    src: "docs/units-and-coordinates.md",
+    slug: "units-and-coordinates",
+    category: "Reference",
+  },
   { src: "docs/bundles.md", slug: "bundles", category: "Reference" },
   {
     src: "docs/projects-and-assemblies.md",
     slug: "projects-and-assemblies",
     category: "Reference",
   },
-  { src: "docs/supplier-hardware.md", slug: "supplier-hardware", category: "Reference" },
-  { src: "docs/browser-editors.md", slug: "browser-editors", category: "Reference" },
-  { src: "docs/hosted-schemas.md", slug: "hosted-schemas", category: "Reference" },
-  { src: "docs/partcad-compatibility.md", slug: "partcad-compatibility", category: "Reference" },
+  {
+    src: "docs/supplier-hardware.md",
+    slug: "supplier-hardware",
+    category: "Reference",
+  },
+  {
+    src: "docs/browser-editors.md",
+    slug: "browser-editors",
+    category: "Reference",
+  },
+  {
+    src: "docs/hosted-schemas.md",
+    slug: "hosted-schemas",
+    category: "Reference",
+  },
+  {
+    src: "docs/partcad-compatibility.md",
+    slug: "partcad-compatibility",
+    category: "Reference",
+  },
   { src: "docs/safety.md", slug: "safety", category: "Reference" },
 
-  { src: "docs/design-principles.md", slug: "design-principles", category: "Project" },
+  {
+    src: "docs/design-principles.md",
+    slug: "design-principles",
+    category: "Project",
+  },
   { src: "docs/roadmap.md", slug: "roadmap", category: "Project" },
-  { src: "docs/release-process.md", slug: "release-process", category: "Project" },
+  {
+    src: "docs/release-process.md",
+    slug: "release-process",
+    category: "Project",
+  },
   {
     src: "docs/v0.1.0-release-checklist.md",
     slug: "v0.1.0-release-checklist",
     category: "Project",
   },
-  { src: "docs/releases/v0.1.0.md", slug: "release-notes-v0.1.0", category: "Project" },
+  {
+    src: "docs/releases/v0.1.0.md",
+    slug: "release-notes-v0.1.0",
+    category: "Project",
+  },
 
   { src: "README.md", slug: "readme", category: "Repository" },
   { src: "CHANGELOG.md", slug: "changelog", category: "Repository" },
   { src: "CONTRIBUTING.md", slug: "contributing", category: "Repository" },
-  { src: "CODE_OF_CONDUCT.md", slug: "code-of-conduct", category: "Repository" },
+  {
+    src: "CODE_OF_CONDUCT.md",
+    slug: "code-of-conduct",
+    category: "Repository",
+  },
   { src: "SECURITY.md", slug: "security", category: "Repository" },
 ];
 
-const slugByBasename = new Map(DOC_SOURCES.map(({ src, slug }) => [path.basename(src), slug]));
+const slugByBasename = new Map(
+  DOC_SOURCES.map(({ src, slug }) => [path.basename(src), slug]),
+);
 
 // Rewrites relative `*.md` links (however prefixed: `foo.md`, `./foo.md`,
 // `docs/foo.md`) that point at another file in DOC_SOURCES into the flat
@@ -94,14 +160,17 @@ function extractDescription(markdown) {
   while (i < lines.length) {
     const raw = lines[i].trim();
     i++;
-    if (!raw || raw.startsWith("#") || /^\|/.test(raw) || /^-{3,}$/.test(raw)) continue;
+    if (!raw || raw.startsWith("#") || /^\|/.test(raw) || /^-{3,}$/.test(raw))
+      continue;
     if (raw.startsWith("```")) {
       while (i < lines.length && !lines[i].trim().startsWith("```")) i++;
       i++;
       continue;
     }
     const isListItem = /^(?:[-*]|\d+\.)\s+/.test(raw);
-    let text = cleanInline(raw.replace(/^>\s*/, "").replace(/^(?:[-*]|\d+\.)\s+/, ""));
+    let text = cleanInline(
+      raw.replace(/^>\s*/, "").replace(/^(?:[-*]|\d+\.)\s+/, ""),
+    );
     if (/^\w+:?$/.test(text)) continue; // bare section label, e.g. "Feature:"
     if (!isListItem) {
       while (i < lines.length) {
@@ -129,7 +198,8 @@ function addHeadingIds(html) {
   const seen = new Set();
   return html.replace(/<(h[1-6])>([\s\S]*?)<\/\1>/g, (whole, tag, inner) => {
     const plain = inner.replace(/<[^>]+>/g, "").toLowerCase();
-    const base = plain.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "section";
+    const base =
+      plain.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "section";
     let id = base;
     let n = 2;
     while (seen.has(id)) id = `${base}-${n++}`;
@@ -142,7 +212,8 @@ const publicDocsPath = path.join(root, PUBLIC_DOCS_DIR);
 mkdirSync(publicDocsPath, { recursive: true });
 for (const existing of readdirSync(publicDocsPath)) {
   const targetPath = path.join(publicDocsPath, existing);
-  if (existing.endsWith(".html") && statSync(targetPath).isFile()) rmSync(targetPath);
+  if (existing.endsWith(".html") && statSync(targetPath).isFile())
+    rmSync(targetPath);
 }
 
 const rendered = DOC_SOURCES.map(({ src, slug, category }) => {
@@ -213,4 +284,6 @@ writeFileSync(path.join(root, "public/llms.txt"), llmsTxtSource);
 writeFileSync(path.join(root, PUBLIC_SCHEMA_DIR, "llms.txt"), llmsTxtSource);
 
 console.log(`Rendered ${rendered.length} doc page(s) to ${PUBLIC_DOCS_DIR}`);
-console.log(`Published llms.txt at public/llms.txt and ${PUBLIC_SCHEMA_DIR}/llms.txt`);
+console.log(
+  `Published llms.txt at public/llms.txt and ${PUBLIC_SCHEMA_DIR}/llms.txt`,
+);

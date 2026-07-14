@@ -12,9 +12,16 @@ export type {
   BundleOptions,
   WriteBundleOptions,
 } from "./bundle.core.js";
-import type { BundleResult, BundleOptions, WriteBundleOptions } from "./bundle.core.js";
+import type {
+  BundleResult,
+  BundleOptions,
+  WriteBundleOptions,
+} from "./bundle.core.js";
 
-export function createBundle(input: unknown, options: BundleOptions = {}): BundleResult {
+export function createBundle(
+  input: unknown,
+  options: BundleOptions = {},
+): BundleResult {
   return createBundleWithDeps(
     { validatePrintSpec, generateOpenScad, generateCadQuery, generateBrepJs },
     input,
@@ -31,7 +38,8 @@ export function writeBundleToDirectory(
   outputDir: string,
   options: WriteBundleOptions = {},
 ) {
-  if (!bundle.supported) throw new Error(bundle.message ?? "Unsupported bundle");
+  if (!bundle.supported)
+    throw new Error(bundle.message ?? "Unsupported bundle");
   if (fs.existsSync(outputDir) && !options.overwrite)
     throw new Error(`Output directory already exists: ${outputDir}`);
   fs.mkdirSync(outputDir, { recursive: true });

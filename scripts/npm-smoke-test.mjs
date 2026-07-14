@@ -9,16 +9,21 @@ const smokeDir = mkdtempSync(path.join(tmpdir(), "printspec-npm-smoke-"));
 
 function run(command, args, options = {}) {
   execFileSync(command, args, {
-    stdio: options.input === undefined ? "inherit" : ["pipe", "inherit", "inherit"],
+    stdio:
+      options.input === undefined ? "inherit" : ["pipe", "inherit", "inherit"],
     ...options,
   });
 }
 
 try {
-  const packOutput = execFileSync("npm", ["--workspace", "@invisra/printspec", "pack", "--json"], {
-    cwd: root,
-    encoding: "utf8",
-  });
+  const packOutput = execFileSync(
+    "npm",
+    ["--workspace", "@invisra/printspec", "pack", "--json"],
+    {
+      cwd: root,
+      encoding: "utf8",
+    },
+  );
   const [{ filename }] = JSON.parse(packOutput);
   const tarball = path.join(root, filename);
 
@@ -30,8 +35,14 @@ try {
   rmSync(tarball, { force: true });
 
   for (const dependency of ["ajv", "ajv-formats"]) {
-    if (!existsSync(path.join(smokeDir, "node_modules", dependency, "package.json"))) {
-      throw new Error(`Installed package is missing runtime dependency ${dependency}`);
+    if (
+      !existsSync(
+        path.join(smokeDir, "node_modules", dependency, "package.json"),
+      )
+    ) {
+      throw new Error(
+        `Installed package is missing runtime dependency ${dependency}`,
+      );
     }
   }
 

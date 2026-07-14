@@ -66,4 +66,9 @@ export type PreviewScene = {
 
 export type PreviewGenerationResult =
   | { supported: true; scene: PreviewScene; warnings: string[] }
-  | { supported: false; message: string; warnings: string[]; errors?: string[] };
+  | {
+      supported: false;
+      message: string;
+      warnings: string[];
+      errors?: string[];
+    };

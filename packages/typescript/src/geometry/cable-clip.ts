@@ -6,7 +6,10 @@ export function resolveCableClipGeometry(q: Params) {
     baseThickness = num(q.baseThickness, num(q.thickness, 3));
   const innerDiameter = num(q.clipInnerDiameter, num(q.cableDiameter, 6));
   const wallThickness = num(q.clipWallThickness, num(q.thickness, 2));
-  const openingWidth = num(q.clipOpeningWidth, Math.max(innerDiameter * 0.45, wallThickness * 1.5));
+  const openingWidth = num(
+    q.clipOpeningWidth,
+    Math.max(innerDiameter * 0.45, wallThickness * 1.5),
+  );
   const outerDiameter = innerDiameter + 2 * wallThickness;
   const centerZ = baseThickness + outerDiameter / 2;
   return {

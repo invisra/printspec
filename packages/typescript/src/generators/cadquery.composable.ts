@@ -139,7 +139,9 @@ function buildProfileEdges(
       return `    cq.Edge.makeBezier([${from}, ${ctrl.join(", ")}, ${to}]),`;
     }
     if (curve?.type === "spline") {
-      const through = curve.through.map((p: any) => `cq.Vector${toPoint3(shift(p))}`);
+      const through = curve.through.map(
+        (p: any) => `cq.Vector${toPoint3(shift(p))}`,
+      );
       return `    cq.Edge.makeSplineApprox([cq.Vector${from}, ${through.join(", ")}, cq.Vector${to}]),`;
     }
     return `    cq.Edge.makeLine(${from}, ${to}),`;
@@ -256,8 +258,15 @@ function buildComponentGeometry(kind: string, dims: any): string {
       const { minX, maxX, minY, maxY } = pointsBoundingBox(dims.points);
       const cx = (minX + maxX) / 2;
       const cy = (minY + maxY) / 2;
-      const shift = (p: { x: number; y: number }): [string, string] => [n(p.x - cx), n(p.y - cy)];
-      const lines = buildProfileEdges(dims.points, shift, ([x, y]) => `(${x}, ${y}, 0)`);
+      const shift = (p: { x: number; y: number }): [string, string] => [
+        n(p.x - cx),
+        n(p.y - cy),
+      ];
+      const lines = buildProfileEdges(
+        dims.points,
+        shift,
+        ([x, y]) => `(${x}, ${y}, 0)`,
+      );
       return (
         `cq.Solid.extrudeLinear(cq.Wire.assembleEdges([\n` +
         `${lines.join("\n")}\n` +
@@ -302,7 +311,11 @@ function buildComponentGeometry(kind: string, dims: any): string {
         n(p.radius),
         n(p.z - minZ),
       ];
-      const lines = buildProfileEdges(dims.points, shift, ([r, z]) => `(${r}, 0, ${z})`);
+      const lines = buildProfileEdges(
+        dims.points,
+        shift,
+        ([r, z]) => `(${r}, 0, ${z})`,
+      );
       const sweepAngle = dims.sweepAngle ?? 360;
       return (
         `cq.Solid.revolve(cq.Wire.assembleEdges([\n` +
@@ -318,18 +331,24 @@ function buildComponentGeometry(kind: string, dims: any): string {
       // profile is centered on its own local origin independently.
       const zs = dims.profiles.map((p: { z: number }) => p.z);
       const minZ = Math.min(...zs);
-      const wires = dims.profiles.map((profile: { points: any[]; z: number }) => {
-        const { minX, maxX, minY, maxY } = pointsBoundingBox(profile.points);
-        const cx = (minX + maxX) / 2;
-        const cy = (minY + maxY) / 2;
-        const shift = (p: { x: number; y: number }): [string, string] => [
-          n(p.x - cx),
-          n(p.y - cy),
-        ];
-        const z = n(profile.z - minZ);
-        const edges = buildProfileEdges(profile.points, shift, ([x, y]) => `(${x}, ${y}, ${z})`);
-        return `cq.Wire.assembleEdges([\n${edges.join("\n")}\n  ])`;
-      });
+      const wires = dims.profiles.map(
+        (profile: { points: any[]; z: number }) => {
+          const { minX, maxX, minY, maxY } = pointsBoundingBox(profile.points);
+          const cx = (minX + maxX) / 2;
+          const cy = (minY + maxY) / 2;
+          const shift = (p: { x: number; y: number }): [string, string] => [
+            n(p.x - cx),
+            n(p.y - cy),
+          ];
+          const z = n(profile.z - minZ);
+          const edges = buildProfileEdges(
+            profile.points,
+            shift,
+            ([x, y]) => `(${x}, ${y}, ${z})`,
+          );
+          return `cq.Wire.assembleEdges([\n${edges.join("\n")}\n  ])`;
+        },
+      );
       return `cq.Solid.makeLoft([\n${wires.map((w: string) => `    ${w},`).join("\n")}\n  ])`;
     }
     case "swept_profile": {
@@ -345,13 +364,24 @@ function buildComponentGeometry(kind: string, dims: any): string {
       // testing here too).
       const p0 = dims.path[0];
       const pathPoints = dims.path.map(
-        (p: { x: number; y: number; z: number }) => pt3(p.x - p0.x, p.y - p0.y, p.z - p0.z),
+        (p: { x: number; y: number; z: number }) =>
+          pt3(p.x - p0.x, p.y - p0.y, p.z - p0.z),
       );
       const spineEdges = pathPoints
         .slice(0, -1)
-        .map((from: string, i: number) => `    cq.Edge.makeLine(${from}, ${pathPoints[i + 1]}),`);
-      const profileShift = (p: { x: number; y: number }): [string, string] => [n(p.x), n(p.y)];
-      const profileEdges = buildProfileEdges(dims.profile, profileShift, ([x, y]) => `(${x}, ${y}, 0)`);
+        .map(
+          (from: string, i: number) =>
+            `    cq.Edge.makeLine(${from}, ${pathPoints[i + 1]}),`,
+        );
+      const profileShift = (p: { x: number; y: number }): [string, string] => [
+        n(p.x),
+        n(p.y),
+      ];
+      const profileEdges = buildProfileEdges(
+        dims.profile,
+        profileShift,
+        ([x, y]) => `(${x}, ${y}, 0)`,
+      );
       return (
         `cq.Solid.sweep(\n` +
         `    cq.Wire.assembleEdges([\n${profileEdges.join("\n")}\n    ]),\n` +
@@ -592,7 +622,12 @@ function buildBoundedEdgesExpr(
   const edgeLists: string[] = [];
   for (const ownOffset of instanceOffsets.own) {
     for (const groupOffset of instanceOffsets.group) {
-      const worldPt = worldPointForGroupInstance(targetId, localPt, groupOffset, ownOffset);
+      const worldPt = worldPointForGroupInstance(
+        targetId,
+        localPt,
+        groupOffset,
+        ownOffset,
+      );
       edgeLists.push(
         `list(${currentVar}.faces(cq.NearestToPointSelector(${pt3(worldPt[0], worldPt[1], worldPt[2])})).Edges())`,
       );
@@ -643,31 +678,45 @@ export function generateComposablePartCadQuery(
     const group = groupsById.get(targetId);
     if (group) return group.memberIds ?? [];
     const targetFeature = featuresById.get(targetId);
-    return targetFeature?.target ? resolveFeatureCsgTargets(targetFeature.target) : [];
+    return targetFeature?.target
+      ? resolveFeatureCsgTargets(targetFeature.target)
+      : [];
   }
   const transformingGroupOf = new Map<string, string>();
   for (const g of groups)
-    if (g.position != null || g.rotation != null || g.relation != null || g.pattern != null)
-      for (const memberId of g.memberIds ?? []) transformingGroupOf.set(memberId, g.id);
+    if (
+      g.position != null ||
+      g.rotation != null ||
+      g.relation != null ||
+      g.pattern != null
+    )
+      for (const memberId of g.memberIds ?? [])
+        transformingGroupOf.set(memberId, g.id);
 
   const targetHasMultipleInstances = (targetId: string): boolean => {
     const gid = transformingGroupOf.get(targetId);
-    return !!(componentsById.get(targetId)?.pattern || (gid && groupsById.get(gid)?.pattern));
+    return !!(
+      componentsById.get(targetId)?.pattern ||
+      (gid && groupsById.get(gid)?.pattern)
+    );
   };
 
-  const targetPatternInstanceOffsets = (targetId: string): { own: Vec3[]; group: Vec3[] } => {
+  const targetPatternInstanceOffsets = (
+    targetId: string,
+  ): { own: Vec3[]; group: Vec3[] } => {
     const own = patternOffsets(componentsById.get(targetId)?.pattern);
     const gid = transformingGroupOf.get(targetId);
     const group = gid ? patternOffsets(groupsById.get(gid)?.pattern) : [ZERO];
     return { own, group };
   };
 
-  const { resolveOwn, worldPointForGroupInstance, worldRotatePoint } = buildResolver(
-    nodesById,
-    (id) => featureIdSet.has(id),
-    dimsOf,
-    transformingGroupOf,
-  );
+  const { resolveOwn, worldPointForGroupInstance, worldRotatePoint } =
+    buildResolver(
+      nodesById,
+      (id) => featureIdSet.has(id),
+      dimsOf,
+      transformingGroupOf,
+    );
 
   const connectivityWarning = checkAssemblyConnectivity(
     components,
@@ -696,7 +745,8 @@ export function generateComposablePartCadQuery(
     const targetRel = targetNode
       ? effectiveRelation(targetNode, featureIdSet.has(targetId))
       : undefined;
-    if (targetRel?.inheritRotation) out = applyInheritedRotation(out, targetRel.target);
+    if (targetRel?.inheritRotation)
+      out = applyInheritedRotation(out, targetRel.target);
     return out;
   }
 
@@ -705,17 +755,20 @@ export function generateComposablePartCadQuery(
     const own = resolveOwn(c.id);
     let oriented = applyTransform(local, own.rotation, ZERO);
     const rel = effectiveRelation(c, false);
-    if (rel?.inheritRotation) oriented = applyInheritedRotation(oriented, rel.target);
+    if (rel?.inheritRotation)
+      oriented = applyInheritedRotation(oriented, rel.target);
     const placed = applyTransform(oriented, ZERO, own.position);
     const gid = transformingGroupOf.get(c.id);
     if (!gid) return placed;
     const g = resolveOwn(gid);
     const groupOffsets = patternOffsets(groupsById.get(gid)?.pattern);
-    if (groupOffsets.length <= 1) return applyTransform(placed, g.rotation, g.position);
+    if (groupOffsets.length <= 1)
+      return applyTransform(placed, g.rotation, g.position);
     const instanceAt = (o: Vec3) =>
       applyTransform(applyTransform(placed, ZERO, o), g.rotation, g.position);
     let combined = instanceAt(groupOffsets[0]);
-    for (const o of groupOffsets.slice(1)) combined = `${combined}.fuse(${instanceAt(o)})`;
+    for (const o of groupOffsets.slice(1))
+      combined = `${combined}.fuse(${instanceAt(o)})`;
     return combined;
   }
 
@@ -755,13 +808,21 @@ export function generateComposablePartCadQuery(
     const operandVar = assign(`${method}_${c.id}`, placedComponentExpr(c));
     for (const targetId of liveTargets) {
       const current = shapesById.get(targetId)!;
-      const newVar = assign(`comp_${targetId}_${method}`, `${current}.${method}(${operandVar})`);
+      const newVar = assign(
+        `comp_${targetId}_${method}`,
+        `${current}.${method}(${operandVar})`,
+      );
       shapesById.set(targetId, newVar);
     }
   }
 
-  function findTargetPatternGroup(node: any, isFeature: boolean, depth = 0): any | undefined {
-    if (depth > components.length + features.length + groups.length) return undefined;
+  function findTargetPatternGroup(
+    node: any,
+    isFeature: boolean,
+    depth = 0,
+  ): any | undefined {
+    if (depth > components.length + features.length + groups.length)
+      return undefined;
     const rel = effectiveRelation(node, isFeature);
     if (!rel) return undefined;
     const asGroup = groupsById.get(rel.target);
@@ -770,7 +831,8 @@ export function generateComposablePartCadQuery(
     if (gid) return groupsById.get(gid);
     if (featureIdSet.has(rel.target)) {
       const targetFeature = nodesById.get(rel.target);
-      if (targetFeature) return findTargetPatternGroup(targetFeature, true, depth + 1);
+      if (targetFeature)
+        return findTargetPatternGroup(targetFeature, true, depth + 1);
     }
     return undefined;
   }
@@ -870,7 +932,8 @@ export function generateComposablePartCadQuery(
       );
       continue;
     }
-    const explicitTargetInstance = effectiveRelation(f, true)?.targetInstance != null;
+    const explicitTargetInstance =
+      effectiveRelation(f, true)?.targetInstance != null;
     if (
       f.target &&
       !f.pattern &&
@@ -902,7 +965,8 @@ export function generateComposablePartCadQuery(
           addV(own.position, rotateExtrinsic(o, groupRotation)),
         );
       let combined = instanceAt(groupOffsets[0]);
-      for (const o of groupOffsets.slice(1)) combined = `${combined}.fuse(${instanceAt(o)})`;
+      for (const o of groupOffsets.slice(1))
+        combined = `${combined}.fuse(${instanceAt(o)})`;
       placedCut = combined;
     }
 
@@ -910,7 +974,10 @@ export function generateComposablePartCadQuery(
     featureShapesById.set(f.id, cutVar);
     for (const targetId of liveTargets) {
       const current = shapesById.get(targetId)!;
-      const newVar = assign(`comp_${targetId}_cut`, `${current}.cut(${cutVar})`);
+      const newVar = assign(
+        `comp_${targetId}_cut`,
+        `${current}.cut(${cutVar})`,
+      );
       shapesById.set(targetId, newVar);
     }
   }
@@ -931,14 +998,17 @@ export function generateComposablePartCadQuery(
   };
 
   if (options?.isolate != null) {
-    let isolateVar = shapesById.get(options.isolate) ?? featureShapesById.get(options.isolate);
+    let isolateVar =
+      shapesById.get(options.isolate) ?? featureShapesById.get(options.isolate);
     if (isolateVar == null) {
       const group = groupsById.get(options.isolate);
       const liveMemberVars = (group?.memberIds ?? [])
         .map((id: string) => shapesById.get(id))
         .filter((v: string | undefined): v is string => v != null);
       if (liveMemberVars.length > 0)
-        isolateVar = liveMemberVars.reduce((acc: string, v: string) => `${acc}.fuse(${v})`);
+        isolateVar = liveMemberVars.reduce(
+          (acc: string, v: string) => `${acc}.fuse(${v})`,
+        );
     }
     if (isolateVar == null)
       return {
@@ -953,7 +1023,8 @@ export function generateComposablePartCadQuery(
   }
 
   let partVar = [...shapesById.values()][0];
-  for (const v of [...shapesById.values()].slice(1)) partVar = assign("part", `${partVar}.fuse(${v})`);
+  for (const v of [...shapesById.values()].slice(1))
+    partVar = assign("part", `${partVar}.fuse(${v})`);
   if (shapesById.size === 1) {
     const finalName = "part_0";
     lines.push(`${finalName} = ${partVar}`);

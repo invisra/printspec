@@ -4,7 +4,9 @@ import path from "node:path";
 import test from "node:test";
 
 const root = path.resolve(import.meta.dirname, "../..");
-const version = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).version;
+const version = JSON.parse(
+  fs.readFileSync(path.join(root, "package.json"), "utf8"),
+).version;
 const sourceDir = path.join(root, "schemas");
 const publicDir = path.join(root, "public", "printspec", version);
 const pythonDir = path.join(root, "packages/python/printspec/schemas");
@@ -13,7 +15,11 @@ const schemaFiles = fs
   .readdirSync(sourceDir)
   .filter((f) => f.endsWith(".schema.json"))
   .sort((a, b) =>
-    a === "printspec.schema.json" ? -1 : b === "printspec.schema.json" ? 1 : a.localeCompare(b),
+    a === "printspec.schema.json"
+      ? -1
+      : b === "printspec.schema.json"
+        ? 1
+        : a.localeCompare(b),
   );
 
 test("static schema site files exist", () => {
@@ -30,8 +36,12 @@ test("static schema site files exist", () => {
 
 test("version index links every schema without filesystem paths or analytics by default", () => {
   const html = fs.readFileSync(path.join(publicDir, "index.html"), "utf8");
-  for (const file of schemaFiles) assert.match(html, new RegExp(file.replaceAll(".", "\\.")));
-  assert.doesNotMatch(html, new RegExp(root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  for (const file of schemaFiles)
+    assert.match(html, new RegExp(file.replaceAll(".", "\\.")));
+  assert.doesNotMatch(
+    html,
+    new RegExp(root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+  );
   assert.doesNotMatch(html, /\/_vercel\/insights\/script\.js/);
 });
 
@@ -47,14 +57,18 @@ test("manifests include versions and all schemas", () => {
     project.versions.map((v) => v.version).includes(version),
     `project manifest versions should include current version ${version}`,
   );
-  const manifest = JSON.parse(fs.readFileSync(path.join(publicDir, "manifest.json"), "utf8"));
+  const manifest = JSON.parse(
+    fs.readFileSync(path.join(publicDir, "manifest.json"), "utf8"),
+  );
   assert.equal(manifest.version, version);
   assert.deepEqual(
     manifest.schemas.map((s) => s.filename),
     schemaFiles,
   );
   for (const entry of manifest.schemas) {
-    const source = JSON.parse(fs.readFileSync(path.join(sourceDir, entry.filename), "utf8"));
+    const source = JSON.parse(
+      fs.readFileSync(path.join(sourceDir, entry.filename), "utf8"),
+    );
     assert.equal(entry.id, source.$id);
     assert.equal(entry.title, source.title);
     assert.equal(entry.description, source.description);
@@ -66,7 +80,11 @@ function schemaFileNames(dir) {
     .readdirSync(dir)
     .filter((f) => f.endsWith(".schema.json"))
     .sort((a, b) =>
-      a === "printspec.schema.json" ? -1 : b === "printspec.schema.json" ? 1 : a.localeCompare(b),
+      a === "printspec.schema.json"
+        ? -1
+        : b === "printspec.schema.json"
+          ? 1
+          : a.localeCompare(b),
     );
 }
 

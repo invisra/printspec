@@ -11,7 +11,10 @@ import {
   listPartFamilies,
 } from "../../packages/typescript/dist/browser.js";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const root = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 const distBrowser = path.join(root, "packages/typescript/dist/browser.js");
 const spec = {
   printspecVersion: "0.2.0",

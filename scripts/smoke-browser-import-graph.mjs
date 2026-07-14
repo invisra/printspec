@@ -36,20 +36,26 @@ function visit(file) {
   seen.add(resolved);
   const source = readFileSync(resolved, "utf8");
   for (const text of bannedText) {
-    if (source.includes(text)) failures.push(`${rel(resolved)} contains banned text ${text}`);
+    if (source.includes(text))
+      failures.push(`${rel(resolved)} contains banned text ${text}`);
   }
   for (const match of source.matchAll(importExportRe)) {
     const spec = match[1] ?? match[2];
     if (!spec?.startsWith(".")) continue;
     if (bannedRelativeSpecifiers.has(spec)) {
-      failures.push(`${rel(resolved)} imports banned browser specifier ${spec}`);
+      failures.push(
+        `${rel(resolved)} imports banned browser specifier ${spec}`,
+      );
     }
     const target = path.resolve(path.dirname(resolved), spec);
     const candidates = path.extname(target)
       ? [target]
       : [`${target}.js`, path.join(target, "index.js")];
     const next = candidates.find((candidate) => existsSync(candidate));
-    if (!next) failures.push(`${rel(resolved)} imports missing relative specifier ${spec}`);
+    if (!next)
+      failures.push(
+        `${rel(resolved)} imports missing relative specifier ${spec}`,
+      );
     else visit(next);
   }
 }
@@ -64,4 +70,6 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`Browser import graph smoke test passed (${seen.size} files checked).`);
+console.log(
+  `Browser import graph smoke test passed (${seen.size} files checked).`,
+);

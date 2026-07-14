@@ -167,7 +167,11 @@ test("schema validator static files are built without Node built-ins", () => {
   assert.ok(existsSync(bundlePath), `${bundlePath} should exist`);
   const bundle = readFileSync(bundlePath, "utf8");
   for (const pattern of forbidden)
-    assert.equal(bundle.includes(pattern), false, `${pattern} must not be bundled`);
+    assert.equal(
+      bundle.includes(pattern),
+      false,
+      `${pattern} must not be bundled`,
+    );
   assert.match(bundle, /printspec-validator-real-browser-api-v1/);
   assert.match(bundle, /round_spacer/);
   assert.match(bundle, /project_enclosure_tray/);
@@ -177,12 +181,18 @@ test("schema validator static files are built without Node built-ins", () => {
 
 test("schema validator HTML includes Invisra static branding", () => {
   const html = readFileSync(htmlPath, "utf8");
-  assert.match(html, /https:\/\/assets\.invisra\.ai\/brand\/v1\/brand\.min\.css/);
+  assert.match(
+    html,
+    /https:\/\/assets\.invisra\.ai\/brand\/v1\/brand\.min\.css/,
+  );
   assert.match(html, /https:\/\/assets\.invisra\.ai\/brand\/v1\/favicon\.svg/);
   assert.match(html, /<html lang="en" data-theme="dark">/);
   assert.match(html, /Invisra/);
   assert.match(html, /printspec validator/);
-  assert.match(html, /<script type="module" src="\.\/validator\.js"><\/script>/);
+  assert.match(
+    html,
+    /<script type="module" src="\.\/validator\.js"><\/script>/,
+  );
   const css = readFileSync("public/printspec/validator/style.css", "utf8");
   assert.match(css, /html\[data-theme=light\] body\.invisra-theme/);
   assert.match(css, /html\[data-theme=light\] \.invisra-shell/);
@@ -191,7 +201,9 @@ test("schema validator HTML includes Invisra static branding", () => {
 test("validator examples validate through browser-safe API", async () => {
   const { validatePrintSpec, listPartFamilies, getPartFamilyFormMetadata } =
     await import("../packages/typescript/dist/browser.js");
-  assert.ok(listPartFamilies().some((family) => family.type === "round_spacer"));
+  assert.ok(
+    listPartFamilies().some((family) => family.type === "round_spacer"),
+  );
   for (const [type, spec] of Object.entries(examples)) {
     assert.equal(getPartFamilyFormMetadata(type).partType, type);
     const result = validatePrintSpec(spec);

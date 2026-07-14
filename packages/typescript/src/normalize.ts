@@ -1,7 +1,9 @@
 import type { PrintSpec } from "./types.js";
 function normSupplier(s: string) {
   const x = s.toLowerCase().replace(/\s+/g, "");
-  return ["mcmaster", "mcmaster-carr"].includes(x) ? "mcmaster" : s.toLowerCase();
+  return ["mcmaster", "mcmaster-carr"].includes(x)
+    ? "mcmaster"
+    : s.toLowerCase();
 }
 function walk(v: any): any {
   if (Array.isArray(v)) return v.map(walk);

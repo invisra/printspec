@@ -43,7 +43,13 @@ export type ComposablePartSpec = {
 export type ProjectSpec = {
   type: "project";
   label: string;
-  parts: { id: string; label: string; spec?: PrintSpec; specPath?: string; quantity?: number }[];
+  parts: {
+    id: string;
+    label: string;
+    spec?: PrintSpec;
+    specPath?: string;
+    quantity?: number;
+  }[];
   hardware?: HardwareItem[];
 };
 export type PrintSpec = {

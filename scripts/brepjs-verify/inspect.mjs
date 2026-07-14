@@ -30,7 +30,14 @@
 // volume/bounds/validity) in a composable_part spec without hand-deriving
 // combined-shape math or authoring a separate spec that isolates it by hand.
 
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
@@ -64,11 +71,14 @@ const isolateIdx = args.indexOf("--isolate");
 const isolateId = isolateIdx !== -1 ? args[isolateIdx + 1] : null;
 
 const resolvedSpecPath = path.resolve(process.cwd(), specPath);
-if (!existsSync(resolvedSpecPath)) fail(`Spec file not found: ${resolvedSpecPath}`);
+if (!existsSync(resolvedSpecPath))
+  fail(`Spec file not found: ${resolvedSpecPath}`);
 
 const distIndex = path.join(repoRoot, "packages/typescript/dist/index.js");
 if (!existsSync(distIndex))
-  fail(`Missing ${path.relative(repoRoot, distIndex)} -- run \`npm run build\` first.`);
+  fail(
+    `Missing ${path.relative(repoRoot, distIndex)} -- run \`npm run build\` first.`,
+  );
 
 if (!existsSync(path.join(here, "node_modules", "brepjs-cad"))) {
   fail(
@@ -76,14 +86,21 @@ if (!existsSync(path.join(here, "node_modules", "brepjs-cad"))) {
   );
 }
 
-const { generateBrepJs, validatePrintSpec } = await import(pathToFileURL(distIndex).href);
+const { generateBrepJs, validatePrintSpec } = await import(
+  pathToFileURL(distIndex).href
+);
 const spec = JSON.parse(readFileSync(resolvedSpecPath, "utf8"));
 
 const validation = validatePrintSpec(spec);
-if (!validation.valid) fail(`Spec is invalid:\n${validation.errors.join("\n")}`);
+if (!validation.valid)
+  fail(`Spec is invalid:\n${validation.errors.join("\n")}`);
 
-const result = generateBrepJs(spec, isolateId ? { isolate: isolateId } : undefined);
-if (!result.supported) fail(`generateBrepJs() does not support this spec: ${result.message}`);
+const result = generateBrepJs(
+  spec,
+  isolateId ? { isolate: isolateId } : undefined,
+);
+if (!result.supported)
+  fail(`generateBrepJs() does not support this spec: ${result.message}`);
 if (result.warnings.length) {
   console.error("printspec generator warnings:");
   for (const w of result.warnings) console.error(`  - ${w}`);
