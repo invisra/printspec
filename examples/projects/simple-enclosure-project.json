@@ -1,5 +1,5 @@
 {
-  "printspecVersion": "0.1.0",
+  "printspecVersion": "0.2.0",
   "units": "mm",
   "project": {
     "type": "project",
@@ -10,7 +10,7 @@
         "id": "base",
         "label": "Generated base",
         "spec": {
-          "printspecVersion": "0.1.0",
+          "printspecVersion": "0.2.0",
           "units": "mm",
           "part": {
             "type": "simple_box",
@@ -40,7 +40,7 @@
         "id": "lid",
         "label": "Generated lid",
         "spec": {
-          "printspecVersion": "0.1.0",
+          "printspecVersion": "0.2.0",
           "units": "mm",
           "part": {
             "type": "simple_lid",

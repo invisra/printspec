@@ -127,7 +127,7 @@
     }
   },
   "additionalProperties": false,
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/project.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/project.schema.json",
   "title": "Project",
   "description": "Project schema for printspec documents."
 }

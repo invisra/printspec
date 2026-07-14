@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to dry-run or release, for example 0.1.0'
+        description: 'Version to dry-run or release, for example 0.2.0'
         required: true
-        default: '0.1.0'
+        default: '0.2.0'
       dry_run:
         description: 'Keep publishing disabled'
         required: true

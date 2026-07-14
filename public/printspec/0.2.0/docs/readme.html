@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>printspec | printspec docs</title>
+  <link rel="stylesheet" href="https://assets.invisra.ai/brand/v1/brand.min.css">
+  <link rel="icon" href="https://assets.invisra.ai/brand/v1/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="https://assets.invisra.ai/brand/v1/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="https://assets.invisra.ai/brand/v1/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="https://assets.invisra.ai/brand/v1/apple-touch-icon.png">
+  <meta name="theme-color" content="#020617">
+  <style>
+    :root{color-scheme:dark light}body.invisra-theme{margin:0;background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.22),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.18),transparent 30rem),var(--invisra-bg,#020617);color:var(--invisra-text,#e5eefb);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.invisra-header{background:color-mix(in srgb,var(--invisra-bg,#020617),transparent 10%);border-bottom:1px solid var(--invisra-border,rgba(148,163,184,.22));box-shadow:none}.invisra-header::before,.invisra-header::after{display:none;background:transparent;box-shadow:none}html[data-theme=light] .invisra-header{background:rgba(255,255,255,.82);border-bottom-color:rgba(15,23,42,.12);box-shadow:0 1px 0 rgba(255,255,255,.78) inset,0 12px 28px rgba(15,23,42,.06)}html[data-theme=light] body.invisra-theme{background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.12),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.1),transparent 30rem),var(--invisra-bg,#f8fafc)}html[data-theme=light] .invisra-shell,html[data-theme=light] footer{background:transparent;color:var(--invisra-text,#0f172a)}html[data-theme=light] .invisra-header::before,html[data-theme=light] .invisra-header::after{display:none;background:transparent;box-shadow:none}.site-nav{display:flex;align-items:center;justify-content:space-between;gap:1rem}.site-links{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}.site-links a,.card-grid .invisra-card>a,.link-row a:not(.invisra-button),.schema h3 a{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border:1px solid var(--invisra-border,rgba(148,163,184,.24));border-radius:999px;background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 28%);box-shadow:0 10px 24px rgba(15,23,42,.08);color:var(--invisra-text,#e5eefb);text-decoration:none;font-weight:800;line-height:1.1;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}.site-links a{padding:.52rem .78rem;font-size:.94rem}.card-grid .invisra-card>a,.link-row a:not(.invisra-button),.schema h3 a{padding:.62rem .9rem}.site-links a:hover,.card-grid .invisra-card>a:hover,.link-row a:not(.invisra-button):hover,.schema h3 a:hover{border-color:color-mix(in srgb,var(--invisra-accent,#38bdf8),transparent 35%);background:color-mix(in srgb,var(--invisra-accent,#38bdf8),transparent 88%);box-shadow:0 14px 30px rgba(14,165,233,.14);transform:translateY(-1px)}.schema-grid,.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}.card-grid .invisra-card{text-align:center;padding:clamp(1.25rem,3vw,2rem)}.card-grid .invisra-card ul{display:inline-block;text-align:left;margin-left:0;padding-left:1.2rem}.card-grid .link-row{justify-content:center}.card-grid pre{text-align:left}.hero-card{padding:clamp(1.5rem,4vw,3rem);margin:2rem auto;text-align:center}.hero-card .lede{margin-left:auto;margin-right:auto}.hero-card .hero-actions,.hero-card .link-row{justify-content:center}.hero-actions,.link-row{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center}.schema{text-align:center;padding:clamp(1.25rem,3vw,2rem)}.schema h3{margin-left:auto;margin-right:auto}.schema code,.invisra-code{overflow-wrap:anywhere}.muted{color:var(--invisra-muted,#94a3b8)}footer{padding:2rem 0;color:var(--invisra-muted,#94a3b8)}pre.invisra-code{white-space:pre-wrap;padding:1rem;border-radius:1rem}.theme-toggle{padding:.52rem .8rem}@media(max-width:760px){.site-nav{align-items:flex-start;flex-direction:column}.site-links{gap:.6rem}}.doc-body{max-width:52rem}.doc-body h1,.doc-body h2,.doc-body h3{line-height:1.25}.doc-body h2{margin-top:2.5rem;border-top:1px solid var(--invisra-border,rgba(148,163,184,.22));padding-top:1.5rem}.doc-body pre{background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 20%);border:1px solid var(--invisra-border,rgba(148,163,184,.22));border-radius:.75rem;padding:1rem;overflow-x:auto}.doc-body code{background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 35%);border-radius:.35rem;padding:.1em .35em;overflow-wrap:anywhere}.doc-body pre code{background:none;padding:0}.doc-body table{border-collapse:collapse;display:block;overflow-x:auto;width:max-content;max-width:100%}.doc-body th,.doc-body td{border:1px solid var(--invisra-border,rgba(148,163,184,.22));padding:.4rem .7rem;text-align:left}.doc-body blockquote{margin:1rem 0;padding:.25rem 1rem;border-left:3px solid var(--invisra-accent,#38bdf8);color:var(--invisra-muted,#94a3b8)}.doc-index-list{list-style:none;margin:0;padding:0;display:grid;gap:.6rem}.doc-index-list a{font-weight:700}
+  </style>
+</head>
+<body class="invisra-theme">
+<script>
+  (function () {
+    var key = 'invisra-theme';
+    var saved = localStorage.getItem(key);
+    var theme = saved === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+
+    function updateThemeButton() {
+      var button = document.querySelector('[data-theme-toggle]');
+      if (button) {
+        button.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        button.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme');
+      }
+    }
+
+    window.toggleInvisraTheme = function () {
+      var current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+      var next = current === 'dark' ? 'light' : 'dark';
+      theme = next;
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem(key, next);
+      updateThemeButton();
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateThemeButton);
+    } else {
+      updateThemeButton();
+    }
+  })();
+</script>
+<header class="invisra-header">
+  <div class="invisra-container site-nav">
+    <a class="invisra-logo-lockup" href="/printspec/" aria-label="printspec home">
+      <svg class="invisra-logo-mark invisra-logo-mark-sm" viewBox="0 0 160 380" role="img" aria-hidden="true" focusable="false"><path fill="currentColor" d="M80 6 8 222 38 256 80 356 122 256 152 222Z M80 118 112 214 80 248 48 214Z"></path></svg>
+      <span class="invisra-logo-wordmark">Invisra</span>
+      <span class="invisra-text-muted">/ printspec</span>
+    </a>
+    <nav class="site-links" aria-label="Site navigation">
+      <a href="/printspec/">Home</a>
+      <a href="/printspec/0.2.0/docs/">Docs</a>
+      <a href="/printspec/validator/">Validator</a>
+      <a href="/printspec/0.2.0/">Schemas</a>
+      <a href="/llms.txt">llms.txt</a>
+      <a href="https://cad.invisra.ai">PartPilot</a>
+      <a href="https://invisra.ai">Invisra</a>
+      <button type="button" class="invisra-button invisra-button-ghost theme-toggle" data-theme-toggle onclick="window.toggleInvisraTheme()" aria-label="Switch theme">Light</button>
+    </nav>
+  </div>
+</header>
+<main class="invisra-shell">
+  <section class="invisra-container">
+    <p class="link-row"><a href="./">&larr; All docs</a><a href="https://github.com/invisra/printspec/blob/main/README.md">View source on GitHub</a></p>
+    <article class="invisra-card doc-body">
+<h1 id="printspec">printspec</h1>
+<p><strong>Practical JSON Schemas and offline tooling for parametric 3D-printable parts.</strong></p>
+<p><strong>Status: v0.2.0 experimental</strong></p>
+<p>printspec is an open-source specification and toolkit from Invisra for describing practical, parameterized 3D-printable parts as JSON. The v0.2.0 schema release focuses on stable schemas, offline TypeScript/Python validation, bundled schema distribution, static hosted schema references, BOM/form helpers, starter source generators, CLI workflows, and deterministic source bundle export—not CAD execution or production manufacturing automation.</p>
+<h2 id="installation">Installation</h2>
+<p>Packages are being prepared for public release. Until npm/PyPI publication is complete, install from this repository.</p>
+<pre><code class="language-sh"># From the repository
+npm install
+python -m pip install -e &quot;packages/python[test]&quot;
+
+# Once published
+npm install @invisra/printspec
+python -m pip install printspec
+</code></pre>
+<h2 id="cli-quickstart">CLI quickstart</h2>
+<pre><code class="language-sh">printspec --version
+printspec validate examples/part-families/rounded-rectangular-plate.basic.json
+printspec list-part-families
+printspec form-metadata rounded_rectangular_plate
+printspec bom examples/projects/simple-enclosure-project.json --format markdown
+printspec to-openscad examples/part-families/round-spacer.basic.json --output round-spacer.scad
+printspec to-cadquery examples/part-families/electronics-standoff.m3.json --output standoff.py
+printspec to-brepjs examples/part-families/round-spacer.basic.json --output round-spacer.brep.ts
+</code></pre>
+<h2 id="schema-url-quick-links">Schema URL quick links</h2>
+<p>Hosted schemas are public references for documentation and external tooling. Package validators use bundled schemas offline and should not fetch these URLs during normal validation.</p>
+<ul>
+<li>Base index: <a href="https://schemas.invisra.ai/">https://schemas.invisra.ai/</a></li>
+<li>Project index: <a href="https://schemas.invisra.ai/printspec/">https://schemas.invisra.ai/printspec/</a></li>
+<li>v0.2.0 index: <a href="https://schemas.invisra.ai/printspec/0.2.0/">https://schemas.invisra.ai/printspec/0.2.0/</a></li>
+<li>Root schema: <a href="https://schemas.invisra.ai/printspec/0.2.0/printspec.schema.json">https://schemas.invisra.ai/printspec/0.2.0/printspec.schema.json</a></li>
+<li>Version manifest: <a href="https://schemas.invisra.ai/printspec/0.2.0/manifest.json">https://schemas.invisra.ai/printspec/0.2.0/manifest.json</a></li>
+<li>Online validator: <a href="https://schemas.invisra.ai/printspec/validator/">https://schemas.invisra.ai/printspec/validator/</a></li>
+<li>Docs site: <a href="https://schemas.invisra.ai/printspec/0.2.0/docs/">https://schemas.invisra.ai/printspec/0.2.0/docs/</a> (every <code>docs/*.md</code> file rendered to HTML)</li>
+<li><code>llms.txt</code> for AI agents: <a href="https://schemas.invisra.ai/llms.txt">https://schemas.invisra.ai/llms.txt</a> (<a href="https://llmstxt.org">llms.txt</a>-convention summary, meant to be fetched as plain text)</li>
+</ul>
+<p>The online validator runs locally in your browser; no JSON is uploaded. It is intended for validation and developer debugging only. Manufacturing exports belong in the PartPilot/worker pipeline, not in the static schema-site validator.</p>
+<p>The static schema site uses the shared Invisra brand assets pinned to <code>https://assets.invisra.ai/brand/v1</code> (not <code>/brand/latest</code>). Dark mode is the default, a light theme is available from the static theme toggle, and the validator remains client-side/browser-only with bundled schemas so it can work offline apart from optional hosted CSS, logo, and favicon assets.</p>
+<h2 id="simple-json-example">Simple JSON example</h2>
+<pre><code class="language-json">{
+  &quot;printspecVersion&quot;: &quot;0.2.0&quot;,
+  &quot;units&quot;: &quot;mm&quot;,
+  &quot;part&quot;: {
+    &quot;type&quot;: &quot;round_spacer&quot;,
+    &quot;label&quot;: &quot;Smoke spacer&quot;,
+    &quot;parameters&quot;: {
+      &quot;outerDiameter&quot;: 12,
+      &quot;innerDiameter&quot;: 4,
+      &quot;height&quot;: 8
+    }
+  }
+}
+</code></pre>
+<h2 id="typescript-api-example">TypeScript API example</h2>
+<p>printspec for TypeScript is ESM-only.</p>
+<pre><code class="language-js">import { validatePrintSpec, generateOpenScad } from &quot;@invisra/printspec&quot;;
+
+const result = validatePrintSpec(spec);
+if (!result.valid) console.error(result.errors);
+
+const generated = generateOpenScad(spec);
+if (generated.supported) console.log(generated.code);
+</code></pre>
+<h2 id="browser-preview-example">Browser preview example</h2>
+<p>The TypeScript package includes a browser-safe, renderer-neutral preview scene generator for immediate UI visualization in tools such as PartPilot. Preview geometry is approximate and visual only: it does not boolean-subtract exact holes, does not execute CAD code, and is not authoritative manufacturing output. Use the OpenSCAD, CadQuery, or external worker pipeline for exact STL/STEP/3MF manufacturing outputs.</p>
+<pre><code class="language-js">import { generatePreviewScene } from &quot;@invisra/printspec/preview&quot;;
+
+const preview = generatePreviewScene(spec);
+if (preview.supported) {
+  console.log(preview.scene.objects);
+}
+</code></pre>
+<p>An optional Three.js adapter is available without adding Three.js to <code>@invisra/printspec/browser</code> or making it a hard runtime dependency. Consumers provide the Three.js namespace themselves.</p>
+<pre><code class="language-js">import { generatePreviewScene } from &quot;@invisra/printspec/preview&quot;;
+import { createThreePreviewObject } from &quot;@invisra/printspec/three&quot;;
+import * as THREE from &quot;three&quot;;
+
+const preview = generatePreviewScene(spec);
+if (preview.supported) {
+  const object = createThreePreviewObject(preview.scene, THREE);
+  scene.add(object);
+}
+</code></pre>
+<h2 id="python-api-example">Python API example</h2>
+<pre><code class="language-python">from printspec import validate_printspec
+from printspec.generators import generate_openscad
+
+result = validate_printspec(spec)
+print(result[&quot;valid&quot;], result[&quot;errors&quot;])
+
+generated = generate_openscad(spec)
+if generated[&quot;supported&quot;]:
+    print(generated[&quot;code&quot;])
+</code></pre>
+<h2 id="supported-part-families">Supported part families</h2>
+<p>v0.2.0 includes practical starter schemas and generator support for:</p>
+<ul>
+<li><code>rounded_rectangular_plate</code></li>
+<li><code>spacer_block</code></li>
+<li><code>round_spacer</code></li>
+<li><code>electronics_standoff</code></li>
+</ul>
+<h2 id="supported-generators">Supported generators</h2>
+<ul>
+<li>Starter OpenSCAD source generation.</li>
+<li>Starter CadQuery source generation.</li>
+</ul>
+<p>Generated source is intended as reviewable starting material. printspec does not run OpenSCAD, CadQuery, FreeCAD, slicers, or CAD kernels.</p>
+<h2 id="bundle-export-example">Bundle export example</h2>
+<p>Bundles are deterministic source bundles with the original JSON, generated source where supported, BOM files when applicable, a manifest, README, and optional experimental PartCAD stub metadata.</p>
+<pre><code class="language-sh">printspec bundle examples/part-families/rounded-rectangular-plate.basic.json --output bundle --overwrite
+</code></pre>
+<pre><code class="language-js">import { createBundle, writeBundleToDirectory } from &quot;@invisra/printspec&quot;;
+
+const bundle = createBundle(spec, { includePartCad: true });
+writeBundleToDirectory(bundle, &quot;bundle&quot;, { overwrite: true });
+</code></pre>
+<pre><code class="language-python">from printspec import create_bundle, write_bundle_to_directory
+
+bundle = create_bundle(spec, {&quot;includePartCad&quot;: True})
+write_bundle_to_directory(bundle, &quot;bundle&quot;, overwrite=True)
+</code></pre>
+<h2 id="browser-metadata-example">Browser metadata example</h2>
+<p>Schemas include <code>x-printspec-*</code> metadata for browser/editor form builders. This metadata is descriptive; it does not add a web app and does not execute CAD.</p>
+<pre><code class="language-sh">printspec form-metadata rounded_rectangular_plate
+printspec list-part-families
+</code></pre>
+<h2 id="what-v0-2-0-includes">What v0.2.0 includes</h2>
+<ul>
+<li>JSON Schemas for practical parametric 3D-printable parts.</li>
+<li>Offline TypeScript validation.</li>
+<li>Offline Python validation.</li>
+<li>Bundled schemas in both packages.</li>
+<li>Hosted schemas at <code>schemas.invisra.ai</code>.</li>
+<li>Static schema index pages and manifests.</li>
+<li>BOM helpers.</li>
+<li>Browser form metadata helpers.</li>
+<li>Starter OpenSCAD source generators.</li>
+<li>Starter CadQuery source generators.</li>
+<li>CLI commands.</li>
+<li>Deterministic project/part bundle export.</li>
+<li>Optional experimental PartCAD stub metadata.</li>
+<li>Browser-safe renderer-neutral visual preview scene generation for initial alpha part families.</li>
+<li>Optional Three.js adapter at <code>@invisra/printspec/three</code> with Three.js as an optional peer dependency.</li>
+</ul>
+<h2 id="what-v0-2-0-does-not-include">What v0.2.0 does not include</h2>
+<ul>
+<li>Authoritative preview meshes for manufacturing.</li>
+<li>STL, STEP, or 3MF export.</li>
+<li>CAD runtime execution.</li>
+<li>Slicer integration.</li>
+<li>Supplier API calls.</li>
+<li>McMaster-Carr cart creation.</li>
+<li>PartPilot SaaS app functionality.</li>
+<li>A full CAD language or constraint solver.</li>
+<li>Certified engineering validation.</li>
+</ul>
+<h2 id="safety-and-non-goals">Safety and non-goals</h2>
+<p>printspec is experimental software for describing and generating starter source for 3D-printable parts. Do not use generated designs without appropriate engineering review for safety-critical, load-bearing, medical, electrical, regulated, or production applications. Review dimensions, clearances, materials, printer settings, and mechanical suitability before printing or use.</p>
+<h2 id="release-resources">Release resources</h2>
+<ul>
+<li>Release process: <a href="release-process.html">docs/release-process.md</a></li>
+<li>Hosted schema documentation: <a href="hosted-schemas.html">docs/hosted-schemas.md</a></li>
+<li>Bundle documentation: <a href="bundles.html">docs/bundles.md</a></li>
+<li>Browser/editor metadata: <a href="form-metadata.html">docs/form-metadata.md</a></li>
+<li>v0.1.0 checklist: <a href="v0.1.0-release-checklist.html">docs/v0.1.0-release-checklist.md</a></li>
+<li>Docs site (all of the above, rendered): <a href="https://schemas.invisra.ai/printspec/0.2.0/docs/">https://schemas.invisra.ai/printspec/0.2.0/docs/</a></li>
+<li><code>llms.txt</code> for AI agents: <a href="https://schemas.invisra.ai/llms.txt">https://schemas.invisra.ai/llms.txt</a> (<a href="https://llmstxt.org">llms.txt</a> convention; also at <a href="llms.txt">llms.txt</a> in this repository)</li>
+</ul>
+<h2 id="license">License</h2>
+<p>Apache-2.0. See package metadata and repository license files for details.</p>
+<h2 id="supported-part-families-2">Supported part families</h2>
+<p>printspec 0.2.0 includes these practical, low-risk alpha part families. Generated OpenSCAD/CadQuery source should be reviewed before manufacturing, and preview geometry is visual/non-authoritative.</p>
+<ul>
+<li><code>round_spacer</code> — cylindrical spacer with optional center hole; key parameters: outerDiameter, innerDiameter, height.</li>
+<li><code>spacer_block</code> — rectangular spacer block with optional holes; key parameters: length, width, height, holes.</li>
+<li><code>electronics_standoff</code> — low-voltage electronics standoff; key parameters: outerDiameter, height, holeDiameter, optional base.</li>
+<li><code>rounded_rectangular_plate</code> — rounded utility plate; key parameters: length, width, thickness, cornerRadius, holes.</li>
+<li><code>cable_comb</code> — flat wire/cable routing comb; key parameters: slotCount, slotWidth, slotDepth, spacing/thickness.</li>
+<li><code>cable_clip</code> — simple cable retaining clip; key parameters: baseLength, base size, clip diameter/wall.</li>
+<li><code>wall_mount_bracket</code> — light-duty wall plate with shelf/tab; key parameters: width, height, thickness, tabDepth, screw holes.</li>
+<li><code>l_bracket</code> — light-duty, non-structural organization/prototyping bracket; key parameters: leg lengths, width, thickness, holes.</li>
+<li><code>drawer_divider</code> — customizable drawer divider strip; key parameters: length, height, thickness, notches, end tabs.</li>
+<li><code>project_enclosure_tray</code> — open tray for low-voltage projects; key parameters: outer size, wall/floor thickness, mount holes.</li>
+</ul>
+
+    </article>
+  </section>
+</main>
+</body>
+</html>

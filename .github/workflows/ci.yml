@@ -10,14 +10,15 @@ jobs:
       - run: npm install
       - run: npm run sync:schemas
       - run: npm run check:versions
-      - run: npm run build
+      - run: npm run lint:ts
       - run: npm test
       - run: npm --workspace @invisra/printspec pack --dry-run
       - run: npm run smoke:npm
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: python -m pip install --upgrade pip
-      - run: python -m pip install -e "packages/python[test]"
+      - run: python -m pip install -e "packages/python[test]" ruff mypy
+      - run: npm run lint:python
       - run: pytest tests/python tests/schema
       - run: python -m pip install build twine
       - run: python -m build packages/python

@@ -1,0 +1,65 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Pulley With Revolved Profile",
+    "description": "A pulley resting on a base plate, with an axle hole through it -- the `revolved_profile` component kind sweeps an arbitrary cross-section (authored in the (radius, z) half-plane, not the XY plane extruded_profile uses) around the Z axis, the classic 'sketch and revolve' CAD operation for rotationally-symmetric mechanical parts none of the other component kinds can approximate directly.",
+    "components": [
+      {
+        "id": "base",
+        "kind": "plate",
+        "operation": "add",
+        "description": "Base plate.",
+        "dimensions": {
+          "length": 40,
+          "width": 40,
+          "thickness": 4
+        }
+      },
+      {
+        "id": "pulley",
+        "kind": "revolved_profile",
+        "operation": "add",
+        "description": "Pulley body: a V-groove profile (rim at radius 10, root at radius 5) revolved a full 360 degrees around Z. Points are authored with z starting at 0 for readability; the generator would shift them to start at 0 regardless.",
+        "dimensions": {
+          "points": [
+            { "radius": 5, "z": 0 },
+            { "radius": 10, "z": 10 },
+            { "radius": 0, "z": 10 },
+            { "radius": 0, "z": 0 }
+          ]
+        },
+        "relation": {
+          "type": "on_top_of",
+          "target": "base"
+        }
+      }
+    ],
+    "features": [
+      {
+        "id": "axleHole",
+        "kind": "hole",
+        "target": "pulley",
+        "description": "Axle through-hole, centered on the pulley.",
+        "relation": {
+          "type": "centered_on",
+          "target": "pulley"
+        },
+        "parameters": {
+          "diameter": 3,
+          "depth": "through"
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

@@ -1,10 +1,94 @@
-import type {BomItem,PrintSpec,HardwareItem} from './types.js';
-function supplier(s?:string){const x=(s??'').toLowerCase().replace(/\s+/g,''); return ['mcmaster','mcmaster-carr'].includes(x)?'mcmaster':(s??'').toLowerCase();}
-function norm(item:HardwareItem,mult=1):BomItem{return {...item,quantity:Math.max(1,Math.trunc((item.quantity||1)*mult)),supplierReferences:(item.supplierReferences??[]).map(r=>({...r,supplier:supplier(r.supplier)}))};}
-function key(i:BomItem){const r=i.supplierReferences?.[0]; return [i.kind,i.standard??'',i.size??'',r?.supplier??'',r?.partNumber??'',i.role??''].join('|');}
-function collect(spec:any,mult=1,out:BomItem[]=[]){for(const h of spec.hardware??[]) out.push(norm(h,mult)); if(spec.part) for(const h of spec.part.hardware??[]) out.push(norm(h,mult)); if(spec.project){for(const h of spec.project.hardware??[]) out.push(norm(h,mult)); for(const p of spec.project.parts??[]) if(p.spec) collect(p.spec,mult*(p.quantity??1),out);} return out;}
-export function extractBom(spec:PrintSpec):BomItem[]{const map=new Map<string,BomItem>(); for(const i of collect(spec)){const k=key(i); const cur=map.get(k); if(cur) cur.quantity+=i.quantity; else map.set(k,{...i});} return [...map.values()];}
-export function bomToMarkdown(bom:BomItem[]):string{return ['| ID | Kind | Size | Qty | Supplier | Part Number |','| --- | --- | --- | ---: | --- | --- |',...bom.map(i=>`| ${i.id} | ${i.kind} | ${i.size??''} | ${i.quantity} | ${i.supplierReferences?.[0]?.supplier??''} | ${i.supplierReferences?.[0]?.partNumber??''} |`)].join('\n');}
-function csv(v:any){const s=String(v??''); return /[",\n]/.test(s)?`"${s.replaceAll('"','""')}"`:s;}
-export function bomToCsv(bom:BomItem[]):string{return ['id,kind,standard,size,quantity,role,supplier,partNumber,url,description',...bom.map(i=>{const r=i.supplierReferences?.[0]??{} as any; return [i.id,i.kind,i.standard??'',i.size??'',i.quantity,i.role??'',r.supplier??'',r.partNumber??'',r.url??'',r.description??''].map(csv).join(',')})].join('\n');}
-export function bomToSupplierOrderList(bom:BomItem[]):string{const by=new Map<string,string[]>(); for(const i of bom) for(const r of i.supplierReferences??[]){const s=supplier(r.supplier); const line=`${r.partNumber} x ${i.quantity}${r.url?` (${r.url})`:''}`; by.set(s,[...(by.get(s)??[]),line]);} return [...by.entries()].map(([s,lines])=>`${s}\n${lines.map(l=>`- ${l}`).join('\n')}`).join('\n\n');}
+import type { BomItem, PrintSpec, HardwareItem } from "./types.js";
+function supplier(s?: string) {
+  const x = (s ?? "").toLowerCase().replace(/\s+/g, "");
+  return ["mcmaster", "mcmaster-carr"].includes(x) ? "mcmaster" : (s ?? "").toLowerCase();
+}
+function norm(item: HardwareItem, mult = 1): BomItem {
+  return {
+    ...item,
+    quantity: Math.max(1, Math.trunc((item.quantity || 1) * mult)),
+    supplierReferences: (item.supplierReferences ?? []).map((r) => ({
+      ...r,
+      supplier: supplier(r.supplier),
+    })),
+  };
+}
+function key(i: BomItem) {
+  const r = i.supplierReferences?.[0];
+  return [
+    i.kind,
+    i.standard ?? "",
+    i.size ?? "",
+    r?.supplier ?? "",
+    r?.partNumber ?? "",
+    i.role ?? "",
+  ].join("|");
+}
+function collect(spec: any, mult = 1, out: BomItem[] = []) {
+  for (const h of spec.hardware ?? []) out.push(norm(h, mult));
+  if (spec.part) for (const h of spec.part.hardware ?? []) out.push(norm(h, mult));
+  if (spec.project) {
+    for (const h of spec.project.hardware ?? []) out.push(norm(h, mult));
+    for (const p of spec.project.parts ?? [])
+      if (p.spec) collect(p.spec, mult * (p.quantity ?? 1), out);
+  }
+  return out;
+}
+export function extractBom(spec: PrintSpec): BomItem[] {
+  const map = new Map<string, BomItem>();
+  for (const i of collect(spec)) {
+    const k = key(i);
+    const cur = map.get(k);
+    if (cur) cur.quantity += i.quantity;
+    else map.set(k, { ...i });
+  }
+  return [...map.values()];
+}
+export function bomToMarkdown(bom: BomItem[]): string {
+  return [
+    "| ID | Kind | Size | Qty | Supplier | Part Number |",
+    "| --- | --- | --- | ---: | --- | --- |",
+    ...bom.map(
+      (i) =>
+        `| ${i.id} | ${i.kind} | ${i.size ?? ""} | ${i.quantity} | ${i.supplierReferences?.[0]?.supplier ?? ""} | ${i.supplierReferences?.[0]?.partNumber ?? ""} |`,
+    ),
+  ].join("\n");
+}
+function csv(v: any) {
+  const s = String(v ?? "");
+  return /[",\n]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
+}
+export function bomToCsv(bom: BomItem[]): string {
+  return [
+    "id,kind,standard,size,quantity,role,supplier,partNumber,url,description",
+    ...bom.map((i) => {
+      const r = i.supplierReferences?.[0] ?? ({} as any);
+      return [
+        i.id,
+        i.kind,
+        i.standard ?? "",
+        i.size ?? "",
+        i.quantity,
+        i.role ?? "",
+        r.supplier ?? "",
+        r.partNumber ?? "",
+        r.url ?? "",
+        r.description ?? "",
+      ]
+        .map(csv)
+        .join(",");
+    }),
+  ].join("\n");
+}
+export function bomToSupplierOrderList(bom: BomItem[]): string {
+  const by = new Map<string, string[]>();
+  for (const i of bom)
+    for (const r of i.supplierReferences ?? []) {
+      const s = supplier(r.supplier);
+      const line = `${r.partNumber} x ${i.quantity}${r.url ? ` (${r.url})` : ""}`;
+      by.set(s, [...(by.get(s) ?? []), line]);
+    }
+  return [...by.entries()]
+    .map(([s, lines]) => `${s}\n${lines.map((l) => `- ${l}`).join("\n")}`)
+    .join("\n\n");
+}

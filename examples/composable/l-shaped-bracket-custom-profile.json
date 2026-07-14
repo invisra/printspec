@@ -1,0 +1,61 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "L-Shaped Bracket With Custom Profile",
+    "description": "An L-shaped mounting bracket with a mounting hole in each arm -- a cross-section none of the other 9 component kinds can approximate, built as an extruded_profile instead. Demonstrates that relations, features, and the bounding-box connectivity check all work against extruded_profile the same as any box-like kind, since its footprint's bounding box is well-defined.",
+    "components": [
+      {
+        "id": "bracket",
+        "kind": "extruded_profile",
+        "operation": "add",
+        "description": "L-shaped footprint: a 40x15 horizontal arm and a 15x40 vertical arm sharing a 15x15 corner, extruded 5mm thick. Points are listed in the profile's own natural coordinate space; the generator centers the bounding box automatically.",
+        "dimensions": {
+          "points": [
+            { "x": 0, "y": 0 },
+            { "x": 40, "y": 0 },
+            { "x": 40, "y": 15 },
+            { "x": 15, "y": 15 },
+            { "x": 15, "y": 40 },
+            { "x": 0, "y": 40 }
+          ],
+          "height": 5
+        }
+      }
+    ],
+    "features": [
+      {
+        "id": "hole_horizontal_arm",
+        "kind": "hole",
+        "target": "bracket",
+        "description": "Mounting hole in the horizontal arm, safely inside that arm's material (away from the shared corner).",
+        "position": { "x": 10, "y": -12, "z": 0 },
+        "parameters": {
+          "diameter": 4,
+          "depth": "through"
+        }
+      },
+      {
+        "id": "hole_vertical_arm",
+        "kind": "hole",
+        "target": "bracket",
+        "description": "Mounting hole in the vertical arm, safely inside that arm's material (away from the shared corner).",
+        "position": { "x": -12, "y": 10, "z": 0 },
+        "parameters": {
+          "diameter": 4,
+          "depth": "through"
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

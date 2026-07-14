@@ -1,0 +1,43 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Knob With Sphere Cap",
+    "description": "A cylindrical grip stem topped with a sphere, the classic rounded knob shape -- the `sphere` component kind sits with its base (not its center) at Z=0 on its own local origin, the same convention as every other kind, so it composes with `on_top_of` exactly like any other component.",
+    "components": [
+      {
+        "id": "stem",
+        "kind": "cylinder",
+        "operation": "add",
+        "description": "Grip stem.",
+        "dimensions": {
+          "diameter": 8,
+          "height": 15
+        }
+      },
+      {
+        "id": "knob",
+        "kind": "sphere",
+        "operation": "add",
+        "description": "Rounded cap, resting on top of the stem via an ordinary on_top_of relation.",
+        "dimensions": {
+          "diameter": 20
+        },
+        "relation": {
+          "type": "on_top_of",
+          "target": "stem"
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

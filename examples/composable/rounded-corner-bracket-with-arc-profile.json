@@ -1,0 +1,58 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Rounded Corner Bracket With Arc Profile",
+    "description": "A mounting bracket whose footprint has one rounded (filleted) corner authored directly in the profile via a point's `curve`, instead of a separate fillet feature -- useful when the rounded corner is part of the footprint's own intended shape rather than a post-hoc edge treatment. The rounded corner is a quarter-circle of radius 5mm, replacing the sharp top-right corner: the arc's `through` point is deliberately the arc's own 45-degree midpoint (not merely 'a bit past the corner'), since threePointArc's three points must all lie on one well-formed arc -- an ill-chosen through point can produce a wildly different (and likely unintended) arc through all three points instead of the small local bulge intended. See docs/composable-parts.md, \"Component kinds\", for that caveat.",
+    "components": [
+      {
+        "id": "bracket",
+        "kind": "extruded_profile",
+        "operation": "add",
+        "description": "Rectangular footprint with a quarter-circle rounded corner (radius 5mm) at the top-right, replacing what would otherwise be a sharp corner.",
+        "dimensions": {
+          "points": [
+            { "x": 0, "y": 0 },
+            { "x": 40, "y": 0 },
+            { "x": 40, "y": 15, "curve": { "type": "arc", "through": { "x": 38.5355339, "y": 18.5355339 } } },
+            { "x": 35, "y": 20 },
+            { "x": 0, "y": 20 }
+          ],
+          "height": 6
+        }
+      }
+    ],
+    "features": [
+      {
+        "id": "mountHole",
+        "kind": "hole",
+        "target": "bracket",
+        "description": "Mounting hole away from the rounded corner.",
+        "relation": {
+          "type": "attached_to_face",
+          "target": "bracket",
+          "face": "top"
+        },
+        "position": {
+          "x": -10,
+          "y": -5,
+          "z": 0
+        },
+        "parameters": {
+          "diameter": 4,
+          "depth": "through"
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

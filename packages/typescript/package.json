@@ -1,6 +1,6 @@
 {
   "name": "@invisra/printspec",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "JSON schemas, validators, BOM helpers, CLI commands, and starter generators for practical parametric 3D-printable parts.",
   "license": "Apache-2.0",
   "author": "Invisra",
@@ -20,6 +20,7 @@
     "json-schema",
     "openscad",
     "cadquery",
+    "brepjs",
     "parametric",
     "bom",
     "stl",

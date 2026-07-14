@@ -1,9 +1,10 @@
 {
-  "printspecVersion": "0.1.0",
+  "printspecVersion": "0.2.0",
   "units": "mm",
   "part": {
     "type": "composable_part",
     "label": "Adapter Plate With Two Hole Patterns",
+    "description": "A mounting plate with two independent hole patterns: a rectangular 2x2 corner bolt pattern and a linear row of ventilation holes down the center.",
     "components": [
       {
         "id": "plate",
@@ -19,11 +20,36 @@
     ],
     "features": [
       {
-        "id": "mount_hole",
+        "id": "mount_holes",
         "kind": "hole",
         "target": "plate",
+        "description": "Four M3 corner mounting holes in a 2x2 rectangular pattern.",
         "parameters": {
-          "diameter": 3.2
+          "diameter": 3.2,
+          "depth": "through"
+        },
+        "pattern": {
+          "type": "rectangular",
+          "countX": 2,
+          "countY": 2,
+          "spacingX": 80,
+          "spacingY": 30
+        }
+      },
+      {
+        "id": "vent_holes",
+        "kind": "hole",
+        "target": "plate",
+        "description": "A row of five ventilation holes down the plate's center, clear of the mounting holes.",
+        "parameters": {
+          "diameter": 4,
+          "depth": "through"
+        },
+        "pattern": {
+          "type": "linear",
+          "count": 5,
+          "spacing": 15,
+          "axis": "x"
         }
       }
     ]

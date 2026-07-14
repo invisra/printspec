@@ -1,0 +1,65 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Clearance-Fit Boss And Cap",
+    "description": "A mounting boss and a separate cap plate with a bore sized to slip over it, demonstrating a `dimension` constraint: the cap's bore diameter must exceed the boss's outer diameter by at least 0.3mm of radial clearance per side (0.6mm on the diameter) for the two to assemble as printed, without needing to hand-verify the numbers agree every time either one changes. The two components are deliberately not touching (they're a mating pair assembled after printing, not one fused body), so generateBrepJs's approximate connectivity check produces its own separate, expected warning about that -- unrelated to the constraint above.",
+    "components": [
+      {
+        "id": "boss",
+        "kind": "cylinder",
+        "operation": "add",
+        "description": "8mm-diameter mounting boss.",
+        "dimensions": {
+          "diameter": 8,
+          "height": 12
+        }
+      },
+      {
+        "id": "cap",
+        "kind": "plate",
+        "operation": "add",
+        "description": "Separate cap plate, offset to the side for clarity when both parts are printed together.",
+        "position": { "x": 30, "y": 0, "z": 0 },
+        "dimensions": {
+          "length": 20,
+          "width": 20,
+          "thickness": 5
+        }
+      }
+    ],
+    "features": [
+      {
+        "id": "bore",
+        "kind": "hole",
+        "target": "cap",
+        "description": "Bore sized to slip over the boss with clearance.",
+        "parameters": {
+          "diameter": 8.6,
+          "depth": "through"
+        }
+      }
+    ],
+    "constraints": [
+      {
+        "type": "dimension",
+        "id": "boss_clears_bore",
+        "description": "The cap's bore must exceed the boss's diameter by at least 0.6mm (0.3mm radial clearance per side) for a slip fit as printed.",
+        "left": { "ref": "bore", "key": "diameter" },
+        "operator": ">=",
+        "right": { "ref": "boss", "key": "diameter" },
+        "margin": 0.6
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

@@ -1,187 +1,106 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>printspec 0.1.0 schemas | Invisra</title>
-  <link rel="stylesheet" href="https://assets.invisra.ai/brand/v1/brand.min.css">
-  <link rel="icon" href="https://assets.invisra.ai/brand/v1/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="https://assets.invisra.ai/brand/v1/favicon-32.png" sizes="32x32" type="image/png">
-  <link rel="icon" href="https://assets.invisra.ai/brand/v1/favicon-16.png" sizes="16x16" type="image/png">
-  <link rel="apple-touch-icon" href="https://assets.invisra.ai/brand/v1/apple-touch-icon.png">
-  <meta name="theme-color" content="#020617">
-  <style>
-    :root{color-scheme:dark light}body.invisra-theme{margin:0;background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.22),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.18),transparent 30rem),var(--invisra-bg,#020617);color:var(--invisra-text,#e5eefb);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.invisra-header{background:color-mix(in srgb,var(--invisra-bg,#020617),transparent 10%);border-bottom:1px solid var(--invisra-border,rgba(148,163,184,.22));box-shadow:none}.invisra-header::before,.invisra-header::after{display:none;background:transparent;box-shadow:none}html[data-theme=light] .invisra-header{background:rgba(255,255,255,.82);border-bottom-color:rgba(15,23,42,.12);box-shadow:0 1px 0 rgba(255,255,255,.78) inset,0 12px 28px rgba(15,23,42,.06)}html[data-theme=light] body.invisra-theme{background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.12),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.1),transparent 30rem),var(--invisra-bg,#f8fafc)}html[data-theme=light] .invisra-shell,html[data-theme=light] footer{background:transparent;color:var(--invisra-text,#0f172a)}html[data-theme=light] .invisra-header::before,html[data-theme=light] .invisra-header::after{display:none;background:transparent;box-shadow:none}.site-nav{display:flex;align-items:center;justify-content:space-between;gap:1rem}.site-links{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}.site-links a,.card-grid .invisra-card>a,.link-row a:not(.invisra-button),.schema h3 a{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border:1px solid var(--invisra-border,rgba(148,163,184,.24));border-radius:999px;background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 28%);box-shadow:0 10px 24px rgba(15,23,42,.08);color:var(--invisra-text,#e5eefb);text-decoration:none;font-weight:800;line-height:1.1;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}.site-links a{padding:.52rem .78rem;font-size:.94rem}.card-grid .invisra-card>a,.link-row a:not(.invisra-button),.schema h3 a{padding:.62rem .9rem}.site-links a:hover,.card-grid .invisra-card>a:hover,.link-row a:not(.invisra-button):hover,.schema h3 a:hover{border-color:color-mix(in srgb,var(--invisra-accent,#38bdf8),transparent 35%);background:color-mix(in srgb,var(--invisra-accent,#38bdf8),transparent 88%);box-shadow:0 14px 30px rgba(14,165,233,.14);transform:translateY(-1px)}.schema-grid,.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}.card-grid .invisra-card{text-align:center;padding:clamp(1.25rem,3vw,2rem)}.card-grid .invisra-card ul{display:inline-block;text-align:left;margin-left:0;padding-left:1.2rem}.card-grid .link-row{justify-content:center}.card-grid pre{text-align:left}.hero-card{padding:clamp(1.5rem,4vw,3rem);margin:2rem auto;text-align:center}.hero-card .lede{margin-left:auto;margin-right:auto}.hero-card .hero-actions,.hero-card .link-row{justify-content:center}.hero-actions,.link-row{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center}.schema{text-align:center;padding:clamp(1.25rem,3vw,2rem)}.schema h3{margin-left:auto;margin-right:auto}.schema code,.invisra-code{overflow-wrap:anywhere}.muted{color:var(--invisra-muted,#94a3b8)}footer{padding:2rem 0;color:var(--invisra-muted,#94a3b8)}pre.invisra-code{white-space:pre-wrap;padding:1rem;border-radius:1rem}.theme-toggle{padding:.52rem .8rem}@media(max-width:760px){.site-nav{align-items:flex-start;flex-direction:column}.site-links{gap:.6rem}}
-  </style>
+  <title>printspec 0.1.0 Schemas</title>
+  <style>body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.5;max-width:960px;margin:0 auto;padding:2rem;color:#172033}a{color:#2454d6}code{background:#f2f4f8;padding:.1rem .25rem;border-radius:.25rem}.muted{color:#5f6b7a}.schema{border-top:1px solid #d9dee7;padding:1rem 0}footer{margin-top:3rem;font-size:.9rem;color:#5f6b7a}</style>
 </head>
-<body class="invisra-theme">
-<script>
-  (function () {
-    var key = 'invisra-theme';
-    var saved = localStorage.getItem(key);
-    var theme = saved === 'light' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = theme;
-
-    function updateThemeButton() {
-      var button = document.querySelector('[data-theme-toggle]');
-      if (button) {
-        button.textContent = theme === 'dark' ? 'Light' : 'Dark';
-        button.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme');
-      }
-    }
-
-    window.toggleInvisraTheme = function () {
-      var current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
-      var next = current === 'dark' ? 'light' : 'dark';
-      theme = next;
-      document.documentElement.dataset.theme = next;
-      localStorage.setItem(key, next);
-      updateThemeButton();
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', updateThemeButton);
-    } else {
-      updateThemeButton();
-    }
-  })();
-</script>
-<header class="invisra-header">
-  <div class="invisra-container site-nav">
-    <a class="invisra-logo-lockup" href="/printspec/" aria-label="printspec home">
-      <svg class="invisra-logo-mark invisra-logo-mark-sm" viewBox="0 0 160 380" role="img" aria-hidden="true" focusable="false"><path fill="currentColor" d="M80 6 8 222 38 256 80 356 122 256 152 222Z M80 118 112 214 80 248 48 214Z"></path></svg>
-      <span class="invisra-logo-wordmark">Invisra</span>
-      <span class="invisra-text-muted">/ printspec</span>
-    </a>
-    <nav class="site-links" aria-label="Site navigation">
-      <a href="/printspec/">Home</a>
-      <a href="/printspec/validator/">Validator</a>
-      <a href="/printspec/0.1.0/">Schemas</a>
-      <a href="https://cad.invisra.ai">PartPilot</a>
-      <a href="https://invisra.ai">Invisra</a>
-      <button type="button" class="invisra-button invisra-button-ghost theme-toggle" data-theme-toggle onclick="window.toggleInvisraTheme()" aria-label="Switch theme">Light</button>
-    </nav>
-  </div>
-</header>
-<main class="invisra-shell">
-  <section class="invisra-container invisra-card hero-card">
-    <span class="invisra-badge">Version 0.1.0</span>
-    <h1>printspec 0.1.0 schemas</h1>
-    <p class="invisra-text-muted">Versioned JSON Schemas for printspec 0.1.0.</p>
-    <p class="link-row"><a class="invisra-button invisra-button-secondary" href="/printspec/">Back to printspec</a><a class="invisra-button invisra-button-primary" href="/printspec/validator/">Open validator</a><a class="invisra-button invisra-button-ghost" href="/printspec/0.1.0/manifest.json">Version manifest</a></p>
+<body>
+<main>
+  <h1>printspec 0.1.0 Schemas</h1>
+  <p>Versioned JSON Schemas for printspec 0.1.0.</p>
+  <p><a href="/printspec/">Back to printspec</a> · <a href="/printspec/0.1.0/manifest.json">Version manifest</a></p>
+  <h2>Schema files</h2>
+  <section class="schema">
+    <h3><a href="printspec.schema.json">printspec.schema.json</a></h3>
+    <p><strong>Printspec</strong></p>
+    <p>Printspec schema for printspec documents.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json</code></p>
   </section>
-  <section class="invisra-container">
-    <h2>Schema files</h2>
-    <div class="schema-grid">
-      <article class="invisra-card schema">
-        <h3><a href="printspec.schema.json">printspec.schema.json</a></h3>
-        <p><strong>Printspec</strong></p>
-        <p class="invisra-text-muted">Printspec schema for printspec documents.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="cable-clip.schema.json">cable-clip.schema.json</a></h3>
-        <p><strong>Cable Clip</strong></p>
-        <p class="invisra-text-muted">Mountable clip for holding a cable or hose.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/cable-clip.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="cable-comb.schema.json">cable-comb.schema.json</a></h3>
-        <p><strong>Cable Comb</strong></p>
-        <p class="invisra-text-muted">Comb-style cable organizer with repeated cable slots.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/cable-comb.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="common.schema.json">common.schema.json</a></h3>
-        <p><strong>Common Printspec Definitions</strong></p>
-        <p class="invisra-text-muted">Reusable JSON Schema definitions shared by printspec schemas.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/common.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="composable-part.schema.json">composable-part.schema.json</a></h3>
-        <p><strong>Composable Part</strong></p>
-        <p class="invisra-text-muted">Composable Part schema for printspec documents.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/composable-part.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="drawer-divider.schema.json">drawer-divider.schema.json</a></h3>
-        <p><strong>Drawer divider</strong></p>
-        <p class="invisra-text-muted">Customizable drawer divider strip with optional interlocking notches.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/drawer-divider.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="drill-guide.schema.json">drill-guide.schema.json</a></h3>
-        <p><strong>Drill Guide</strong></p>
-        <p class="invisra-text-muted">Block used to guide repeated drilled holes.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/drill-guide.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="electronics-standoff.schema.json">electronics-standoff.schema.json</a></h3>
-        <p><strong>Electronics Standoff</strong></p>
-        <p class="invisra-text-muted">Round standoff with optional base for supporting circuit boards.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/electronics-standoff.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="l-bracket.schema.json">l-bracket.schema.json</a></h3>
-        <p><strong>L Bracket</strong></p>
-        <p class="invisra-text-muted">Two-leg right-angle bracket with optional mounting features.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/l-bracket.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="part-family.schema.json">part-family.schema.json</a></h3>
-        <p><strong>Part Family</strong></p>
-        <p class="invisra-text-muted">Part Family schema for printspec documents.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/part-family.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="project-enclosure-tray.schema.json">project-enclosure-tray.schema.json</a></h3>
-        <p><strong>Project enclosure tray</strong></p>
-        <p class="invisra-text-muted">Open tray for low-voltage electronics and project organization.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/project-enclosure-tray.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="project.schema.json">project.schema.json</a></h3>
-        <p><strong>Project</strong></p>
-        <p class="invisra-text-muted">Project schema for printspec documents.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/project.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="round-spacer.schema.json">round-spacer.schema.json</a></h3>
-        <p><strong>Round Spacer</strong></p>
-        <p class="invisra-text-muted">Cylindrical spacer or bushing with a central clearance hole.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/round-spacer.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="rounded-rectangular-plate.schema.json">rounded-rectangular-plate.schema.json</a></h3>
-        <p><strong>Rounded Rectangular Plate</strong></p>
-        <p class="invisra-text-muted">Flat plate with rounded outside corners and optional hole or slot features.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/rounded-rectangular-plate.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="simple-box.schema.json">simple-box.schema.json</a></h3>
-        <p><strong>Simple Box</strong></p>
-        <p class="invisra-text-muted">Open-top box or enclosure body with walls and optional cutouts.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/simple-box.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="simple-lid.schema.json">simple-lid.schema.json</a></h3>
-        <p><strong>Simple Lid</strong></p>
-        <p class="invisra-text-muted">Flat lid with optional lip, holes, and edge finishing.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/simple-lid.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="spacer-block.schema.json">spacer-block.schema.json</a></h3>
-        <p><strong>Spacer Block</strong></p>
-        <p class="invisra-text-muted">Rectangular spacer block with optional holes, slots, and edge finishing.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/spacer-block.schema.json</code></p>
-      </article>
-      <article class="invisra-card schema">
-        <h3><a href="wall-mount-bracket.schema.json">wall-mount-bracket.schema.json</a></h3>
-        <p><strong>Wall mount bracket</strong></p>
-        <p class="invisra-text-muted">Simple flat wall bracket with a light-duty shelf/tab.</p>
-        <p class="muted"><code class="invisra-code">https://schemas.invisra.ai/printspec/0.1.0/wall-mount-bracket.schema.json</code></p>
-      </article>
-    </div>
+  <section class="schema">
+    <h3><a href="cable-clip.schema.json">cable-clip.schema.json</a></h3>
+    <p><strong>Cable Clip</strong></p>
+    <p>Mountable clip for holding a cable or hose.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/cable-clip.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="cable-comb.schema.json">cable-comb.schema.json</a></h3>
+    <p><strong>Cable Comb</strong></p>
+    <p>Comb-style cable organizer with repeated cable slots.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/cable-comb.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="common.schema.json">common.schema.json</a></h3>
+    <p><strong>Common Printspec Definitions</strong></p>
+    <p>Reusable JSON Schema definitions shared by printspec schemas.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/common.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="composable-part.schema.json">composable-part.schema.json</a></h3>
+    <p><strong>Composable Part</strong></p>
+    <p>Composable Part schema for printspec documents.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/composable-part.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="drill-guide.schema.json">drill-guide.schema.json</a></h3>
+    <p><strong>Drill Guide</strong></p>
+    <p>Block used to guide repeated drilled holes.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/drill-guide.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="electronics-standoff.schema.json">electronics-standoff.schema.json</a></h3>
+    <p><strong>Electronics Standoff</strong></p>
+    <p>Round standoff with optional base for supporting circuit boards.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/electronics-standoff.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="l-bracket.schema.json">l-bracket.schema.json</a></h3>
+    <p><strong>L Bracket</strong></p>
+    <p>Two-leg right-angle bracket with optional mounting features.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/l-bracket.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="part-family.schema.json">part-family.schema.json</a></h3>
+    <p><strong>Part Family</strong></p>
+    <p>Part Family schema for printspec documents.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/part-family.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="project.schema.json">project.schema.json</a></h3>
+    <p><strong>Project</strong></p>
+    <p>Project schema for printspec documents.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/project.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="round-spacer.schema.json">round-spacer.schema.json</a></h3>
+    <p><strong>Round Spacer</strong></p>
+    <p>Cylindrical spacer or bushing with a central clearance hole.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/round-spacer.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="rounded-rectangular-plate.schema.json">rounded-rectangular-plate.schema.json</a></h3>
+    <p><strong>Rounded Rectangular Plate</strong></p>
+    <p>Flat plate with rounded outside corners and optional hole or slot features.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/rounded-rectangular-plate.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="simple-box.schema.json">simple-box.schema.json</a></h3>
+    <p><strong>Simple Box</strong></p>
+    <p>Open-top box or enclosure body with walls and optional cutouts.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/simple-box.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="simple-lid.schema.json">simple-lid.schema.json</a></h3>
+    <p><strong>Simple Lid</strong></p>
+    <p>Flat lid with optional lip, holes, and edge finishing.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/simple-lid.schema.json</code></p>
+  </section>
+  <section class="schema">
+    <h3><a href="spacer-block.schema.json">spacer-block.schema.json</a></h3>
+    <p><strong>Spacer Block</strong></p>
+    <p>Rectangular spacer block with optional holes, slots, and edge finishing.</p>
+    <p class="muted"><code>https://schemas.invisra.ai/printspec/0.1.0/spacer-block.schema.json</code></p>
   </section>
 </main>
 </body>

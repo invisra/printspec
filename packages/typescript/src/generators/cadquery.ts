@@ -1,7 +1,11 @@
-import type {GeneratorResult, PrintSpec} from '../types.js';
-import {validatePrintSpec} from '../validate.js';
-import {generateCadQueryWithValidator} from './cadquery.core.js';
+import type { GeneratorResult, PrintSpec } from "../types.js";
+import { validatePrintSpec } from "../validate.js";
+import { generateCadQueryWithValidator } from "./cadquery.core.js";
+import type { ComposablePartGenerateOptions } from "./cadquery.composable.js";
 
-export function generateCadQuery(spec: PrintSpec): GeneratorResult {
-  return generateCadQueryWithValidator(validatePrintSpec, spec);
+export function generateCadQuery(
+  spec: PrintSpec,
+  options?: ComposablePartGenerateOptions,
+): GeneratorResult {
+  return generateCadQueryWithValidator(validatePrintSpec, spec, options);
 }

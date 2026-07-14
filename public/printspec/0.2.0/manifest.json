@@ -1,0 +1,132 @@
+{
+  "project": "printspec",
+  "version": "0.2.0",
+  "schemas": [
+    {
+      "filename": "printspec.schema.json",
+      "url": "/printspec/0.2.0/printspec.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/printspec.schema.json",
+      "title": "Printspec",
+      "description": "Printspec schema for printspec documents."
+    },
+    {
+      "filename": "cable-clip.schema.json",
+      "url": "/printspec/0.2.0/cable-clip.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/cable-clip.schema.json",
+      "title": "Cable Clip",
+      "description": "Mountable clip for holding a cable or hose."
+    },
+    {
+      "filename": "cable-comb.schema.json",
+      "url": "/printspec/0.2.0/cable-comb.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/cable-comb.schema.json",
+      "title": "Cable Comb",
+      "description": "Comb-style cable organizer with repeated cable slots."
+    },
+    {
+      "filename": "common.schema.json",
+      "url": "/printspec/0.2.0/common.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/common.schema.json",
+      "title": "Common Printspec Definitions",
+      "description": "Reusable JSON Schema definitions shared by printspec schemas."
+    },
+    {
+      "filename": "composable-part.schema.json",
+      "url": "/printspec/0.2.0/composable-part.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/composable-part.schema.json",
+      "title": "Composable Part",
+      "description": "Composable Part schema for printspec documents."
+    },
+    {
+      "filename": "drawer-divider.schema.json",
+      "url": "/printspec/0.2.0/drawer-divider.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/drawer-divider.schema.json",
+      "title": "Drawer divider",
+      "description": "Customizable drawer divider strip with optional interlocking notches."
+    },
+    {
+      "filename": "drill-guide.schema.json",
+      "url": "/printspec/0.2.0/drill-guide.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/drill-guide.schema.json",
+      "title": "Drill Guide",
+      "description": "Block used to guide repeated drilled holes."
+    },
+    {
+      "filename": "electronics-standoff.schema.json",
+      "url": "/printspec/0.2.0/electronics-standoff.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/electronics-standoff.schema.json",
+      "title": "Electronics Standoff",
+      "description": "Round standoff with optional base for supporting circuit boards."
+    },
+    {
+      "filename": "l-bracket.schema.json",
+      "url": "/printspec/0.2.0/l-bracket.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/l-bracket.schema.json",
+      "title": "L Bracket",
+      "description": "Two-leg right-angle bracket with optional mounting features."
+    },
+    {
+      "filename": "part-family.schema.json",
+      "url": "/printspec/0.2.0/part-family.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/part-family.schema.json",
+      "title": "Part Family",
+      "description": "Part Family schema for printspec documents."
+    },
+    {
+      "filename": "project-enclosure-tray.schema.json",
+      "url": "/printspec/0.2.0/project-enclosure-tray.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/project-enclosure-tray.schema.json",
+      "title": "Project enclosure tray",
+      "description": "Open tray for low-voltage electronics and project organization."
+    },
+    {
+      "filename": "project.schema.json",
+      "url": "/printspec/0.2.0/project.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/project.schema.json",
+      "title": "Project",
+      "description": "Project schema for printspec documents."
+    },
+    {
+      "filename": "round-spacer.schema.json",
+      "url": "/printspec/0.2.0/round-spacer.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/round-spacer.schema.json",
+      "title": "Round Spacer",
+      "description": "Cylindrical spacer or bushing with a central clearance hole."
+    },
+    {
+      "filename": "rounded-rectangular-plate.schema.json",
+      "url": "/printspec/0.2.0/rounded-rectangular-plate.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/rounded-rectangular-plate.schema.json",
+      "title": "Rounded Rectangular Plate",
+      "description": "Flat plate with rounded outside corners and optional hole or slot features."
+    },
+    {
+      "filename": "simple-box.schema.json",
+      "url": "/printspec/0.2.0/simple-box.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/simple-box.schema.json",
+      "title": "Simple Box",
+      "description": "Open-top box or enclosure body with walls and optional cutouts."
+    },
+    {
+      "filename": "simple-lid.schema.json",
+      "url": "/printspec/0.2.0/simple-lid.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/simple-lid.schema.json",
+      "title": "Simple Lid",
+      "description": "Flat lid with optional lip, holes, and edge finishing."
+    },
+    {
+      "filename": "spacer-block.schema.json",
+      "url": "/printspec/0.2.0/spacer-block.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/spacer-block.schema.json",
+      "title": "Spacer Block",
+      "description": "Rectangular spacer block with optional holes, slots, and edge finishing."
+    },
+    {
+      "filename": "wall-mount-bracket.schema.json",
+      "url": "/printspec/0.2.0/wall-mount-bracket.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/wall-mount-bracket.schema.json",
+      "title": "Wall mount bracket",
+      "description": "Simple flat wall bracket with a light-duty shelf/tab."
+    }
+  ]
+}

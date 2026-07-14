@@ -4,7 +4,7 @@
 export const bundledSchemas = {
   "cable-clip.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/cable-clip.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/cable-clip.schema.json",
     "type": "object",
     "required": [
       "type",
@@ -230,7 +230,7 @@ export const bundledSchemas = {
   },
   "cable-comb.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/cable-comb.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/cable-comb.schema.json",
     "type": "object",
     "required": [
       "type",
@@ -459,14 +459,14 @@ export const bundledSchemas = {
   },
   "common.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/common.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/common.schema.json",
     "$defs": {
       "Dimension": {
         "type": "number",
         "exclusiveMinimum": 0,
         "maximum": 10000,
         "title": "Dimension",
-        "description": " dimension parameter."
+        "description": "A positive linear measurement in millimeters."
       },
       "Point2D": {
         "type": "object",
@@ -478,17 +478,17 @@ export const bundledSchemas = {
           "x": {
             "type": "number",
             "title": "X",
-            "description": "X parameter."
+            "description": "X coordinate in millimeters, relative to the part's local origin."
           },
           "y": {
             "type": "number",
             "title": "Y",
-            "description": "Y parameter."
+            "description": "Y coordinate in millimeters, relative to the part's local origin."
           }
         },
         "additionalProperties": false,
         "title": "Point2D",
-        "description": " point2 d parameter."
+        "description": "A 2D position in millimeters, relative to the part's local origin."
       },
       "Point3D": {
         "type": "object",
@@ -501,22 +501,22 @@ export const bundledSchemas = {
           "x": {
             "type": "number",
             "title": "X",
-            "description": "X parameter."
+            "description": "X coordinate in millimeters, relative to the part's local origin."
           },
           "y": {
             "type": "number",
             "title": "Y",
-            "description": "Y parameter."
+            "description": "Y coordinate in millimeters, relative to the part's local origin."
           },
           "z": {
             "type": "number",
             "title": "Z",
-            "description": "Z parameter."
+            "description": "Z coordinate in millimeters, relative to the part's local origin."
           }
         },
         "additionalProperties": false,
         "title": "Point3D",
-        "description": " point3 d parameter."
+        "description": "A 3D position in millimeters, relative to the part's local origin."
       },
       "Countersink": {
         "type": "object",
@@ -537,12 +537,12 @@ export const bundledSchemas = {
             "minimum": 1,
             "maximum": 179,
             "title": "Angle",
-            "description": "Angle parameter."
+            "description": "Included angle of the countersink cone, in degrees."
           }
         },
         "additionalProperties": false,
         "title": "Countersink",
-        "description": " countersink for the part."
+        "description": "A countersink recess for a flat-head fastener, defined by diameter and included angle."
       },
       "Counterbore": {
         "type": "object",
@@ -568,7 +568,7 @@ export const bundledSchemas = {
         },
         "additionalProperties": false,
         "title": "Counterbore",
-        "description": " counterbore for the part."
+        "description": "A counterbore recess for a fastener head, defined by diameter and depth."
       },
       "Hole": {
         "type": "object",
@@ -582,17 +582,17 @@ export const bundledSchemas = {
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Id parameter."
+            "description": "Optional stable identifier for this hole, used to reference it from features or diagnostics."
           },
           "x": {
             "type": "number",
             "title": "X",
-            "description": "X parameter."
+            "description": "X coordinate of the hole center in millimeters, relative to the part's local origin."
           },
           "y": {
             "type": "number",
             "title": "Y",
-            "description": "Y parameter."
+            "description": "Y coordinate of the hole center in millimeters, relative to the part's local origin."
           },
           "diameter": {
             "type": "number",
@@ -610,10 +610,12 @@ export const bundledSchemas = {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "maximum": 10000,
-                "title": "OneOf",
-                "description": "One of parameter."
+                "title": "Depth",
+                "description": "Hole depth in millimeters."
               }
-            ]
+            ],
+            "title": "Depth",
+            "description": "Hole depth in millimeters, or \"through\" to cut completely through the part."
           },
           "axis": {
             "enum": [
@@ -623,7 +625,7 @@ export const bundledSchemas = {
             ],
             "default": "z",
             "title": "Axis",
-            "description": "Axis parameter.",
+            "description": "Axis the hole is drilled along; \"z\" is the default vertical axis for flat parts.",
             "examples": [
               "z"
             ],
@@ -646,7 +648,7 @@ export const bundledSchemas = {
         },
         "additionalProperties": false,
         "title": "Hole",
-        "description": " hole parameter."
+        "description": "A cylindrical hole to subtract from the part, with an optional countersink or counterbore."
       },
       "Slot": {
         "type": "object",
@@ -662,31 +664,31 @@ export const bundledSchemas = {
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Id parameter."
+            "description": "Optional stable identifier for this slot, used to reference it from features or diagnostics."
           },
           "x": {
             "type": "number",
             "title": "X",
-            "description": "X parameter."
+            "description": "X coordinate of the slot center in millimeters, relative to the part's local origin."
           },
           "y": {
             "type": "number",
             "title": "Y",
-            "description": "Y parameter."
+            "description": "Y coordinate of the slot center in millimeters, relative to the part's local origin."
           },
           "length": {
             "type": "number",
             "exclusiveMinimum": 0,
             "maximum": 10000,
             "title": "Length",
-            "description": "Length in millimeters."
+            "description": "Slot length in millimeters, measured along its long axis."
           },
           "width": {
             "type": "number",
             "exclusiveMinimum": 0,
             "maximum": 10000,
             "title": "Width",
-            "description": "Width in millimeters."
+            "description": "Slot width in millimeters."
           },
           "depth": {
             "oneOf": [
@@ -697,10 +699,12 @@ export const bundledSchemas = {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "maximum": 10000,
-                "title": "OneOf",
-                "description": "One of parameter."
+                "title": "Depth",
+                "description": "Slot depth in millimeters."
               }
-            ]
+            ],
+            "title": "Depth",
+            "description": "Slot depth in millimeters, or \"through\" to cut completely through the part."
           },
           "axis": {
             "enum": [
@@ -709,7 +713,7 @@ export const bundledSchemas = {
               "z"
             ],
             "title": "Axis",
-            "description": "Axis parameter.",
+            "description": "Axis the slot is cut along.",
             "default": "z",
             "examples": [
               "z"
@@ -723,7 +727,7 @@ export const bundledSchemas = {
         },
         "additionalProperties": false,
         "title": "Slot",
-        "description": " slot parameter."
+        "description": "A rectangular slot to subtract from the part."
       },
       "Fillet": {
         "type": "object",
@@ -741,12 +745,12 @@ export const bundledSchemas = {
           "target": {
             "type": "string",
             "title": "Target",
-            "description": "Target parameter."
+            "description": "Optional identifier of the edge or feature this fillet applies to; omit to apply it to the whole part where supported."
           }
         },
         "additionalProperties": false,
         "title": "Fillet",
-        "description": " fillet parameter."
+        "description": "A rounded edge finishing request, defined by radius."
       },
       "Chamfer": {
         "type": "object",
@@ -759,17 +763,17 @@ export const bundledSchemas = {
             "exclusiveMinimum": 0,
             "maximum": 10000,
             "title": "Distance",
-            "description": "Distance parameter."
+            "description": "Chamfer distance in millimeters, measured along each adjoining face."
           },
           "target": {
             "type": "string",
             "title": "Target",
-            "description": "Target parameter."
+            "description": "Optional identifier of the edge or feature this chamfer applies to; omit to apply it to the whole part where supported."
           }
         },
         "additionalProperties": false,
         "title": "Chamfer",
-        "description": " chamfer parameter."
+        "description": "A beveled edge finishing request, defined by distance."
       },
       "Pattern": {
         "oneOf": [
@@ -791,33 +795,33 @@ export const bundledSchemas = {
                 "minimum": 1,
                 "maximum": 100,
                 "title": "CountX",
-                "description": "Count x for the part."
+                "description": "Number of repetitions along the X axis."
               },
               "countY": {
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 100,
                 "title": "CountY",
-                "description": "Count y for the part."
+                "description": "Number of repetitions along the Y axis."
               },
               "spacingX": {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "maximum": 10000,
                 "title": "SpacingX",
-                "description": "Spacing x in millimeters."
+                "description": "Spacing between repetitions along the X axis, in millimeters."
               },
               "spacingY": {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "maximum": 10000,
                 "title": "SpacingY",
-                "description": "Spacing y in millimeters."
+                "description": "Spacing between repetitions along the Y axis, in millimeters."
               }
             },
             "additionalProperties": false,
-            "title": "OneOf",
-            "description": "One of parameter."
+            "title": "RectangularPattern",
+            "description": "A rectangular grid pattern defined by repetition counts and spacing along the X and Y axes."
           },
           {
             "type": "object",
@@ -835,14 +839,14 @@ export const bundledSchemas = {
                 "minimum": 1,
                 "maximum": 100,
                 "title": "Count",
-                "description": "Count for the part."
+                "description": "Number of repetitions."
               },
               "spacing": {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "maximum": 10000,
                 "title": "Spacing",
-                "description": "Spacing in millimeters."
+                "description": "Spacing between repetitions, in millimeters."
               },
               "axis": {
                 "enum": [
@@ -851,7 +855,7 @@ export const bundledSchemas = {
                   "z"
                 ],
                 "title": "Axis",
-                "description": "Axis parameter.",
+                "description": "Axis the pattern repeats along.",
                 "default": "z",
                 "examples": [
                   "z"
@@ -864,8 +868,8 @@ export const bundledSchemas = {
               }
             },
             "additionalProperties": false,
-            "title": "OneOf",
-            "description": "One of parameter."
+            "title": "LinearPattern",
+            "description": "A linear pattern defined by a repetition count and spacing along one axis."
           },
           {
             "type": "object",
@@ -883,31 +887,33 @@ export const bundledSchemas = {
                 "minimum": 1,
                 "maximum": 100,
                 "title": "Count",
-                "description": "Count for the part."
+                "description": "Number of repetitions around the circle."
               },
               "radius": {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "maximum": 10000,
                 "title": "Radius",
-                "description": "Radius in millimeters."
+                "description": "Radius of the circle the repetitions are placed on, in millimeters."
               },
               "startAngle": {
                 "type": "number",
                 "title": "StartAngle",
-                "description": "Start angle parameter."
+                "description": "Starting angle of the first repetition, in degrees, measured counterclockwise from the X axis."
               },
               "sweepAngle": {
                 "type": "number",
                 "title": "SweepAngle",
-                "description": "Sweep angle parameter."
+                "description": "Total angle the pattern sweeps through, in degrees; omit for a full 360-degree pattern."
               }
             },
             "additionalProperties": false,
-            "title": "OneOf",
-            "description": "One of parameter."
+            "title": "RadialPattern",
+            "description": "A radial (circular) pattern defined by a repetition count around a center point."
           }
-        ]
+        ],
+        "title": "Pattern",
+        "description": "A rectangular, linear, or radial repetition pattern for a feature."
       },
       "SupplierReference": {
         "type": "object",
@@ -920,29 +926,29 @@ export const bundledSchemas = {
             "type": "string",
             "minLength": 1,
             "title": "Supplier",
-            "description": "Supplier parameter."
+            "description": "Supplier or vendor name, for example \"McMaster-Carr\"."
           },
           "partNumber": {
             "type": "string",
             "minLength": 1,
             "title": "PartNumber",
-            "description": "Part number parameter."
+            "description": "Supplier's part number or SKU for this item."
           },
           "url": {
             "type": "string",
             "format": "uri",
             "title": "Url",
-            "description": "Url parameter."
+            "description": "Optional URL to the supplier's product page for this item."
           },
           "description": {
             "type": "string",
             "title": "Description",
-            "description": "Description parameter."
+            "description": "Optional human-readable description of the supplier listing."
           }
         },
         "additionalProperties": false,
         "title": "SupplierReference",
-        "description": " supplier reference parameter."
+        "description": "A reference to where a hardware item can be purchased."
       },
       "HardwareItem": {
         "type": "object",
@@ -956,50 +962,50 @@ export const bundledSchemas = {
             "type": "string",
             "minLength": 1,
             "title": "Id",
-            "description": "Id parameter."
+            "description": "Stable identifier for this hardware item, used in BOM output and project relationships."
           },
           "kind": {
             "type": "string",
             "minLength": 1,
             "title": "Kind",
-            "description": "Kind parameter."
+            "description": "Hardware category, for example \"screw\", \"nut\", or \"insert\"."
           },
           "standard": {
             "type": "string",
             "title": "Standard",
-            "description": "Standard parameter."
+            "description": "Optional fastener standard, for example \"ISO 4762\" or \"DIN 912\"."
           },
           "size": {
             "type": "string",
             "title": "Size",
-            "description": "Size parameter."
+            "description": "Optional size designation, for example \"M3x8\" or \"#4-40\"."
           },
           "quantity": {
             "type": "integer",
             "minimum": 1,
             "maximum": 10000,
             "title": "Quantity",
-            "description": "Quantity parameter."
+            "description": "Number of this hardware item required."
           },
           "role": {
             "type": "string",
             "title": "Role",
-            "description": "Role parameter."
+            "description": "Optional description of how this hardware is used, for example \"lid screw\" or \"heat-set insert\"."
           },
           "supplierReferences": {
             "type": "array",
             "items": {
               "$ref": "#/$defs/SupplierReference",
-              "title": "Items",
-              "description": "Items parameter."
+              "title": "SupplierReference",
+              "description": "A supplier reference for this hardware item."
             },
             "title": "SupplierReferences",
-            "description": "Supplier references parameter."
+            "description": "Optional list of supplier references for sourcing this hardware item."
           }
         },
         "additionalProperties": false,
         "title": "HardwareItem",
-        "description": " hardware item parameter."
+        "description": "A bill-of-materials entry for a fastener, insert, or other hardware component used by the part."
       }
     },
     "title": "Common Printspec Definitions",
@@ -1013,6 +1019,1191 @@ export const bundledSchemas = {
       "label",
       "components"
     ],
+    "$defs": {
+      "Id": {
+        "type": "string",
+        "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+        "minLength": 1,
+        "maxLength": 64,
+        "title": "Id",
+        "description": "Stable identifier for this component or feature. A coder agent implementing this part is likely to use this id as a source-code variable or object name, so it must start with a letter or underscore and contain only letters, digits, and underscores."
+      },
+      "Relation": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "absolute",
+              "on_top_of",
+              "attached_to_face",
+              "centered_on",
+              "aligned_with",
+              "offset_from",
+              "mirrored_from"
+            ],
+            "title": "Type",
+            "description": "How this component or feature is anchored relative to the target, before `position` is added as a further offset. Anchor points are defined against the target's axis-aligned bounding box (its footprint and height/thickness), not its visual surface, so the same rule applies uniformly across component kinds. See docs/composable-parts.md for the exact anchor point per type; `rib` and `wedge` targets don't have a well-defined bounding-box footprint, so `on_top_of`/`attached_to_face`/`centered_on`/`aligned_with` against them fall back to the target's own origin and `position` must express the full offset manually."
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "Id of the component, feature, or group this relation is relative to; required for every relation type except \"absolute\"."
+          },
+          "face": {
+            "enum": [
+              "top",
+              "bottom",
+              "front",
+              "back",
+              "left",
+              "right",
+              "side"
+            ],
+            "title": "Face",
+            "description": "Face of the target's bounding box this relation attaches to; required when type is \"attached_to_face\". \"side\" is only meaningful for cylindrical kinds (cylinder, boss, tube) and anchors at the +X point on the target's circumference at mid-height.",
+            "x-printspec-enumLabels": {
+              "top": "Top (+Z)",
+              "bottom": "Bottom (-Z)",
+              "front": "Front (-Y)",
+              "back": "Back (+Y)",
+              "left": "Left (-X)",
+              "right": "Right (+X)",
+              "side": "Side (cylindrical, +X)"
+            }
+          },
+          "mirrorAxis": {
+            "enum": [
+              "x",
+              "y",
+              "z"
+            ],
+            "default": "x",
+            "title": "Mirror axis",
+            "description": "Only used when type is \"mirrored_from\": the axis to mirror the target's resolved position across (\"x\" negates X, mirroring across the YZ plane, and so on). Defaults to \"x\", the common left/right mirrored-pair case. Rotation is not mirrored; see inheritRotation to copy the target's rotation verbatim instead, or set rotation explicitly."
+          },
+          "inheritRotation": {
+            "type": "boolean",
+            "default": false,
+            "title": "Inherit rotation",
+            "description": "If true, this component's or feature's own rotation starts from the target's fully-resolved rotation (its own `rotation`, further composed with its transforming group's `rotation`, if grouped) instead of starting from zero -- so it naturally stays flush with a rotated target without hand-copying and re-deriving the same rotation value onto every dependent down a chain. A component's own `rotation` field, if also set, is applied on top of (not instead of) the inherited rotation. Only valid on a component or feature relation, not a group relation. Not automatically applied for \"mirrored_from\" (the target's rotation is copied verbatim, not mirrored, matching how mirrorAxis only mirrors position); combine with an explicit `rotation` if the mirrored orientation also needs adjusting."
+          },
+          "targetInstance": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Target instance",
+            "description": "Zero-based index into target's own pattern instances (see docs/composable-parts.md, \"Patterns\"), anchoring to that specific instance's resolved position instead of the pattern's center -- for example a counterbore that should stack on only one corner of a 4-hole bolt pattern. Only valid when target is a patterned component or feature (not a group, and not an unpatterned target) and less than the pattern's total instance count; semantic validation checks both. Addresses only target's own pattern, not a transforming group's pattern it may also belong to."
+          }
+        },
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "absolute"
+                }
+              }
+            },
+            "else": {
+              "required": [
+                "target"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "attached_to_face"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "target",
+                "face"
+              ]
+            }
+          }
+        ],
+        "title": "Relation",
+        "description": "Describes how a component, feature, or group is positioned relative to another component, feature, or group. `position` (on the component/feature/group itself) is the single offset mechanism, applied on top of the relation's resolved anchor; there is no separate offset field on the relation."
+      },
+      "Group": {
+        "type": "object",
+        "required": [
+          "id",
+          "memberIds"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Id"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional human-readable notes explaining what this group represents, for example \"lid latch sub-assembly\"."
+          },
+          "memberIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "description": "Ids of the components in this group. Every id must be a component id (not a feature or group id); groups are not nestable, and a component may belong to more than one group. Features stay associated with their target component and move with it implicitly; they are not listed here."
+          },
+          "position": {
+            "$ref": "common.schema.json#/$defs/Point3D",
+            "title": "Position",
+            "description": "Position in millimeters, relative to the part's local origin or, when relation is set, relative to the related component/feature/group. Applied as an additional transform on top of each member's own position/rotation: a group transform composes with, rather than replaces, each member's individually-authored placement."
+          },
+          "rotation": {
+            "$ref": "common.schema.json#/$defs/Point3D",
+            "title": "Rotation",
+            "description": "Optional rotation in degrees applied to the whole group as a rigid body, before translation by position. Rotations are extrinsic (fixed-axis) and applied in X, then Y, then Z order. Composes with each member's own rotation the same way position does."
+          },
+          "relation": {
+            "$ref": "#/$defs/Relation"
+          },
+          "pattern": {
+            "$ref": "common.schema.json#/$defs/Pattern",
+            "description": "Optional repetition of the whole group (every member, as one rigid unit) instead of a single component or feature. All instances share this group's single `id` and are not individually addressable. The resolved position (from `position`/`relation`) is the center of the pattern, not its first instance; per-instance offsets are computed in the group's own (pre-rotation) local frame, so they rotate together with the group's own `rotation`. See docs/composable-parts.md for the exact per-instance offset rule."
+          }
+        },
+        "additionalProperties": false,
+        "title": "Group",
+        "description": "A named collection of components that can be positioned, rotated, patterned, or targeted by a relation as a single unit, without changing any member's own position/rotation relative to the group. Useful once a part has enough components that a flat list becomes hard to reason about, or when a recognizable sub-assembly (for example a latch or a standoff pair) needs to move, mirror, or repeat together."
+      },
+      "BoxDimensions": {
+        "type": "object",
+        "required": [
+          "length",
+          "width",
+          "height"
+        ],
+        "properties": {
+          "length": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Length along the X axis, in millimeters."
+          },
+          "width": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Width along the Y axis, in millimeters."
+          },
+          "height": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Height along the Z axis, in millimeters."
+          }
+        },
+        "additionalProperties": false,
+        "title": "BoxDimensions",
+        "description": "Dimensions for a rectangular box component."
+      },
+      "RoundedBoxDimensions": {
+        "type": "object",
+        "required": [
+          "length",
+          "width",
+          "height",
+          "radius"
+        ],
+        "properties": {
+          "length": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Length along the X axis, in millimeters."
+          },
+          "width": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Width along the Y axis, in millimeters."
+          },
+          "height": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Height along the Z axis, in millimeters."
+          },
+          "radius": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Corner radius in millimeters; should be no more than half of the smaller of length and width."
+          }
+        },
+        "additionalProperties": false,
+        "title": "RoundedBoxDimensions",
+        "description": "Dimensions for a box component with rounded vertical edges."
+      },
+      "CylinderDimensions": {
+        "type": "object",
+        "required": [
+          "diameter",
+          "height"
+        ],
+        "properties": {
+          "diameter": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Outer diameter in millimeters."
+          },
+          "height": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Height along the cylinder axis, in millimeters."
+          }
+        },
+        "additionalProperties": false,
+        "title": "CylinderDimensions",
+        "description": "Dimensions for a solid cylinder component."
+      },
+      "TubeDimensions": {
+        "type": "object",
+        "required": [
+          "outerDiameter",
+          "innerDiameter",
+          "height"
+        ],
+        "properties": {
+          "outerDiameter": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Outer diameter in millimeters."
+          },
+          "innerDiameter": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Inner bore diameter in millimeters; must be less than outerDiameter."
+          },
+          "height": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Height along the tube axis, in millimeters."
+          }
+        },
+        "additionalProperties": false,
+        "title": "TubeDimensions",
+        "description": "Dimensions for a hollow tube component."
+      },
+      "PlateDimensions": {
+        "type": "object",
+        "required": [
+          "length",
+          "width",
+          "thickness"
+        ],
+        "properties": {
+          "length": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Length along the X axis, in millimeters."
+          },
+          "width": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Width along the Y axis, in millimeters."
+          },
+          "thickness": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Plate thickness along the Z axis, in millimeters."
+          }
+        },
+        "additionalProperties": false,
+        "title": "PlateDimensions",
+        "description": "Dimensions for a flat plate component."
+      },
+      "TabDimensions": {
+        "type": "object",
+        "required": [
+          "length",
+          "width",
+          "thickness"
+        ],
+        "properties": {
+          "length": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Length along the X axis, in millimeters."
+          },
+          "width": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Width along the Y axis, in millimeters."
+          },
+          "thickness": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Tab thickness along the Z axis, in millimeters."
+          }
+        },
+        "additionalProperties": false,
+        "title": "TabDimensions",
+        "description": "Dimensions for a small flat tab or ear component."
+      },
+      "BossDimensions": {
+        "type": "object",
+        "required": [
+          "diameter",
+          "height"
+        ],
+        "properties": {
+          "diameter": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Outer diameter in millimeters."
+          },
+          "height": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Height along the boss axis, in millimeters."
+          }
+        },
+        "additionalProperties": false,
+        "title": "BossDimensions",
+        "description": "Dimensions for a cylindrical mounting boss component."
+      },
+      "RibDimensions": {
+        "type": "object",
+        "required": [
+          "length",
+          "height",
+          "thickness"
+        ],
+        "properties": {
+          "length": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Rib length in millimeters."
+          },
+          "height": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Rib height in millimeters, measured from its base."
+          },
+          "thickness": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Rib thickness in millimeters."
+          }
+        },
+        "additionalProperties": false,
+        "title": "RibDimensions",
+        "description": "Dimensions for a thin structural reinforcing rib component."
+      },
+      "WedgeDimensions": {
+        "type": "object",
+        "required": [
+          "length",
+          "width",
+          "height"
+        ],
+        "properties": {
+          "length": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Length along the sloped (X) axis, in millimeters."
+          },
+          "width": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Width along the Y axis, in millimeters."
+          },
+          "height": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Height of the tall edge in millimeters; the wedge tapers to zero height along length."
+          }
+        },
+        "additionalProperties": false,
+        "title": "WedgeDimensions",
+        "description": "Dimensions for a wedge (sloped right-triangular prism) component."
+      },
+      "ExtrudedProfileCurve": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "through"
+            ],
+            "properties": {
+              "type": {
+                "const": "arc"
+              },
+              "through": {
+                "$ref": "common.schema.json#/$defs/Point2D"
+              }
+            },
+            "additionalProperties": false,
+            "title": "ArcCurve",
+            "description": "The edge from this point to the next is a circular arc through this point, the given through point, and the next point (in that order) -- not a straight line."
+          },
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "controlPoints"
+            ],
+            "properties": {
+              "type": {
+                "const": "bezier"
+              },
+              "controlPoints": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "common.schema.json#/$defs/Point2D"
+                },
+                "description": "One or more control points between this point and the next (one gives a quadratic Bezier curve; two gives cubic; and so on)."
+              }
+            },
+            "additionalProperties": false,
+            "title": "BezierCurve",
+            "description": "The edge from this point to the next is a Bezier curve through this point, the given control point(s) in order, and the next point -- not a straight line."
+          },
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "through"
+            ],
+            "properties": {
+              "type": {
+                "const": "spline"
+              },
+              "through": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "common.schema.json#/$defs/Point2D"
+                },
+                "description": "One or more points the edge passes through (approximately -- brepjs's underlying B-spline approximation, not an exact interpolation), between this point and the next, in order."
+              }
+            },
+            "additionalProperties": false,
+            "title": "SplineCurve",
+            "description": "The edge from this point to the next is a smooth B-spline curve through this point, the given through point(s) in order, and the next point -- not a straight line. Use this instead of `arc` for a smooth curve through more than one intermediate point, or instead of `bezier` when a smooth, organic curve is wanted rather than one shaped by a pulling control point."
+          }
+        ],
+        "title": "ExtrudedProfileCurve",
+        "description": "Describes the edge from a profile point to the next one (in points' authored order) as a curve instead of the default straight line."
+      },
+      "ExtrudedProfilePoint": {
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "properties": {
+          "x": {
+            "type": "number",
+            "title": "X",
+            "description": "X coordinate in millimeters, relative to the part's local origin."
+          },
+          "y": {
+            "type": "number",
+            "title": "Y",
+            "description": "Y coordinate in millimeters, relative to the part's local origin."
+          },
+          "curve": {
+            "$ref": "#/$defs/ExtrudedProfileCurve",
+            "description": "Optional: makes the edge from this point to the next one a curve (arc or Bezier) instead of a straight line. Has no effect on the last point's own coordinates -- it only describes the closing edge back to the first point."
+          }
+        },
+        "additionalProperties": false,
+        "title": "ExtrudedProfilePoint",
+        "description": "One vertex of an extruded_profile's footprint, with an optional curve describing the edge to the next vertex."
+      },
+      "ExtrudedProfileDimensions": {
+        "type": "object",
+        "required": [
+          "points",
+          "height"
+        ],
+        "properties": {
+          "points": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "$ref": "#/$defs/ExtrudedProfilePoint"
+            },
+            "title": "Points",
+            "description": "Vertices of the footprint's polygon in the XY plane, in order around its perimeter (either winding direction; the shape comes out the same either way). The polygon is implicitly closed -- the last point connects back to the first, so don't repeat it. Points may be given in any convenient coordinate space; the generator centers the polygon's bounding box (including any curve's through/control points, not just the vertices themselves) at the component's own local origin, the same convention used for every other component kind, so the same list of points always produces the same shape regardless of where it happens to sit numerically. Each point may set an optional `curve` to make the edge to the *next* point (in this array's order) an arc or a Bezier curve instead of a straight line."
+          },
+          "height": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Extrusion height along the Z axis, in millimeters, from the footprint (at the component's base) upward."
+          }
+        },
+        "additionalProperties": false,
+        "title": "ExtrudedProfileDimensions",
+        "description": "Dimensions for a component whose footprint is an arbitrary polygon -- not just a box or a circle -- extruded to a given height. Use this for a custom cross-section none of the other component kinds can approximate (an L-shaped bracket profile, a custom brace, a rounded/filleted custom footprint via curved points, and so on)."
+      },
+      "SphereDimensions": {
+        "type": "object",
+        "required": [
+          "diameter"
+        ],
+        "properties": {
+          "diameter": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Sphere diameter in millimeters."
+          }
+        },
+        "additionalProperties": false,
+        "title": "SphereDimensions",
+        "description": "Dimensions for a solid sphere component. Like every other kind, a sphere sits with its base (its lowest point) at Z=0 on its own local origin, not centered on Z -- rest a sphere on top of another component with an ordinary on_top_of relation, the same as any other kind, rather than needing to manually offset it upward by its own radius."
+      },
+      "TorusDimensions": {
+        "type": "object",
+        "required": [
+          "outerDiameter",
+          "tubeDiameter"
+        ],
+        "properties": {
+          "outerDiameter": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Overall outer diameter of the whole ring in millimeters, measured across the outside of the tube."
+          },
+          "tubeDiameter": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Diameter of the tube's own circular cross-section in millimeters; must be less than outerDiameter (the ring's major radius, which the tube sweeps around, is (outerDiameter - tubeDiameter) / 2, and must be positive)."
+          }
+        },
+        "additionalProperties": false,
+        "title": "TorusDimensions",
+        "description": "Dimensions for a solid torus (ring/donut) component, lying flat with its axis along Z by default -- rotate it (for example 90 degrees about X) to stand it up as a loop. Like every other kind, a torus sits with its base at Z=0 on its own local origin, not centered on Z."
+      },
+      "EllipsoidDimensions": {
+        "type": "object",
+        "required": [
+          "lengthX",
+          "lengthY",
+          "lengthZ"
+        ],
+        "properties": {
+          "lengthX": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Full length along the X axis, in millimeters."
+          },
+          "lengthY": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Full length along the Y axis, in millimeters."
+          },
+          "lengthZ": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Full length along the Z axis, in millimeters."
+          }
+        },
+        "additionalProperties": false,
+        "title": "EllipsoidDimensions",
+        "description": "Dimensions for a solid ellipsoid component -- a sphere stretched independently along each axis. Like every other kind, an ellipsoid sits with its base (its lowest point) at Z=0 on its own local origin, not centered on Z."
+      },
+      "RevolveProfileCurve": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "through"
+            ],
+            "properties": {
+              "type": {
+                "const": "arc"
+              },
+              "through": {
+                "$ref": "#/$defs/RevolveProfilePoint"
+              }
+            },
+            "additionalProperties": false,
+            "title": "RevolveArcCurve",
+            "description": "The edge from this point to the next is a circular arc through this point, the given through point, and the next point (in that order) -- not a straight line."
+          },
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "controlPoints"
+            ],
+            "properties": {
+              "type": {
+                "const": "bezier"
+              },
+              "controlPoints": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/RevolveProfilePoint"
+                },
+                "description": "One or more control points between this point and the next (one gives a quadratic Bezier curve; two gives cubic; and so on)."
+              }
+            },
+            "additionalProperties": false,
+            "title": "RevolveBezierCurve",
+            "description": "The edge from this point to the next is a Bezier curve through this point, the given control point(s) in order, and the next point -- not a straight line."
+          },
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "through"
+            ],
+            "properties": {
+              "type": {
+                "const": "spline"
+              },
+              "through": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/RevolveProfilePoint"
+                },
+                "description": "One or more points the edge passes through (approximately -- brepjs's underlying B-spline approximation, not an exact interpolation), between this point and the next, in order."
+              }
+            },
+            "additionalProperties": false,
+            "title": "RevolveSplineCurve",
+            "description": "The edge from this point to the next is a smooth B-spline curve through this point, the given through point(s) in order, and the next point -- not a straight line. Use this instead of `arc` for a smooth curve through more than one intermediate point, or instead of `bezier` when a smooth, organic curve is wanted rather than one shaped by a pulling control point."
+          }
+        ],
+        "title": "RevolveProfileCurve",
+        "description": "Describes the edge from a revolve profile point to the next one (in points' authored order) as a curve instead of the default straight line."
+      },
+      "RevolveProfilePoint": {
+        "type": "object",
+        "required": [
+          "radius",
+          "z"
+        ],
+        "properties": {
+          "radius": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10000,
+            "title": "Radius",
+            "description": "Distance from the revolve axis (Z) in millimeters; must be non-negative -- 0 sits exactly on the axis."
+          },
+          "z": {
+            "type": "number",
+            "title": "Z",
+            "description": "Position along the revolve axis in millimeters, in whatever coordinate space is convenient -- the generator shifts the whole profile's Z range so its minimum lands at the component's own Z=0, the same \"Z=0 at base\" convention as every other kind."
+          },
+          "curve": {
+            "$ref": "#/$defs/RevolveProfileCurve",
+            "description": "Optional: makes the edge from this point to the next one a curve (arc or Bezier) instead of a straight line. Has no effect on the last point's own coordinates -- it only describes the closing edge back to the first point."
+          }
+        },
+        "additionalProperties": false,
+        "title": "RevolveProfilePoint",
+        "description": "One vertex of a revolve profile's cross-section, in the (radius, z) half-plane the profile is revolved around Z from."
+      },
+      "RevolvedProfileDimensions": {
+        "type": "object",
+        "required": [
+          "points"
+        ],
+        "properties": {
+          "points": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "$ref": "#/$defs/RevolveProfilePoint"
+            },
+            "title": "Points",
+            "description": "Vertices of the profile's cross-section in the (radius, z) half-plane, in order around its perimeter (either winding direction), implicitly closed back to the first point -- the same convention as extruded_profile's footprint, just in the revolve axis's half-plane instead of the XY plane. Revolved around the Z axis (by sweepAngle, or a full 360 degrees if omitted) to produce a solid of revolution. A profile that includes radius: 0 at some point produces a solid revolve with no center hole (a knob, a dome); a profile entirely at radius > 0 produces a hollow ring (a torus-like shape) instead. All radius values must be >= 0; the generator shifts the whole profile's Z range so its minimum lands at the component's own Z=0, the same \"Z=0 at base\" convention as every other kind, but does not shift or center radius, since the revolve axis (radius=0) is a fixed reference, not an arbitrary footprint to center."
+          },
+          "sweepAngle": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 360,
+            "default": 360,
+            "title": "Sweep angle",
+            "description": "Angle in degrees to revolve the profile through, measured counterclockwise around the Z axis starting from the +X direction; defaults to a full 360-degree revolution. A value less than 360 produces an open, partial solid of revolution (for example a quarter-round channel), correctly capped with flat faces at each end -- real-kernel-verified."
+          }
+        },
+        "additionalProperties": false,
+        "title": "RevolvedProfileDimensions",
+        "description": "Dimensions for a component whose cross-section (an arbitrary polygon in the (radius, z) half-plane) is revolved around the Z axis to form a solid of revolution -- pulleys, custom shafts, flanges, bushings, knobs, and similar rotationally-symmetric shapes none of the other component kinds can approximate directly."
+      },
+      "LoftProfileSection": {
+        "type": "object",
+        "required": [
+          "points",
+          "z"
+        ],
+        "properties": {
+          "points": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "$ref": "#/$defs/ExtrudedProfilePoint"
+            },
+            "title": "Points",
+            "description": "Vertices of this cross-section's footprint in the XY plane, in order around its perimeter (either winding direction), implicitly closed back to the first point -- the same convention (including optional per-point `curve`) as extruded_profile's own `points`. Centered at this section's own local origin independently of every other section's points, so cross-sections stack concentrically by default."
+          },
+          "z": {
+            "type": "number",
+            "title": "Z",
+            "description": "Height along Z, in millimeters, at which this cross-section sits, in whatever coordinate space is convenient -- the generator shifts every section's Z uniformly so the lowest section's z lands at the component's own Z=0, the same \"Z=0 at base\" convention as every other kind."
+          }
+        },
+        "additionalProperties": false,
+        "title": "LoftProfileSection",
+        "description": "One cross-sectional profile of a loft_profile component, at a given height along Z."
+      },
+      "LoftProfileDimensions": {
+        "type": "object",
+        "required": [
+          "profiles"
+        ],
+        "properties": {
+          "profiles": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "$ref": "#/$defs/LoftProfileSection"
+            },
+            "title": "Profiles",
+            "description": "Cross-sectional profiles to blend between, in order of increasing or decreasing z (order in this array does not need to match z order, but the shape will be more predictable if it does). Profiles may have different numbers of points; brepjs's underlying loft algorithm corresponds vertices automatically. At least 2 profiles are required -- a single profile has nothing to loft to."
+          }
+        },
+        "additionalProperties": false,
+        "title": "LoftProfileDimensions",
+        "description": "Dimensions for a component that blends between 2 or more cross-sectional profiles at different heights -- a square-to-round adapter, a tapered housing, or any other transitional shape none of the other component kinds can approximate directly."
+      },
+      "SweptProfileDimensions": {
+        "type": "object",
+        "required": [
+          "profile",
+          "path"
+        ],
+        "properties": {
+          "profile": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "$ref": "#/$defs/ExtrudedProfilePoint"
+            },
+            "title": "Profile",
+            "description": "Closed cross-section swept along `path`, in the same {x, y} convention (including optional per-point `curve`) as extruded_profile's own `points`. Unlike extruded_profile, this is NOT centered on its own bounding box -- it's authored directly in the path's own local coordinate frame, so a profile point at {x: 0, y: 0} sits exactly on the path's own centerline. Offset the profile deliberately (for example to sweep an off-center channel) by using non-zero coordinates."
+          },
+          "path": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "$ref": "common.schema.json#/$defs/Point3D"
+            },
+            "title": "Path",
+            "description": "The spine to sweep `profile` along: a sequence of 3D points connected by straight lines (curved path segments are not yet supported). path[0] is the component's own local origin (Z=0), the same base convention as every other kind. The first two points must differ only in z -- the path's first segment must run parallel to the Z axis, matching the profile's fixed orientation in the XY plane -- see docs/composable-parts.md for why. No two consecutive points may be identical."
+          }
+        },
+        "additionalProperties": false,
+        "title": "SweptProfileDimensions",
+        "description": "Dimensions for a component built by sweeping an arbitrary closed cross-section along a 3D path -- a cable channel, a handle, a bent standoff, or any other shape that follows a path none of the other component kinds can approximate directly."
+      },
+      "HoleFeatureParameters": {
+        "type": "object",
+        "required": [
+          "diameter"
+        ],
+        "properties": {
+          "diameter": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Hole diameter in millimeters."
+          },
+          "depth": {
+            "oneOf": [
+              {
+                "const": "through"
+              },
+              {
+                "$ref": "common.schema.json#/$defs/Dimension"
+              }
+            ],
+            "description": "Hole depth in millimeters, or \"through\" to cut completely through the target; defaults to a through hole when omitted."
+          },
+          "axis": {
+            "enum": [
+              "x",
+              "y",
+              "z"
+            ],
+            "default": "z",
+            "description": "Axis the hole is drilled along.",
+            "x-printspec-enumLabels": {
+              "x": "X axis",
+              "y": "Y axis",
+              "z": "Z axis"
+            }
+          },
+          "countersink": {
+            "$ref": "common.schema.json#/$defs/Countersink",
+            "description": "Optional countersink for a flat-head fastener."
+          },
+          "counterbore": {
+            "$ref": "common.schema.json#/$defs/Counterbore",
+            "description": "Optional counterbore for a fastener head."
+          }
+        },
+        "additionalProperties": false,
+        "title": "HoleFeatureParameters",
+        "description": "Parameters for a hole feature cut into the target component."
+      },
+      "SlotFeatureParameters": {
+        "type": "object",
+        "required": [
+          "length",
+          "width"
+        ],
+        "properties": {
+          "length": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Slot length in millimeters, measured along its long axis."
+          },
+          "width": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Slot width in millimeters."
+          },
+          "depth": {
+            "oneOf": [
+              {
+                "const": "through"
+              },
+              {
+                "$ref": "common.schema.json#/$defs/Dimension"
+              }
+            ],
+            "description": "Slot depth in millimeters, or \"through\" to cut completely through the target; defaults to a through slot when omitted."
+          },
+          "axis": {
+            "enum": [
+              "x",
+              "y",
+              "z"
+            ],
+            "default": "z",
+            "description": "Axis the slot is cut along.",
+            "x-printspec-enumLabels": {
+              "x": "X axis",
+              "y": "Y axis",
+              "z": "Z axis"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "title": "SlotFeatureParameters",
+        "description": "Parameters for a slot feature cut into the target component."
+      },
+      "FilletFeatureParameters": {
+        "type": "object",
+        "required": [
+          "radius",
+          "edges"
+        ],
+        "properties": {
+          "radius": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Fillet radius in millimeters; must be less than half of the target's smallest relevant dimension."
+          },
+          "edges": {
+            "enum": [
+              "vertical",
+              "top",
+              "bottom",
+              "all"
+            ],
+            "title": "Edges",
+            "description": "Which subset of the target's edges to fillet: \"vertical\" selects the target's edges parallel to its own local Z axis (its vertical corners); \"top\"/\"bottom\" select the perimeter edges of the target's top/bottom face; \"all\" selects every edge on the target (a full 3D round-over, like a soap bar), only supported for kinds with no curved surfaces and no fillets already baked into their own construction (\"box\"/\"plate\"/\"tab\" -- not \"rounded_box\", \"cylinder\"/\"boss\"/\"tube\", or any curved/profile-based kind). Whether a given kind supports a given value depends on its geometry; an unsupported combination is dropped with a warning rather than guessed at. See docs/composable-parts.md.",
+            "x-printspec-enumLabels": {
+              "vertical": "Vertical edges",
+              "top": "Top face perimeter",
+              "bottom": "Bottom face perimeter",
+              "all": "All edges (full round-over)"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "title": "FilletFeatureParameters",
+        "description": "Parameters for a fillet (rounded edge) feature applied to a bounded subset of the target component's edges."
+      },
+      "ChamferFeatureParameters": {
+        "type": "object",
+        "required": [
+          "distance",
+          "edges"
+        ],
+        "properties": {
+          "distance": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Chamfer distance in millimeters, measured along each adjoining face; must be less than half of the target's smallest relevant dimension."
+          },
+          "edges": {
+            "enum": [
+              "vertical",
+              "top",
+              "bottom",
+              "all"
+            ],
+            "title": "Edges",
+            "description": "Which subset of the target's edges to chamfer: \"vertical\" selects the target's edges parallel to its own local Z axis (its vertical corners); \"top\"/\"bottom\" select the perimeter edges of the target's top/bottom face; \"all\" selects every edge on the target, only supported for kinds with no curved surfaces and no fillets already baked into their own construction (\"box\"/\"plate\"/\"tab\" -- not \"rounded_box\", \"cylinder\"/\"boss\"/\"tube\", or any curved/profile-based kind). Whether a given kind supports a given value depends on its geometry; an unsupported combination is dropped with a warning rather than guessed at. See docs/composable-parts.md.",
+            "x-printspec-enumLabels": {
+              "vertical": "Vertical edges",
+              "top": "Top face perimeter",
+              "bottom": "Bottom face perimeter",
+              "all": "All edges (full round-over)"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "title": "ChamferFeatureParameters",
+        "description": "Parameters for a chamfer (beveled edge) feature applied to a bounded subset of the target component's edges."
+      },
+      "TextFeatureParameters": {
+        "type": "object",
+        "required": [
+          "content",
+          "depth",
+          "fontUrl"
+        ],
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Text content to emboss or engrave."
+          },
+          "depth": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Emboss/engrave depth in millimeters. For \"engrave\", must be less than the target's own depth dimension."
+          },
+          "size": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Font size in millimeters (roughly the cap height); defaults to 10 if omitted."
+          },
+          "fontUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to a TrueType/OpenType font file, fetched at runtime when the generated brepjs module is loaded (brepjs has no bundled default font). Must be a scheme `fetch()` can actually retrieve -- an `http(s)://` URL, or a `data:` URI with the font bytes inlined; a local filesystem path or `file://` URL will not work under Node's built-in `fetch`. Required because there is no safe default to fall back to.",
+            "x-printspec-hint": "Point this at a font file your printed part's target environment can actually fetch at generation-verification/build time -- for example a direct link to a Google Fonts TTF file, or a data: URI with a small font embedded."
+          },
+          "mode": {
+            "enum": [
+              "emboss",
+              "engrave"
+            ],
+            "default": "emboss",
+            "description": "Whether the text is raised (emboss) or recessed (engrave)."
+          }
+        },
+        "additionalProperties": false,
+        "title": "TextFeatureParameters",
+        "description": "Parameters for a text feature applied to the target component."
+      },
+      "ShellFeatureParameters": {
+        "type": "object",
+        "required": [
+          "thickness",
+          "openFaces"
+        ],
+        "properties": {
+          "thickness": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Wall thickness in millimeters, measured inward from the target's outer surface; must be less than half of the target's smallest relevant dimension."
+          },
+          "openFaces": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "top",
+                "bottom",
+                "front",
+                "back",
+                "left",
+                "right",
+                "side"
+              ]
+            },
+            "title": "Open faces",
+            "description": "Faces of the target's bounding box to remove (open up), using the same face convention as Relation.face. At least one is required -- the underlying brepjs shell operation has no \"fully sealed\" mode. Which faces are actually supported depends on the target component's kind; an unsupported face is dropped with a warning rather than guessed at. See docs/composable-parts.md.",
+            "x-printspec-enumLabels": {
+              "top": "Top (+Z)",
+              "bottom": "Bottom (-Z)",
+              "front": "Front (-Y)",
+              "back": "Back (+Y)",
+              "left": "Left (-X)",
+              "right": "Right (+X)",
+              "side": "Side (cylindrical, +X)"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "title": "ShellFeatureParameters",
+        "description": "Parameters for a shell (hollow-out) feature applied to the target component."
+      },
+      "ThreadFeatureParameters": {
+        "type": "object",
+        "required": [
+          "pitch",
+          "height"
+        ],
+        "properties": {
+          "pitch": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Axial distance per full turn, in millimeters."
+          },
+          "height": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Total thread length along the target's axis, in millimeters, starting at the feature's own resolved position (Z=0 relative to the target, like every other feature)."
+          },
+          "depth": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Radial thread height (crest minus root) in millimeters; defaults to 0.6 x pitch (an approximately ISO 60-degree V profile) when omitted."
+          },
+          "toothHalfWidth": {
+            "$ref": "common.schema.json#/$defs/Dimension",
+            "description": "Axial half-width of the tooth at the root, in millimeters; defaults to 0.42 x pitch when omitted."
+          },
+          "crest": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Axial half-width of a flat crest, in millimeters, giving a trapezoidal tooth instead of a pointed V; 0 (default) is a sharp V (ISO/UN). Use a positive value for a power-screw profile (roughly 0.18 x pitch for Acme/trapezoidal, near toothHalfWidth for a square thread). Must be less than toothHalfWidth."
+          },
+          "sectionsPerTurn": {
+            "type": "integer",
+            "minimum": 3,
+            "default": 20,
+            "description": "Loft sections per turn; higher is smoother but slower to generate."
+          },
+          "lefthand": {
+            "type": "boolean",
+            "default": false,
+            "description": "Left-handed thread."
+          },
+          "mode": {
+            "enum": [
+              "external",
+              "internal"
+            ],
+            "default": "external",
+            "description": "\"external\" fuses the thread ridge onto the target's outer surface (a printed screw/bolt/threaded post) -- valid targets are a \"cylinder\", \"boss\", or \"tube\" component. \"internal\" cuts the thread ridge from the target's inner bore (a printed nut/threaded insert) -- valid targets are a \"tube\" component (its own inner bore) or a \"hole\" feature (its own bore).",
+            "x-printspec-enumLabels": {
+              "external": "External (add, on outer surface)",
+              "internal": "Internal (cut, in inner bore)"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "title": "ThreadFeatureParameters",
+        "description": "Parameters for a thread feature applied to the target component -- a real helical screw-thread ridge built via brepjs's thread() operation. The thread's own radius is not author-specified; it is derived directly from the target's own diameter/outerDiameter/innerDiameter (whichever applies), so the thread always sits exactly flush with the surface it belongs to."
+      },
+      "DimensionRef": {
+        "type": "object",
+        "required": [
+          "ref",
+          "key"
+        ],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref",
+            "description": "Id of the component or feature whose dimensions/parameters this references."
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Key within the referenced component's `dimensions` object or feature's `parameters` object, for example \"diameter\" or \"radius\"."
+          }
+        },
+        "additionalProperties": false,
+        "title": "DimensionRef",
+        "description": "References a single already-authored numeric value from a component's `dimensions` or a feature's `parameters`, for use in a `dimension` constraint."
+      },
+      "DimensionConstraint": {
+        "type": "object",
+        "required": [
+          "type",
+          "left",
+          "operator",
+          "right"
+        ],
+        "properties": {
+          "type": {
+            "const": "dimension"
+          },
+          "id": {
+            "$ref": "#/$defs/Id",
+            "description": "Optional identifier used in validation error messages; if omitted, the constraint's position in the array is used instead."
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional human-readable explanation of intent, for example \"boss must clear the mounting hole with at least 0.2mm radial play\"."
+          },
+          "left": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "$ref": "#/$defs/DimensionRef"
+              }
+            ],
+            "title": "Left",
+            "description": "Left-hand value: a literal number, or a reference to a component's dimension or feature's parameter."
+          },
+          "operator": {
+            "enum": [
+              "<",
+              "<=",
+              ">",
+              ">=",
+              "==",
+              "!="
+            ],
+            "title": "Operator"
+          },
+          "right": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "$ref": "#/$defs/DimensionRef"
+              }
+            ],
+            "title": "Right",
+            "description": "Right-hand value: a literal number, or a reference to a component's dimension or feature's parameter."
+          },
+          "margin": {
+            "type": "number",
+            "default": 0,
+            "title": "Margin",
+            "description": "Added to the right-hand value before comparing, for example to require a minimum clearance: `left >= right + margin` with `margin: 0.2` requires left to exceed right by at least 0.2mm, not just be greater."
+          }
+        },
+        "additionalProperties": false,
+        "title": "DimensionConstraint",
+        "description": "Asserts a numeric relationship between two dimension/parameter values (or literals), checked at validation time against the part's already-authored numbers -- not solved for. Every value referenced must already be concretely specified elsewhere in the spec (a component's `dimensions`, a feature's `parameters`); this only validates the numbers that are already there, the same way the schema's built-in checks do (for example a hole's diameter against its target's width), just author-expressible for relationships the schema doesn't hardcode."
+      },
+      "ClearanceConstraint": {
+        "type": "object",
+        "required": [
+          "type",
+          "a",
+          "b",
+          "minDistance"
+        ],
+        "properties": {
+          "type": {
+            "const": "clearance"
+          },
+          "id": {
+            "$ref": "#/$defs/Id",
+            "description": "Optional identifier used in validation error messages; if omitted, the constraint's position in the array is used instead."
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional human-readable explanation of intent, for example \"latch arm must clear the housing wall by 0.3mm to move freely\"."
+          },
+          "a": {
+            "type": "string",
+            "title": "A",
+            "description": "Id of the first component this clearance constraint checks. Must be a component id (not a feature or group id) with well-defined geometry (not `rib`/`wedge`, which have no bounding box to measure a gap against)."
+          },
+          "b": {
+            "type": "string",
+            "title": "B",
+            "description": "Id of the second component this clearance constraint checks; same restrictions as `a`, and must be a different component."
+          },
+          "minDistance": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Minimum distance",
+            "description": "Minimum required gap in millimeters between a's and b's fully resolved geometry (every pattern instance of each, if patterned). 0 means they must not overlap but may touch."
+          }
+        },
+        "additionalProperties": false,
+        "title": "ClearanceConstraint",
+        "description": "Asserts a minimum spatial gap between two components -- unlike `dimension` constraints (checked by semantic validation, shared by both languages, against already-authored numbers), this needs each component's fully resolved world position (including relations, rotation, and group/pattern composition), which only the TypeScript brepjs generator can compute; semantic validation only checks that `a`/`b` reference real, geometrically well-defined components, not whether the constraint actually holds. A violated `clearance` constraint is reported as a `generateBrepJs` warning, not a semantic validation error, and only when generating with brepjs -- there is no Python-side equivalent, since the Python package has no composable_part generator at all. Approximated the same way the generator's connectivity check already is: via each component's axis-aligned bounding box (every pattern instance of it), not real boolean geometry, so it can miss a real gap between two components whose *boxes* still overlap. See `examples/composable/clearance-fit-boss-and-cap.json`, which predates this constraint type and expresses the same clearance relationship as a `dimension` constraint on diameters instead (still the better choice whenever the clearance is really just a dimension comparison, as it is there); use `clearance` when the two components' relative position, not just their sizes, is what actually needs checking."
+      }
+    },
     "properties": {
       "type": {
         "const": "composable_part",
@@ -1042,7 +2233,7 @@ export const bundledSchemas = {
           ],
           "properties": {
             "id": {
-              "type": "string"
+              "$ref": "#/$defs/Id"
             },
             "name": {
               "type": "string"
@@ -1060,50 +2251,51 @@ export const bundledSchemas = {
                 "tab",
                 "boss",
                 "rib",
-                "wedge"
+                "wedge",
+                "extruded_profile",
+                "sphere",
+                "torus",
+                "ellipsoid",
+                "revolved_profile",
+                "loft_profile",
+                "swept_profile"
               ]
             },
             "operation": {
               "enum": [
                 "add",
-                "subtract"
+                "subtract",
+                "intersect"
               ]
+            },
+            "appliesTo": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "description": "Optional list of component ids this operation applies to. For a \"subtract\" or \"intersect\" component, this scopes the operation to specific components instead of everything added so far (the default when omitted); has no effect on \"add\" components."
             },
             "dimensions": {
               "type": "object",
-              "additionalProperties": {
-                "type": "number",
-                "exclusiveMinimum": 0
-              }
+              "description": "Kind-specific dimensions; the required and allowed keys depend on this component's kind."
             },
             "position": {
-              "$ref": "common.schema.json#/$defs/Point3D"
+              "$ref": "common.schema.json#/$defs/Point3D",
+              "title": "Position",
+              "description": "Position in millimeters of this component's local origin, relative to the part's local origin (or, when relation is set, relative to the related component). Every component kind is modeled centered on its own local origin along X and Y, with Z=0 at its base and its height/thickness extending in +Z; rotation, if set, is applied before this translation."
+            },
+            "rotation": {
+              "$ref": "common.schema.json#/$defs/Point3D",
+              "title": "Rotation",
+              "description": "Optional rotation in degrees around this component's local origin, applied before translation by position. Rotations are extrinsic (fixed-axis) and applied in X, then Y, then Z order."
             },
             "relation": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "enum": [
-                    "absolute",
-                    "on_top_of",
-                    "attached_to_face",
-                    "centered_on",
-                    "aligned_with",
-                    "offset_from",
-                    "mirrored_from"
-                  ]
-                },
-                "target": {
-                  "type": "string"
-                },
-                "face": {
-                  "type": "string"
-                }
-              },
-              "additionalProperties": true
+              "$ref": "#/$defs/Relation"
             },
             "pattern": {
-              "$ref": "common.schema.json#/$defs/Pattern"
+              "$ref": "common.schema.json#/$defs/Pattern",
+              "description": "Optional repetition of this component. All instances share this component's single `id` and are not individually addressable by other features/relations/groups; author separate components instead if instances need individual treatment. The resolved position (from `position`/`relation`) is the center of the pattern, not its first instance. See docs/composable-parts.md for the exact per-instance offset rule."
             },
             "materialRole": {
               "enum": [
@@ -1115,7 +2307,265 @@ export const bundledSchemas = {
               ]
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "box"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/BoxDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "rounded_box"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/RoundedBoxDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "cylinder"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/CylinderDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "tube"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/TubeDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "plate"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/PlateDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "tab"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/TabDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "boss"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/BossDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "rib"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/RibDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "wedge"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/WedgeDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "extruded_profile"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/ExtrudedProfileDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "sphere"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/SphereDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "torus"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/TorusDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "ellipsoid"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/EllipsoidDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "revolved_profile"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/RevolvedProfileDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "loft_profile"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/LoftProfileDimensions"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "swept_profile"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "dimensions": {
+                    "$ref": "#/$defs/SweptProfileDimensions"
+                  }
+                }
+              }
+            }
+          ]
         }
       },
       "features": {
@@ -1129,7 +2579,11 @@ export const bundledSchemas = {
           ],
           "properties": {
             "id": {
-              "type": "string"
+              "$ref": "#/$defs/Id"
+            },
+            "description": {
+              "type": "string",
+              "description": "Optional human-readable notes explaining why this feature exists or how it should be implemented, for example \"M3 clearance hole for the standoff screw\"."
             },
             "kind": {
               "enum": [
@@ -1139,33 +2593,203 @@ export const bundledSchemas = {
                 "countersink",
                 "fillet",
                 "chamfer",
-                "text"
+                "text",
+                "shell",
+                "thread"
               ]
             },
             "target": {
-              "type": "string"
+              "type": "string",
+              "description": "Id of the component (or feature, for stacked features such as a counterbore on top of a hole) this feature applies to."
             },
             "position": {
-              "$ref": "common.schema.json#/$defs/Point3D"
+              "$ref": "common.schema.json#/$defs/Point3D",
+              "title": "Position",
+              "description": "Position in millimeters, relative to the target's local origin (or, when relation is set, relative to the related component), using the same origin convention as component position: centered along X and Y, with Z=0 at the target's base."
             },
             "relation": {
-              "type": "object"
+              "$ref": "#/$defs/Relation"
             },
             "pattern": {
-              "$ref": "common.schema.json#/$defs/Pattern"
+              "$ref": "common.schema.json#/$defs/Pattern",
+              "description": "Optional repetition of this feature (for example a bolt circle of holes). All instances share this feature's single `id` and are not individually addressable; author separate features instead if instances need individual treatment. The resolved position (from `position`/`relation`) is the center of the pattern, not its first instance. See docs/composable-parts.md for the exact per-instance offset rule."
             },
             "parameters": {
-              "type": "object"
+              "type": "object",
+              "description": "Kind-specific parameters; the required and allowed keys depend on this feature's kind."
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "hole"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "parameters": {
+                    "$ref": "#/$defs/HoleFeatureParameters"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "slot"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "parameters": {
+                    "$ref": "#/$defs/SlotFeatureParameters"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "counterbore"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "parameters": {
+                    "$ref": "common.schema.json#/$defs/Counterbore"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "countersink"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "parameters": {
+                    "$ref": "common.schema.json#/$defs/Countersink"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "fillet"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "parameters": {
+                    "$ref": "#/$defs/FilletFeatureParameters"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "chamfer"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "parameters": {
+                    "$ref": "#/$defs/ChamferFeatureParameters"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "text"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "parameters": {
+                    "$ref": "#/$defs/TextFeatureParameters"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "shell"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "parameters": {
+                    "$ref": "#/$defs/ShellFeatureParameters"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "thread"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "parameters": {
+                    "$ref": "#/$defs/ThreadFeatureParameters"
+                  }
+                }
+              }
+            }
+          ]
         }
+      },
+      "groups": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/Group"
+        },
+        "title": "Groups",
+        "description": "Optional named collections of components that can be positioned, rotated, or targeted by a relation as a single unit. See docs/composable-parts.md for how group transforms compose with each member's own position/rotation."
       },
       "constraints": {
         "type": "array",
         "items": {
-          "type": "object"
-        }
+          "oneOf": [
+            {
+              "$ref": "#/$defs/DimensionConstraint"
+            },
+            {
+              "$ref": "#/$defs/ClearanceConstraint"
+            }
+          ]
+        },
+        "title": "Constraints",
+        "description": "Optional declarative assertions, for example \"boss diameter must be less than hole diameter minus 0.2mm clearance\" (a `dimension` constraint) or \"the latch arm must clear the housing wall by 0.3mm\" (a `clearance` constraint). `dimension` constraints are checked at validation time (both languages) against the part's already-authored dimension/parameter values, not solved for. `clearance` constraints need each component's fully resolved world position, so they can only be evaluated by the TypeScript brepjs generator (reported as a warning if violated), not by semantic validation in either language -- see ClearanceConstraint's own description."
       },
       "hardware": {
         "type": "array",
@@ -1175,13 +2799,13 @@ export const bundledSchemas = {
       }
     },
     "additionalProperties": false,
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/composable-part.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/composable-part.schema.json",
     "title": "Composable Part",
     "description": "Composable Part schema for printspec documents."
   },
   "drawer-divider.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/drawer-divider.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/drawer-divider.schema.json",
     "type": "object",
     "title": "Drawer divider",
     "description": "Customizable drawer divider strip with optional interlocking notches.",
@@ -1218,7 +2842,7 @@ export const bundledSchemas = {
           "length": {
             "type": "number",
             "title": "Length",
-            "description": "Length parameter.",
+            "description": "Overall divider length in millimeters, running along the drawer.",
             "default": 120,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -1233,7 +2857,7 @@ export const bundledSchemas = {
           "height": {
             "type": "number",
             "title": "Height",
-            "description": "Height parameter.",
+            "description": "Divider height in millimeters, measured from the drawer floor.",
             "default": 40,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -1248,7 +2872,7 @@ export const bundledSchemas = {
           "thickness": {
             "type": "number",
             "title": "Thickness",
-            "description": "Thickness parameter.",
+            "description": "Divider panel thickness in millimeters.",
             "default": 3,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -1263,7 +2887,7 @@ export const bundledSchemas = {
           "notchCount": {
             "type": "integer",
             "title": "Notch count",
-            "description": "Notch count parameter.",
+            "description": "Number of interlocking notches cut into the top edge of the divider.",
             "default": 0,
             "x-printspec-control": "integer",
             "x-printspec-unit": "count",
@@ -1278,7 +2902,7 @@ export const bundledSchemas = {
           "notchWidth": {
             "type": "number",
             "title": "Notch width",
-            "description": "Notch width parameter.",
+            "description": "Notch width in millimeters.",
             "default": 3,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -1293,7 +2917,7 @@ export const bundledSchemas = {
           "notchDepth": {
             "type": "number",
             "title": "Notch depth",
-            "description": "Notch depth parameter.",
+            "description": "Notch depth in millimeters, measured down from the top edge.",
             "default": 10,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -1347,7 +2971,7 @@ export const bundledSchemas = {
   },
   "drill-guide.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/drill-guide.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/drill-guide.schema.json",
     "type": "object",
     "required": [
       "type",
@@ -1575,7 +3199,7 @@ export const bundledSchemas = {
   },
   "electronics-standoff.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/electronics-standoff.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/electronics-standoff.schema.json",
     "type": "object",
     "required": [
       "type",
@@ -1783,7 +3407,7 @@ export const bundledSchemas = {
   },
   "l-bracket.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/l-bracket.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/l-bracket.schema.json",
     "type": "object",
     "required": [
       "type",
@@ -1920,17 +3544,19 @@ export const bundledSchemas = {
             "type": "object",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "Whether to add a reinforcing rib along the inside corner of the bracket."
               },
               "thickness": {
                 "type": "number",
                 "exclusiveMinimum": 0,
-                "maximum": 10000
+                "maximum": 10000,
+                "description": "Rib thickness in millimeters."
               }
             },
             "additionalProperties": false,
             "title": "Rib",
-            "description": "Rib parameter.",
+            "description": "Optional reinforcing rib along the inside corner of the bracket.",
             "x-printspec-control": "number",
             "x-printspec-priority": "advanced"
           }
@@ -2025,13 +3651,13 @@ export const bundledSchemas = {
         "$ref": "project-enclosure-tray.schema.json"
       }
     ],
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/part-family.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/part-family.schema.json",
     "title": "Part Family",
     "description": "Part Family schema for printspec documents."
   },
   "printspec.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/printspec.schema.json",
     "type": "object",
     "required": [
       "printspecVersion",
@@ -2039,7 +3665,7 @@ export const bundledSchemas = {
     ],
     "properties": {
       "printspecVersion": {
-        "const": "0.1.0"
+        "const": "0.2.0"
       },
       "units": {
         "const": "mm"
@@ -2104,7 +3730,7 @@ export const bundledSchemas = {
   },
   "project-enclosure-tray.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/project-enclosure-tray.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/project-enclosure-tray.schema.json",
     "type": "object",
     "title": "Project enclosure tray",
     "description": "Open tray for low-voltage electronics and project organization.",
@@ -2143,7 +3769,7 @@ export const bundledSchemas = {
           "outerWidth": {
             "type": "number",
             "title": "Outer width",
-            "description": "Outer width parameter.",
+            "description": "Overall tray width in millimeters, including walls.",
             "default": 80,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -2158,7 +3784,7 @@ export const bundledSchemas = {
           "outerDepth": {
             "type": "number",
             "title": "Outer depth",
-            "description": "Outer depth parameter.",
+            "description": "Overall tray depth in millimeters, including walls.",
             "default": 50,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -2173,7 +3799,7 @@ export const bundledSchemas = {
           "wallHeight": {
             "type": "number",
             "title": "Wall height",
-            "description": "Wall height parameter.",
+            "description": "Wall height in millimeters, measured from the floor.",
             "default": 15,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -2188,7 +3814,7 @@ export const bundledSchemas = {
           "wallThickness": {
             "type": "number",
             "title": "Wall thickness",
-            "description": "Wall thickness parameter.",
+            "description": "Wall thickness in millimeters.",
             "default": 3,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -2203,7 +3829,7 @@ export const bundledSchemas = {
           "floorThickness": {
             "type": "number",
             "title": "Floor thickness",
-            "description": "Floor thickness parameter.",
+            "description": "Floor thickness in millimeters.",
             "default": 3,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -2218,7 +3844,7 @@ export const bundledSchemas = {
           "cornerRadius": {
             "type": "number",
             "title": "Corner radius",
-            "description": "Corner radius parameter.",
+            "description": "Outer corner radius in millimeters.",
             "default": 4,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -2233,7 +3859,7 @@ export const bundledSchemas = {
           "mountHoleDiameter": {
             "type": "number",
             "title": "Mount hole diameter",
-            "description": "Mount hole diameter parameter.",
+            "description": "Diameter of the floor mounting holes, in millimeters.",
             "default": 3,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -2248,7 +3874,7 @@ export const bundledSchemas = {
           "mountHoleInset": {
             "type": "number",
             "title": "Mount hole inset",
-            "description": "Mount hole inset parameter.",
+            "description": "Distance from each outer edge to the center of the nearest mounting hole, in millimeters.",
             "default": 8,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -2423,13 +4049,13 @@ export const bundledSchemas = {
       }
     },
     "additionalProperties": false,
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/project.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/project.schema.json",
     "title": "Project",
     "description": "Project schema for printspec documents."
   },
   "round-spacer.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/round-spacer.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/round-spacer.schema.json",
     "type": "object",
     "required": [
       "type",
@@ -2610,7 +4236,7 @@ export const bundledSchemas = {
   },
   "rounded-rectangular-plate.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/rounded-rectangular-plate.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/rounded-rectangular-plate.schema.json",
     "type": "object",
     "required": [
       "type",
@@ -2799,7 +4425,7 @@ export const bundledSchemas = {
   },
   "simple-box.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/simple-box.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/simple-box.schema.json",
     "type": "object",
     "required": [
       "type",
@@ -2935,7 +4561,7 @@ export const bundledSchemas = {
               "type": "object"
             },
             "title": "Mounting bosses",
-            "description": "Mounting bosses parameter.",
+            "description": "Optional interior mounting bosses for securing internal components.",
             "x-printspec-control": "array",
             "x-printspec-priority": "advanced",
             "default": []
@@ -2946,7 +4572,7 @@ export const bundledSchemas = {
               "$ref": "common.schema.json#/$defs/Slot"
             },
             "title": "Cable cutouts",
-            "description": "Cable cutouts parameter.",
+            "description": "Optional slots cut into the box walls for cable pass-through.",
             "x-printspec-control": "array",
             "x-printspec-priority": "advanced",
             "default": []
@@ -3015,7 +4641,7 @@ export const bundledSchemas = {
   },
   "simple-lid.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/simple-lid.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/simple-lid.schema.json",
     "type": "object",
     "required": [
       "type",
@@ -3223,7 +4849,7 @@ export const bundledSchemas = {
   },
   "spacer-block.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/spacer-block.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/spacer-block.schema.json",
     "type": "object",
     "required": [
       "type",
@@ -3405,7 +5031,7 @@ export const bundledSchemas = {
   },
   "wall-mount-bracket.schema.json": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://schemas.invisra.ai/printspec/0.1.0/wall-mount-bracket.schema.json",
+    "$id": "https://schemas.invisra.ai/printspec/0.2.0/wall-mount-bracket.schema.json",
     "type": "object",
     "title": "Wall mount bracket",
     "description": "Simple flat wall bracket with a light-duty shelf/tab.",
@@ -3445,7 +5071,7 @@ export const bundledSchemas = {
           "width": {
             "type": "number",
             "title": "Width",
-            "description": "Width parameter.",
+            "description": "Wall plate width in millimeters.",
             "default": 40,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -3460,7 +5086,7 @@ export const bundledSchemas = {
           "height": {
             "type": "number",
             "title": "Height",
-            "description": "Height parameter.",
+            "description": "Wall plate height in millimeters, measured from the bottom of the tab to the top of the plate.",
             "default": 60,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -3475,7 +5101,7 @@ export const bundledSchemas = {
           "thickness": {
             "type": "number",
             "title": "Thickness",
-            "description": "Thickness parameter.",
+            "description": "Wall plate and tab thickness in millimeters.",
             "default": 4,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -3490,7 +5116,7 @@ export const bundledSchemas = {
           "tabDepth": {
             "type": "number",
             "title": "Tab depth",
-            "description": "Tab depth parameter.",
+            "description": "Depth the shelf/tab projects out from the wall plate, in millimeters.",
             "default": 20,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -3505,7 +5131,7 @@ export const bundledSchemas = {
           "screwHoleDiameter": {
             "type": "number",
             "title": "Screw hole diameter",
-            "description": "Screw hole diameter parameter.",
+            "description": "Diameter of the wall-mounting screw holes, in millimeters.",
             "default": 4,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -3520,7 +5146,7 @@ export const bundledSchemas = {
           "screwHoleSpacing": {
             "type": "number",
             "title": "Screw hole spacing",
-            "description": "Screw hole spacing parameter.",
+            "description": "Center-to-center spacing between the wall-mounting screw holes, in millimeters.",
             "default": 36,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",
@@ -3535,7 +5161,7 @@ export const bundledSchemas = {
           "cornerRadius": {
             "type": "number",
             "title": "Corner radius",
-            "description": "Corner radius parameter.",
+            "description": "Outer corner radius in millimeters.",
             "default": 3,
             "x-printspec-control": "number",
             "x-printspec-unit": "mm",

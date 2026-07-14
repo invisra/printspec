@@ -1,6 +1,6 @@
-export type PreviewUnit = 'mm';
-export type PreviewMaterialRole = 'body' | 'hole' | 'reference' | 'warning';
-export type PreviewVector3 = {x: number; y: number; z: number};
+export type PreviewUnit = "mm";
+export type PreviewMaterialRole = "body" | "hole" | "reference" | "warning";
+export type PreviewVector3 = { x: number; y: number; z: number };
 export type PreviewRotationDeg = Partial<PreviewVector3>;
 
 type PreviewObjectBase = {
@@ -12,42 +12,48 @@ type PreviewObjectBase = {
 };
 
 export type PreviewBox = PreviewObjectBase & {
-  kind: 'box';
+  kind: "box";
   dimensionsMm: PreviewVector3;
 };
 
 export type PreviewRoundedBox = PreviewObjectBase & {
-  kind: 'roundedBox';
+  kind: "roundedBox";
   dimensionsMm: PreviewVector3;
   radiusMm: number;
 };
 
 export type PreviewCylinder = PreviewObjectBase & {
-  kind: 'cylinder';
+  kind: "cylinder";
   radiusMm: number;
   depthMm: number;
-  axis?: 'x' | 'y' | 'z';
+  axis?: "x" | "y" | "z";
 };
 
 export type PreviewHoleMarker = PreviewObjectBase & {
-  kind: 'hole_marker';
+  kind: "hole_marker";
   radiusMm: number;
   depthMm: number;
-  axis?: 'x' | 'y' | 'z';
+  axis?: "x" | "y" | "z";
 };
 
 export type PreviewSlotMarker = PreviewObjectBase & {
-  kind: 'slot_marker';
+  kind: "slot_marker";
   dimensionsMm: PreviewVector3;
 };
 
 export type PreviewAxisMarker = PreviewObjectBase & {
-  kind: 'axis_marker';
-  axis: 'x' | 'y' | 'z';
+  kind: "axis_marker";
+  axis: "x" | "y" | "z";
   lengthMm: number;
 };
 
-export type PreviewObject = PreviewBox | PreviewCylinder | PreviewRoundedBox | PreviewHoleMarker | PreviewSlotMarker | PreviewAxisMarker;
+export type PreviewObject =
+  | PreviewBox
+  | PreviewCylinder
+  | PreviewRoundedBox
+  | PreviewHoleMarker
+  | PreviewSlotMarker
+  | PreviewAxisMarker;
 
 export type PreviewScene = {
   units: PreviewUnit;
@@ -59,5 +65,5 @@ export type PreviewScene = {
 };
 
 export type PreviewGenerationResult =
-  | {supported: true; scene: PreviewScene; warnings: string[]}
-  | {supported: false; message: string; warnings: string[]; errors?: string[]};
+  | { supported: true; scene: PreviewScene; warnings: string[] }
+  | { supported: false; message: string; warnings: string[]; errors?: string[] };

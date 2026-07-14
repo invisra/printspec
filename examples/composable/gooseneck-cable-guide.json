@@ -1,0 +1,40 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Gooseneck Cable Guide",
+    "description": "A wall-mounted cable guide arm: a square channel swept along a bent 3D path (up, over, and partway back down) via `swept_profile` and brepjs's real `sweep()` operation -- a shape none of the other component kinds can approximate directly. The path's first segment runs straight up (parallel to Z), matching the profile's fixed orientation, then bends twice.",
+    "components": [
+      {
+        "id": "guide",
+        "kind": "swept_profile",
+        "operation": "add",
+        "description": "6mm square channel, swept up 15mm, over 20mm, then back down 10mm.",
+        "dimensions": {
+          "profile": [
+            { "x": -3, "y": -3 },
+            { "x": 3, "y": -3 },
+            { "x": 3, "y": 3 },
+            { "x": -3, "y": 3 }
+          ],
+          "path": [
+            { "x": 0, "y": 0, "z": 0 },
+            { "x": 0, "y": 0, "z": 15 },
+            { "x": 20, "y": 0, "z": 15 },
+            { "x": 20, "y": 0, "z": 5 }
+          ]
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PETG",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

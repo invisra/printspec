@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/simple-box.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/simple-box.schema.json",
   "type": "object",
   "required": [
     "type",
@@ -136,7 +136,7 @@
             "type": "object"
           },
           "title": "Mounting bosses",
-          "description": "Mounting bosses parameter.",
+          "description": "Optional interior mounting bosses for securing internal components.",
           "x-printspec-control": "array",
           "x-printspec-priority": "advanced",
           "default": []
@@ -147,7 +147,7 @@
             "$ref": "common.schema.json#/$defs/Slot"
           },
           "title": "Cable cutouts",
-          "description": "Cable cutouts parameter.",
+          "description": "Optional slots cut into the box walls for cable pass-through.",
           "x-printspec-control": "array",
           "x-printspec-priority": "advanced",
           "default": []

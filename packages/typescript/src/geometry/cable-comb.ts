@@ -1,4 +1,4 @@
-import {num, type Params} from './common.js';
+import { num, type Params } from "./common.js";
 
 export function resolveCableCombGeometry(q: Params) {
   const slotCount = Math.max(0, Math.floor(num(q.slotCount, 6)));
@@ -12,6 +12,19 @@ export function resolveCableCombGeometry(q: Params) {
   const pitch = slotSpacing || slotWidth + toothWidth;
   const occupied = slotCount > 1 ? (slotCount - 1) * pitch + slotWidth : slotWidth;
   const startX = -occupied / 2 + slotWidth / 2;
-  const slots = Array.from({length: slotCount}, (_, i) => ({x: startX + i * pitch, y: width / 2 - slotDepth / 2}));
-  return {slotCount, slotWidth, slotSpacing: pitch, toothWidth, slotDepth, thickness, length, width, slots};
+  const slots = Array.from({ length: slotCount }, (_, i) => ({
+    x: startX + i * pitch,
+    y: width / 2 - slotDepth / 2,
+  }));
+  return {
+    slotCount,
+    slotWidth,
+    slotSpacing: pitch,
+    toothWidth,
+    slotDepth,
+    thickness,
+    length,
+    width,
+    slots,
+  };
 }

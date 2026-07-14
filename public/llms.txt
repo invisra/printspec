@@ -1,0 +1,69 @@
+# printspec
+
+> Open-source JSON Schemas and offline TypeScript/Python tooling (from Invisra) for describing parametric, 3D-printable mechanical parts, with real-BRep-kernel (brepjs/OCCT) verification for the most expressive part type, `composable_part`.
+
+A `printspec` document is `{printspecVersion, units, part, print?, metadata?, hardware?}`. `part.type` selects one of 13 fixed part-family types (box, spacer, bracket, standoff, etc. — each with a small, fixed `parameters` object) or `composable_part` (arbitrary components/features/relations/patterns/groups/constraints — the type this file focuses on). Validate with `validatePrintSpec`/`validate_printspec` (TS/Python, schema + semantic checks) before generating. `generateBrepJs`/`generateOpenScad`/`generateCadQuery` turn a validated spec into source; only `generateBrepJs` supports `composable_part`.
+
+Canonical schema source lives in `schemas/*.schema.json` (synced by `scripts/sync-schemas.mjs` into `packages/typescript/schemas`, `packages/python/printspec/schemas`, and `public/printspec/<version>`) — always edit `schemas/`, never the synced copies, then run `npm run build`.
+
+## Start here
+
+- [docs/getting-started.md](docs/getting-started.md): install, CLI (`printspec validate|to-brepjs|to-openscad|to-cadquery|bom|form-metadata`), first spec.
+- [docs/composable-parts.md](docs/composable-parts.md): the full composable_part authoring reference — read this before authoring anything nontrivial. Long; this file summarizes it.
+- [docs/generators.md](docs/generators.md): what each generator actually emits, per-kind implementation notes, and every real-kernel finding (hazards, dead ends) discovered while building this.
+- [README.md](README.md): install, CLI quickstart, hosted schema URLs (`schemas.invisra.ai`).
+- [examples/composable/](examples/composable/): 27 worked, real-kernel-verified `composable_part` specs, one per nontrivial capability — copy the closest match rather than authoring from scratch.
+
+## composable_part: componentsD
+
+Each component is `{id, kind, operation, dimensions, position?, rotation?, relation?, pattern?, appliesTo?, description?}`. `id` must match `^[a-zA-Z_][a-zA-Z0-9_]*$`. `operation` is `add`, `subtract`, or `intersect` — every kind works with every operation (a `torus` can cut a groove just as well as a `box` can). Every kind sits with its base (lowest point, not center) at Z=0 on its own local origin unless noted, so it composes with relations like any other.
+
+- `box` `{length, width, height}`, `rounded_box` (+ `radius`, own baked-in vertical-edge fillet), `cylinder` `{diameter, height}`, `tube` `{outerDiameter, innerDiameter, height}` (innerDiameter < outerDiameter, checked), `plate`/`tab` `{length, width, thickness}`, `boss` `{diameter, height}` — the box-like family; full relation/pattern/hole-bounds/shell/fillet/chamfer support (mostly — see per-kind exclusions in generators.md).
+- `sphere` `{diameter}`, `torus` `{outerDiameter, tubeDiameter}` (tubeDiameter < outerDiameter, checked), `ellipsoid` `{lengthX, lengthY, lengthZ}` — full relation/hole-bounds support for sphere/torus; ellipsoid excluded from hole-bounds (no single footprint number). None support shell/fillet/chamfer (no flat cap/straight edge).
+- `rib`/`wedge` — tapered gusset profiles; **no AABB at all** (no footprint/depth model) — can't be a relation anchor target (falls back to origin), can't be a `clearance` constraint operand, excluded from the connectivity check, no hole/slot-bounds check.
+- `extruded_profile` `{points: [{x,y,curve?}, ...] (≥3), height}` — arbitrary polygon footprint in the XY plane, extruded along Z. Points may be given in any coordinate space (auto-centered). Has a real AABB.
+- `revolved_profile` `{points: [{radius,z,curve?}, ...] (≥3), sweepAngle? (default 360)}` — cross-section in the (radius,z) half-plane, revolved around Z. `radius=0` allowed (solid) or all `radius>0` (hollow ring). Has a real AABB (max radius, Z span). **Hazard:** an aggressive `curve` through-point on a revolve can hit a hard `REVOLVE_FAILED` kernel error, not just a bad shape — pick a through-point near the arc's natural midpoint; always real-kernel-verify a curved revolve.
+- `loft_profile` `{profiles: [{points, z}, ...] (≥2)}` — blends between 2+ cross-sections at different Z heights (square-to-round adapters, tapers). Each profile centers on its *own* local origin independently. Has a real AABB (widest section).
+- `swept_profile` `{profile: [{x,y,curve?},...] (≥3), path: [{x,y,z},...] (≥2)}` — sweeps a cross-section along a straight-line-segment 3D path (cable channels, handles, bent standoffs). **`profile` is NOT centered** (unlike every other profile kind) — a point at `(0,0)` sits on the path's own centerline; author it in the path's own frame. **The path's first two points must differ only in `z`** (checked at validation time) — the profile is fixed in the XY plane, so the first segment must run parallel to Z; later segments may bend any direction. **No AABB** (like rib/wedge) — same exclusions.
+- Profile `curve` (on `extruded_profile`/`revolved_profile`/`loft_profile`/`swept_profile` points): optional per-point `{type: "arc", through}` | `{type: "bezier", controlPoints: [...]}` | `{type: "spline", through: [...]}` — makes the edge to the *next* point a curve instead of a straight line. `spline` is best for a smooth curve through several points; `arc` needs all 3 points on one true circle (fragile on aggressive bulges, see above); `bezier` pulls toward but doesn't touch its control point(s).
+
+## composable_part: features
+
+Each feature is `{id, kind, target, position?, relation?, pattern?, parameters, description?}`. `target` is a component id, or another feature id for a *stacked* feature (e.g. `counterbore`/`countersink`/`thread` on a `hole`).
+
+- `hole` `{diameter, depth? ("through" or number), axis?}`, `slot` `{length, width, depth?, axis?}`. `hole`'s own `countersink`/`counterbore` sub-properties are schema-accepted but **not implemented** by the generator (warns, does nothing) — author a separate stacked `counterbore`/`countersink` feature targeting the hole instead, the form that actually works.
+- `counterbore`/`countersink` — stack them as their own feature with `target` pointing at the `hole`. **Centered on their own resolved position, not surface-anchored** — review Z placement before manufacturing.
+- `fillet` `{radius, edges}`, `chamfer` `{distance, edges}` — `edges` is `"vertical"`, `"top"`, `"bottom"`, or `"all"` (every edge — a full 3D round-over; **only `box`/`plate`/`tab`** support `"all"`, not curved kinds or `rounded_box`, which already bakes in its own fillet). Support matrix is kind-dependent; unsupported combos warn, don't guess. **Stacking fillet+chamfer on the same target is order-sensitive** — chamfer first, fillet last (the reverse can fail outright at the kernel level).
+- `shell` `{thickness, openFaces: [...]}` — hollows the target; `openFaces` support is kind-dependent (see generators.md); can't shell a patterned/compound target (kernel limitation).
+- `text` `{content, depth, fontUrl, size?, mode? ("emboss"|"engrave")}` — `fontUrl` must be a real fetchable `http(s)://` URL or `data:` URI (no `file://`, no bundled default font).
+- `thread` `{pitch, height, depth?, toothHalfWidth?, crest?, sectionsPerTurn?, lefthand?, mode? ("external"|"internal")}` — a real helical screw-thread ridge. **No `radius` field** — always derived from the target's own `diameter`/`outerDiameter`/`innerDiameter` (external: `cylinder`/`boss`/`tube`; internal: `tube`'s own bore, or a stacked `hole`'s own diameter). The ridge slightly overhangs `[0, height]` at both ends (a real, harmless brepjs characteristic).
+
+## composable_part: relations, patterns, groups, constraints
+
+- **Relations** `{type, target?, face?, mirrorAxis?, inheritRotation?, targetInstance?}`: `absolute` (or omit entirely — position is a plain absolute placement), `on_top_of`, `attached_to_face` (needs `face`: top/bottom/front/back/left/right/side), `centered_on`, `aligned_with`, `offset_from`, `mirrored_from` (needs `mirrorAxis`). `position` is *added on top* of the resolved anchor, not a replacement. `inheritRotation: true` composes the target's fully-resolved rotation onto the dependent (transitively). `targetInstance` (0-based index) anchors to one specific pattern instance instead of the pattern's center — only valid when the target actually has its own pattern (not a group's).
+- **Patterns** `{type, ...}` on a component/feature/group: `rectangular` `{countX, countY, spacingX, spacingY}`, `linear` `{count, spacing, axis?}`, `radial` `{count, radius, startAngle?, sweepAngle?}`. A stacked feature with no pattern of its own only applies once, at the target's pattern center — warns if that looks accidental.
+- **Groups** `{id, memberIds, position?, rotation?, relation?, pattern?}` — a named collection transformable as one unit; a component belongs to at most one transforming group.
+- **Constraints**: `dimension` `{left, right, operator}` (checked at validation time in both languages, against already-authored numbers — not solved for; operands are literals or `{ref, key}` into a component's dimensions/feature's parameters). `clearance` `{a, b, minDistance}` (component ids only, not `rib`/`wedge`/`swept_profile` — needs fully resolved world position, so it's only ever checked by the TypeScript brepjs generator, reported as a warning if violated, not a semantic error).
+
+## brepjs generation and verification
+
+- `generateBrepJs(spec, options?)` is the only generator supporting `composable_part`. `options.isolate: id` (component, feature-with-a-standalone-shape, or group id) emits a module whose `export default` is just that one piece's resolved shape instead of the whole fused part — for inspecting one piece without hand-deriving combined-shape math. `shell`/`fillet`/`chamfer` features have no standalone shape to isolate.
+- Output is a plain `.brep.ts` ES module (`import {...} from 'brepjs'; export default () => shape;`) — no kernel init, no execution, just source text.
+- Real-kernel checks (opt-in, need Node ≥24 + `cd scripts/brepjs-verify && npm install`): `node scripts/brepjs-verify/verify.mjs` (every example, valid+volume), `node scripts/brepjs-verify/inspect.mjs <spec.json> [--isolate <id>] [--snapshot <dir>]` (full report: volume/bounds/center-of-mass/manifold/manufacturability, optional rendered PNGs). Same substrate `brepjs-cad`'s `brep-mcp` MCP server (`run_program`) wraps — **that MCP server has been found broken in at least one environment** (fails every call with `The URL must be of scheme file`, a bug in its own transport, not in printspec); `inspect.mjs`'s direct CLI call is unaffected and is the reliable fallback.
+
+## Known hazards (read before authoring)
+
+- `swept_profile`'s path[0] is its own local origin — a `subtract`/`intersect` operand built from it still needs its own explicit `position`/`relation` to land on the right target; its own coordinates are never automatically aligned to what it's cutting.
+- `revolved_profile` + aggressive `curve` through-points can hit `REVOLVE_FAILED`.
+- `rib`, `wedge`, `swept_profile` have no AABB — no relation-anchor math, no hole/slot-bounds check, no connectivity-check participation, no `clearance` constraint eligibility, no shell/fillet/chamfer.
+- `counterbore`/`countersink` anchor to their own resolved position, not a real surface.
+- Fillet-then-chamfer (in that order) on the same target can fail at the kernel level; chamfer-then-fillet is safe.
+- `twistExtrude()`/`complexExtrude()` (brepjs's own helical-twist/tapered-extrude functions) are silently no-op in the currently pinned brepjs version (confirmed at extreme parameter values) — not used by any feature here; don't build on them without re-verifying against a newer brepjs release first.
+- Every new capability in this project is meant to be real-kernel-verified, not just schema-valid — schema validity does not imply the geometry is sane (see the hazards above). When in doubt, run `inspect.mjs`.
+
+## Optional
+
+- [docs/units-and-coordinates.md](docs/units-and-coordinates.md), [docs/validation.md](docs/validation.md), [docs/part-families.md](docs/part-families.md), [docs/projects-and-assemblies.md](docs/projects-and-assemblies.md), [docs/supplier-hardware.md](docs/supplier-hardware.md), [docs/bundles.md](docs/bundles.md), [docs/browser-editors.md](docs/browser-editors.md), [docs/form-metadata.md](docs/form-metadata.md), [docs/hosted-schemas.md](docs/hosted-schemas.md), [docs/partcad-compatibility.md](docs/partcad-compatibility.md): narrower topics, part-family-specific or infra-specific.
+- [docs/design-principles.md](docs/design-principles.md), [docs/roadmap.md](docs/roadmap.md): project intent and direction, not needed to author a spec.
+- [CHANGELOG.md](CHANGELOG.md): dense, dated record of every feature/fix with the real-kernel reasoning behind it — useful when a capability's exact behavior or a past decision's rationale isn't obvious from the docs alone.
+- [CONTRIBUTING.md](CONTRIBUTING.md): schema-editing workflow (`schemas/` is canonical; run `npm run build` after editing; `npm test` + `.venv`/`pytest` for Python).

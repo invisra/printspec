@@ -1,0 +1,51 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Threaded Post And Nut",
+    "description": "Two components side by side demonstrating both `thread` modes: `post` is a boss with a real external screw thread fused onto its outer surface (brepjs's real `thread()`), and `nut` is a tube with a real internal thread cut into its own bore. Neither is sized to mate with the other -- they're independent demonstrations of the feature, not a matched fastener pair.",
+    "components": [
+      {
+        "id": "post",
+        "kind": "boss",
+        "operation": "add",
+        "description": "A printed screw/threaded post: an M12-ish boss (12mm diameter, 10mm tall) with a 2mm-pitch external thread running its full height.",
+        "dimensions": { "diameter": 12, "height": 10 }
+      },
+      {
+        "id": "nut",
+        "kind": "tube",
+        "operation": "add",
+        "description": "A printed threaded insert/nut: a tube (18mm outer, 12mm inner bore, 10mm tall) with an internal thread cut into its own inner bore.",
+        "position": { "x": 15, "y": 0, "z": 0 },
+        "dimensions": { "outerDiameter": 18, "innerDiameter": 12, "height": 10 }
+      }
+    ],
+    "features": [
+      {
+        "id": "post_thread",
+        "kind": "thread",
+        "target": "post",
+        "description": "External thread fused onto the post's outer surface.",
+        "parameters": { "pitch": 2, "height": 10, "mode": "external" }
+      },
+      {
+        "id": "nut_thread",
+        "kind": "thread",
+        "target": "nut",
+        "description": "Internal thread cut into the nut's own inner bore.",
+        "parameters": { "pitch": 2, "height": 10, "mode": "internal" }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

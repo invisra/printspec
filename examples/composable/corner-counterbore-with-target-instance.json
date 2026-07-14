@@ -1,0 +1,70 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Corner Counterbore With Target Instance",
+    "description": "A mounting plate with a 2x2 corner bolt pattern of holes, where only one corner (an alignment/keying corner) gets a counterbore for a flush fastener head -- relation.targetInstance anchors the counterbore to one specific instance of the patterned hole instead of its pattern center, the addressed alternative to authoring that one corner as a separate, non-patterned hole+counterbore pair.",
+    "components": [
+      {
+        "id": "plate",
+        "kind": "plate",
+        "operation": "add",
+        "description": "Mounting plate.",
+        "dimensions": {
+          "length": 50,
+          "width": 50,
+          "thickness": 5
+        }
+      }
+    ],
+    "features": [
+      {
+        "id": "cornerHoles",
+        "kind": "hole",
+        "target": "plate",
+        "description": "Four-corner bolt pattern, instances indexed 0..3 in (i, j) row-major order per docs/composable-parts.md, \"Patterns\" -- instance 3 is (i=1, j=1), the +X +Y corner.",
+        "relation": {
+          "type": "attached_to_face",
+          "target": "plate",
+          "face": "top"
+        },
+        "pattern": {
+          "type": "rectangular",
+          "countX": 2,
+          "countY": 2,
+          "spacingX": 36,
+          "spacingY": 36
+        },
+        "parameters": {
+          "diameter": 4,
+          "depth": "through"
+        }
+      },
+      {
+        "id": "keyedCornerCounterbore",
+        "kind": "counterbore",
+        "target": "cornerHoles",
+        "description": "Counterbore on just the keying corner (instance 3), not every corner -- deliberately not given a matching pattern of its own.",
+        "relation": {
+          "type": "offset_from",
+          "target": "cornerHoles",
+          "targetInstance": 3
+        },
+        "parameters": {
+          "diameter": 8,
+          "depth": 2.5
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

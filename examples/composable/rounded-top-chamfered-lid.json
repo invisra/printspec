@@ -1,0 +1,53 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Rounded-Top Chamfered Lid",
+    "description": "A simple flat lid plate demonstrating bounded fillet/chamfer: the plate's four vertical corner edges are chamfered first, then the top face's perimeter is filleted for a comfortable, finger-friendly edge -- both features target the same component and stack in declaration order. This order matters: real-kernel testing found the reverse (fillet the top first, then chamfer the now-shortened vertical edges) fails at the kernel level once the vertical edges have been truncated by the top fillet's transition surface, even though this order (chamfer first, so the fillet is the last operation and sees full-length, unmodified vertical edges) works cleanly.",
+    "components": [
+      {
+        "id": "lid",
+        "kind": "plate",
+        "operation": "add",
+        "description": "60x40x5mm flat lid plate.",
+        "dimensions": {
+          "length": 60,
+          "width": 40,
+          "thickness": 5
+        }
+      }
+    ],
+    "features": [
+      {
+        "id": "chamfer_corners",
+        "kind": "chamfer",
+        "target": "lid",
+        "description": "Breaks the plate's four vertical corner edges. Declared before round_top_edge -- see the part description for why this order is required.",
+        "parameters": {
+          "distance": 1,
+          "edges": "vertical"
+        }
+      },
+      {
+        "id": "round_top_edge",
+        "kind": "fillet",
+        "target": "lid",
+        "description": "Rounds the top face's perimeter for a comfortable edge to handle.",
+        "parameters": {
+          "radius": 1.5,
+          "edges": "top"
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

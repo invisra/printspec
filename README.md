@@ -4,7 +4,7 @@
 
 **Status: v0.2.0 experimental**
 
-printspec is an open-source specification and toolkit from Invisra for describing practical, parameterized 3D-printable parts as JSON. The v0.1.0 release focuses on stable schemas, offline TypeScript/Python validation, bundled schema distribution, static hosted schema references, BOM/form helpers, starter source generators, CLI workflows, and deterministic source bundle export—not CAD execution or production manufacturing automation.
+printspec is an open-source specification and toolkit from Invisra for describing practical, parameterized 3D-printable parts as JSON. The v0.2.0 schema release focuses on stable schemas, offline TypeScript/Python validation, bundled schema distribution, static hosted schema references, BOM/form helpers, starter source generators, CLI workflows, and deterministic source bundle export—not CAD execution or production manufacturing automation.
 
 ## Installation
 
@@ -30,6 +30,7 @@ printspec form-metadata rounded_rectangular_plate
 printspec bom examples/projects/simple-enclosure-project.json --format markdown
 printspec to-openscad examples/part-families/round-spacer.basic.json --output round-spacer.scad
 printspec to-cadquery examples/part-families/electronics-standoff.m3.json --output standoff.py
+printspec to-brepjs examples/part-families/round-spacer.basic.json --output round-spacer.brep.ts
 ```
 
 ## Schema URL quick links
@@ -38,10 +39,12 @@ Hosted schemas are public references for documentation and external tooling. Pac
 
 - Base index: <https://schemas.invisra.ai/>
 - Project index: <https://schemas.invisra.ai/printspec/>
-- v0.1.0 index: <https://schemas.invisra.ai/printspec/0.1.0/>
-- Root schema: <https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json>
-- Version manifest: <https://schemas.invisra.ai/printspec/0.1.0/manifest.json>
+- v0.2.0 index: <https://schemas.invisra.ai/printspec/0.2.0/>
+- Root schema: <https://schemas.invisra.ai/printspec/0.2.0/printspec.schema.json>
+- Version manifest: <https://schemas.invisra.ai/printspec/0.2.0/manifest.json>
 - Online validator: <https://schemas.invisra.ai/printspec/validator/>
+- Docs site: <https://schemas.invisra.ai/printspec/0.2.0/docs/> (every `docs/*.md` file rendered to HTML)
+- `llms.txt` for AI agents: <https://schemas.invisra.ai/llms.txt> ([llms.txt](https://llmstxt.org)-convention summary, meant to be fetched as plain text)
 
 The online validator runs locally in your browser; no JSON is uploaded. It is intended for validation and developer debugging only. Manufacturing exports belong in the PartPilot/worker pipeline, not in the static schema-site validator.
 
@@ -51,7 +54,7 @@ The static schema site uses the shared Invisra brand assets pinned to `https://a
 
 ```json
 {
-  "printspecVersion": "0.1.0",
+  "printspecVersion": "0.2.0",
   "units": "mm",
   "part": {
     "type": "round_spacer",
@@ -122,7 +125,7 @@ if generated["supported"]:
 
 ## Supported part families
 
-v0.1.0 includes practical starter schemas and generator support for:
+v0.2.0 includes practical starter schemas and generator support for:
 
 - `rounded_rectangular_plate`
 - `spacer_block`
@@ -185,7 +188,7 @@ printspec list-part-families
 - Browser-safe renderer-neutral visual preview scene generation for initial alpha part families.
 - Optional Three.js adapter at `@invisra/printspec/three` with Three.js as an optional peer dependency.
 
-## What v0.1.0 does not include
+## What v0.2.0 does not include
 
 - Authoritative preview meshes for manufacturing.
 - STL, STEP, or 3MF export.
@@ -208,6 +211,8 @@ printspec is experimental software for describing and generating starter source 
 - Bundle documentation: [docs/bundles.md](docs/bundles.md)
 - Browser/editor metadata: [docs/form-metadata.md](docs/form-metadata.md)
 - v0.1.0 checklist: [docs/v0.1.0-release-checklist.md](docs/v0.1.0-release-checklist.md)
+- Docs site (all of the above, rendered): <https://schemas.invisra.ai/printspec/0.2.0/docs/>
+- `llms.txt` for AI agents: <https://schemas.invisra.ai/llms.txt> ([llms.txt](https://llmstxt.org) convention; also at [llms.txt](llms.txt) in this repository)
 
 ## License
 

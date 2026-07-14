@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Validation | printspec docs</title>
+  <link rel="stylesheet" href="https://assets.invisra.ai/brand/v1/brand.min.css">
+  <link rel="icon" href="https://assets.invisra.ai/brand/v1/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="https://assets.invisra.ai/brand/v1/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="https://assets.invisra.ai/brand/v1/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="https://assets.invisra.ai/brand/v1/apple-touch-icon.png">
+  <meta name="theme-color" content="#020617">
+  <style>
+    :root{color-scheme:dark light}body.invisra-theme{margin:0;background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.22),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.18),transparent 30rem),var(--invisra-bg,#020617);color:var(--invisra-text,#e5eefb);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.invisra-header{background:color-mix(in srgb,var(--invisra-bg,#020617),transparent 10%);border-bottom:1px solid var(--invisra-border,rgba(148,163,184,.22));box-shadow:none}.invisra-header::before,.invisra-header::after{display:none;background:transparent;box-shadow:none}html[data-theme=light] .invisra-header{background:rgba(255,255,255,.82);border-bottom-color:rgba(15,23,42,.12);box-shadow:0 1px 0 rgba(255,255,255,.78) inset,0 12px 28px rgba(15,23,42,.06)}html[data-theme=light] body.invisra-theme{background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.12),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.1),transparent 30rem),var(--invisra-bg,#f8fafc)}html[data-theme=light] .invisra-shell,html[data-theme=light] footer{background:transparent;color:var(--invisra-text,#0f172a)}html[data-theme=light] .invisra-header::before,html[data-theme=light] .invisra-header::after{display:none;background:transparent;box-shadow:none}.site-nav{display:flex;align-items:center;justify-content:space-between;gap:1rem}.site-links{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}.site-links a,.card-grid .invisra-card>a,.link-row a:not(.invisra-button),.schema h3 a{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border:1px solid var(--invisra-border,rgba(148,163,184,.24));border-radius:999px;background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 28%);box-shadow:0 10px 24px rgba(15,23,42,.08);color:var(--invisra-text,#e5eefb);text-decoration:none;font-weight:800;line-height:1.1;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}.site-links a{padding:.52rem .78rem;font-size:.94rem}.card-grid .invisra-card>a,.link-row a:not(.invisra-button),.schema h3 a{padding:.62rem .9rem}.site-links a:hover,.card-grid .invisra-card>a:hover,.link-row a:not(.invisra-button):hover,.schema h3 a:hover{border-color:color-mix(in srgb,var(--invisra-accent,#38bdf8),transparent 35%);background:color-mix(in srgb,var(--invisra-accent,#38bdf8),transparent 88%);box-shadow:0 14px 30px rgba(14,165,233,.14);transform:translateY(-1px)}.schema-grid,.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}.card-grid .invisra-card{text-align:center;padding:clamp(1.25rem,3vw,2rem)}.card-grid .invisra-card ul{display:inline-block;text-align:left;margin-left:0;padding-left:1.2rem}.card-grid .link-row{justify-content:center}.card-grid pre{text-align:left}.hero-card{padding:clamp(1.5rem,4vw,3rem);margin:2rem auto;text-align:center}.hero-card .lede{margin-left:auto;margin-right:auto}.hero-card .hero-actions,.hero-card .link-row{justify-content:center}.hero-actions,.link-row{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center}.schema{text-align:center;padding:clamp(1.25rem,3vw,2rem)}.schema h3{margin-left:auto;margin-right:auto}.schema code,.invisra-code{overflow-wrap:anywhere}.muted{color:var(--invisra-muted,#94a3b8)}footer{padding:2rem 0;color:var(--invisra-muted,#94a3b8)}pre.invisra-code{white-space:pre-wrap;padding:1rem;border-radius:1rem}.theme-toggle{padding:.52rem .8rem}@media(max-width:760px){.site-nav{align-items:flex-start;flex-direction:column}.site-links{gap:.6rem}}.doc-body{max-width:52rem}.doc-body h1,.doc-body h2,.doc-body h3{line-height:1.25}.doc-body h2{margin-top:2.5rem;border-top:1px solid var(--invisra-border,rgba(148,163,184,.22));padding-top:1.5rem}.doc-body pre{background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 20%);border:1px solid var(--invisra-border,rgba(148,163,184,.22));border-radius:.75rem;padding:1rem;overflow-x:auto}.doc-body code{background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 35%);border-radius:.35rem;padding:.1em .35em;overflow-wrap:anywhere}.doc-body pre code{background:none;padding:0}.doc-body table{border-collapse:collapse;display:block;overflow-x:auto;width:max-content;max-width:100%}.doc-body th,.doc-body td{border:1px solid var(--invisra-border,rgba(148,163,184,.22));padding:.4rem .7rem;text-align:left}.doc-body blockquote{margin:1rem 0;padding:.25rem 1rem;border-left:3px solid var(--invisra-accent,#38bdf8);color:var(--invisra-muted,#94a3b8)}.doc-index-list{list-style:none;margin:0;padding:0;display:grid;gap:.6rem}.doc-index-list a{font-weight:700}
+  </style>
+</head>
+<body class="invisra-theme">
+<script>
+  (function () {
+    var key = 'invisra-theme';
+    var saved = localStorage.getItem(key);
+    var theme = saved === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+
+    function updateThemeButton() {
+      var button = document.querySelector('[data-theme-toggle]');
+      if (button) {
+        button.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        button.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme');
+      }
+    }
+
+    window.toggleInvisraTheme = function () {
+      var current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+      var next = current === 'dark' ? 'light' : 'dark';
+      theme = next;
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem(key, next);
+      updateThemeButton();
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateThemeButton);
+    } else {
+      updateThemeButton();
+    }
+  })();
+</script>
+<header class="invisra-header">
+  <div class="invisra-container site-nav">
+    <a class="invisra-logo-lockup" href="/printspec/" aria-label="printspec home">
+      <svg class="invisra-logo-mark invisra-logo-mark-sm" viewBox="0 0 160 380" role="img" aria-hidden="true" focusable="false"><path fill="currentColor" d="M80 6 8 222 38 256 80 356 122 256 152 222Z M80 118 112 214 80 248 48 214Z"></path></svg>
+      <span class="invisra-logo-wordmark">Invisra</span>
+      <span class="invisra-text-muted">/ printspec</span>
+    </a>
+    <nav class="site-links" aria-label="Site navigation">
+      <a href="/printspec/">Home</a>
+      <a href="/printspec/0.2.0/docs/">Docs</a>
+      <a href="/printspec/validator/">Validator</a>
+      <a href="/printspec/0.2.0/">Schemas</a>
+      <a href="/llms.txt">llms.txt</a>
+      <a href="https://cad.invisra.ai">PartPilot</a>
+      <a href="https://invisra.ai">Invisra</a>
+      <button type="button" class="invisra-button invisra-button-ghost theme-toggle" data-theme-toggle onclick="window.toggleInvisraTheme()" aria-label="Switch theme">Light</button>
+    </nav>
+  </div>
+</header>
+<main class="invisra-shell">
+  <section class="invisra-container">
+    <p class="link-row"><a href="./">&larr; All docs</a><a href="https://github.com/invisra/printspec/blob/main/docs/validation.md">View source on GitHub</a></p>
+    <article class="invisra-card doc-body">
+<h1 id="validation">Validation</h1>
+<p>printspec v0.2.0 uses JSON Schema as the structural source of truth. The schemas define required fields, known object shapes, numeric ranges, URL formats, allowed enums, and top-level <code>part</code> versus <code>project</code> exclusivity.</p>
+<p>Both toolkits expose matching result shapes:</p>
+<pre><code class="language-ts">validatePrintSpec(spec, { semantic: true }) // { valid: boolean, errors: string[] }
+</code></pre>
+<pre><code class="language-py">validate_printspec(spec, semantic=True) # {&quot;valid&quot;: bool, &quot;errors&quot;: list[str]}
+</code></pre>
+<p>Validation runs in two layers:</p>
+<ol>
+<li><strong>JSON Schema validation</strong> checks structural correctness using local schemas synchronized from <code>schemas/</code>. TypeScript uses Ajv Draft 2020-12 and Python uses <code>jsonschema</code> with <code>referencing</code>; both validators register local schemas before validation and do not fetch remote schemas.</li>
+<li><strong>Semantic validation</strong> runs only after schema validation succeeds, unless disabled with <code>semantic: false</code> / <code>semantic=False</code>. It catches cross-reference and geometry sanity issues such as duplicate ids, broken feature targets, broken project relationships, oversized rounded-plate corner radii, inner diameters larger than outer diameters, wall thicknesses that are too large, and obvious hole-fit issues where implemented.</li>
+</ol>
+<p>The schemas use stable, public-looking <code>$id</code> values such as <code>https://schemas.invisra.ai/printspec/0.2.0/printspec.schema.json</code>. These identifiers are schema resource names, not a network dependency. The Python validator registers every local schema with <code>jsonschema</code>/<code>referencing</code>, and the TypeScript validator registers every local schema with Ajv 2020, so relative <code>$ref</code> values resolve offline.</p>
+<p>Validation must not fetch schemas from <code>schemas.invisra.ai</code> or any other remote host. Schema tests also meta-validate every <code>schemas/*.schema.json</code> file against Draft 2020-12 so schema authoring mistakes fail before fixture validation. The schemas are experimental until printspec 1.0, and the <code>$id</code> URLs are served publicly for documentation, tooling, and cross-package references.</p>
+<h2 id="hosted-schema-references">Hosted schema references</h2>
+<p>The repository-level <code>schemas/</code> directory is the source of truth. <code>npm run sync:schemas</code> creates synchronized artifacts in <code>public/printspec/0.2.0/</code> for static hosting and <code>packages/python/printspec/schemas/</code> for Python package data, and <code>packages/typescript/schemas/</code> for TypeScript package data; do not manually maintain divergent copies in either destination. Vercel serves the synchronized JSON Schema files from <code>https://schemas.invisra.ai/printspec/0.2.0/</code> with schema JSON content-type, permissive CORS, and immutable caching headers.</p>
+<p>Hosted schema URLs are public references for documentation and external JSON Schema tooling. They are not required by printspec&#39;s validators: Python validation uses bundled package schemas and TypeScript validation loads bundled package-local schemas first and registers local schemas before validation, so normal validation works offline and must not fetch schemas from the network.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<p>If validation reports a schema resolution error that tries to fetch <code>schemas.invisra.ai</code>, local schema registration is broken. Ensure <code>npm run sync:schemas</code> has produced <code>packages/python/printspec/schemas/</code> for Python installs and <code>packages/typescript/schemas/</code> for TypeScript installs, or that a source checkout can locate the repository-level <code>schemas/</code> directory, and that every <code>*.schema.json</code> file has the expected unique <code>$id</code> value.</p>
+<p>Error text is intentionally compact. TypeScript and Python messages are not guaranteed to be byte-for-byte identical, but they should agree on whether shared examples and fixtures are valid.</p>
+<h2 id="v0-2-0-release-candidate-usage">v0.2.0 release-candidate usage</h2>
+<p>Install and test from a checkout:</p>
+<pre><code class="language-sh">npm install
+npm run sync:schemas
+npm run build
+npm test
+python -m pip install --upgrade pip
+python -m pip install -e &quot;packages/python[test]&quot;
+pytest
+python -m pip install build
+python -m build packages/python
+</code></pre>
+<p>The Python and TypeScript packages validate offline using bundled schemas copied into <code>packages/python/printspec/schemas/</code> and <code>packages/typescript/schemas/</code>; hosted schema URLs are public references only and validators must not fetch them during normal validation.</p>
+<p>Both packages provide a <code>printspec</code> CLI. The Python CLI is available after the editable install; the TypeScript CLI can be run from <code>packages/typescript/dist/cli.js</code> after <code>npm run build</code>:</p>
+<pre><code class="language-sh">printspec validate examples/part-families/rounded-rectangular-plate.basic.json
+printspec to-openscad examples/part-families/round-spacer.basic.json --output model.scad
+printspec to-cadquery examples/part-families/electronics-standoff.m3.json --output model.py
+printspec bom examples/projects/simple-enclosure-project.json --format markdown
+node packages/typescript/dist/cli.js validate examples/part-families/rounded-rectangular-plate.basic.json
+</code></pre>
+<p>Generators currently emit source code only and do not require or execute OpenSCAD, CadQuery, FreeCAD, or any CAD runtime. See <a href="generators.html">docs/generators.md</a> for the current supported family list, which is the same for both the TypeScript and Python packages. Validation runs before generation. Valid but unsupported optional generator features, such as spacer chamfers or fillets, produce stable warnings rather than being silently ignored. BOM helpers format local spec hardware data only; printspec does not scrape suppliers or create carts. The v0.2.0 line is experimental and intended for review before manufacturing.</p>
+<h2 id="hosted-references-and-manifests">Hosted references and manifests</h2>
+<p>The public schema site at <code>https://schemas.invisra.ai</code> exposes <code>https://schemas.invisra.ai/printspec/</code>, <code>https://schemas.invisra.ai/printspec/0.2.0/</code>, <code>https://schemas.invisra.ai/printspec/manifest.json</code>, and <code>https://schemas.invisra.ai/printspec/0.2.0/manifest.json</code>. These files are generated from <code>schemas/</code> by <code>npm run sync:schemas</code> together with Python and TypeScript package schema data. Validators should continue to resolve schemas offline from bundled/local copies; hosted URLs are public identifiers and references, not a runtime dependency.</p>
+<h2 id="browser-editor-form-metadata">Browser/editor form metadata</h2>
+<p>Printspec schemas now include <code>x-printspec-*</code> browser-editor metadata for parameter ordering, grouping, units, controls, steps, priorities, examples, and documentation-only warnings. See <code>docs/form-metadata.md</code> for the convention plus TypeScript, Python, and CLI usage. This metadata helps tools render forms; it is not a web app and does not execute CAD.</p>
+
+    </article>
+  </section>
+</main>
+</body>
+</html>

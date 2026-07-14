@@ -2,7 +2,7 @@
 
 Python package for printspec JSON Schemas, offline validation, BOM helpers, browser form metadata helpers, CLI commands, deterministic bundle export, and starter OpenSCAD/CadQuery source generation.
 
-**Status: v0.1.0 experimental.** Requires Python 3.11+. The package is prepared for PyPI publication. If it is not yet published, install from a repository checkout instead of assuming registry availability.
+**Status: v0.2.0 experimental.** Requires Python 3.11+. The package is prepared for PyPI publication. If it is not yet published, install from a repository checkout instead of assuming registry availability.
 
 ## Installation
 
@@ -31,7 +31,7 @@ python -m printspec.cli bundle examples/part-families/rounded-rectangular-plate.
 
 ```python
 spec = {
-    "printspecVersion": "0.1.0",
+    "printspecVersion": "0.2.0",
     "units": "mm",
     "part": {
         "type": "round_spacer",
@@ -76,7 +76,7 @@ Schema files are included inside the package under `printspec/schemas/`. Validat
 
 ## Hosted schema note
 
-Hosted schemas at `https://schemas.invisra.ai/printspec/0.1.0/` are public references for documentation and external tools. They are not required for package validation.
+Hosted schemas at `https://schemas.invisra.ai/printspec/0.2.0/` are public references for documentation and external tools. They are not required for package validation.
 
 ## Safety note
 

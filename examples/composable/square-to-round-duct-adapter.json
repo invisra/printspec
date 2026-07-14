@@ -1,0 +1,48 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Square To Round Duct Adapter",
+    "description": "A transition adapter blending a square flange into a round duct -- the classic HVAC/ducting loft shape, and a `loft_profile` component blending two very differently-shaped cross-sections (a 4-point square and a true circle built from 4 quarter-circle arcs via `curve`, combining both the loft and curved-profile capabilities). brepjs's underlying loft algorithm corresponds mismatched vertex counts (4 square corners to 4 circle quadrant points) automatically.",
+    "components": [
+      {
+        "id": "adapter",
+        "kind": "loft_profile",
+        "operation": "add",
+        "description": "Square flange (side 30mm) at the base, blending into a round duct (radius 12mm) at the top.",
+        "dimensions": {
+          "profiles": [
+            {
+              "points": [
+                { "x": -15, "y": -15 },
+                { "x": 15, "y": -15 },
+                { "x": 15, "y": 15 },
+                { "x": -15, "y": 15 }
+              ],
+              "z": 0
+            },
+            {
+              "points": [
+                { "x": 12, "y": 0, "curve": { "type": "arc", "through": { "x": 8.4852814, "y": 8.4852814 } } },
+                { "x": 0, "y": 12, "curve": { "type": "arc", "through": { "x": -8.4852814, "y": 8.4852814 } } },
+                { "x": -12, "y": 0, "curve": { "type": "arc", "through": { "x": -8.4852814, "y": -8.4852814 } } },
+                { "x": 0, "y": -12, "curve": { "type": "arc", "through": { "x": 8.4852814, "y": -8.4852814 } } }
+              ],
+              "z": 20
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

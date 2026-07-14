@@ -1,0 +1,112 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Cable Tie Anchor Strip",
+    "description": "A base strip with two identical tie-down posts, each with a through hole for a cable tie. Both posts are authored once as a local sub-assembly and placed with group-level position/mirroring, instead of duplicating and hand-mirroring each component's position.",
+    "components": [
+      {
+        "id": "base",
+        "kind": "plate",
+        "operation": "add",
+        "description": "Anchor strip base.",
+        "dimensions": {
+          "length": 50,
+          "width": 14,
+          "thickness": 3
+        },
+        "materialRole": "body"
+      },
+      {
+        "id": "post_left",
+        "kind": "boss",
+        "operation": "add",
+        "description": "Tie-down post; authored at the sub-assembly's own local origin, on top of the base. The group below moves the whole sub-assembly into place.",
+        "dimensions": {
+          "diameter": 6,
+          "height": 8
+        },
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 3
+        },
+        "materialRole": "mount"
+      },
+      {
+        "id": "post_right",
+        "kind": "boss",
+        "operation": "add",
+        "description": "Tie-down post; authored identically to post_left at the sub-assembly's own local origin. The group below mirrors the whole sub-assembly instead of this needing hand-mirrored coordinates.",
+        "dimensions": {
+          "diameter": 6,
+          "height": 8
+        },
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 3
+        },
+        "materialRole": "mount"
+      }
+    ],
+    "features": [
+      {
+        "id": "tie_hole_left",
+        "kind": "hole",
+        "target": "post_left",
+        "description": "Cable tie pass-through hole in the left post.",
+        "parameters": {
+          "diameter": 3,
+          "axis": "x"
+        }
+      },
+      {
+        "id": "tie_hole_right",
+        "kind": "hole",
+        "target": "post_right",
+        "description": "Cable tie pass-through hole in the right post.",
+        "parameters": {
+          "diameter": 3,
+          "axis": "x"
+        }
+      }
+    ],
+    "groups": [
+      {
+        "id": "post_left_assembly",
+        "description": "Left tie-down sub-assembly, moved as a unit to its position along the strip.",
+        "memberIds": [
+          "post_left"
+        ],
+        "position": {
+          "x": -18,
+          "y": 0,
+          "z": 0
+        }
+      },
+      {
+        "id": "post_right_assembly",
+        "description": "Right tie-down sub-assembly, mirrored from the left sub-assembly across the YZ plane instead of re-specifying its position.",
+        "memberIds": [
+          "post_right"
+        ],
+        "relation": {
+          "type": "mirrored_from",
+          "target": "post_left_assembly",
+          "mirrorAxis": "x"
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

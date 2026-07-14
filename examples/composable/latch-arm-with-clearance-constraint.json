@@ -1,0 +1,57 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Latch Arm With Clearance Constraint",
+    "description": "A fixed wall and a flexing latch arm positioned near it, with a `clearance` constraint asserting the arm has at least 0.3mm of gap to move freely without rubbing the wall -- unlike a `dimension` constraint (checked against already-authored numbers), this needs each component's fully resolved world position, so it's only evaluated by the brepjs generator, not by validatePrintSpec/validate_printspec.",
+    "components": [
+      {
+        "id": "wall",
+        "kind": "box",
+        "operation": "add",
+        "description": "Fixed housing wall.",
+        "dimensions": {
+          "length": 4,
+          "width": 20,
+          "height": 15
+        }
+      },
+      {
+        "id": "latchArm",
+        "kind": "box",
+        "operation": "add",
+        "description": "Flexing latch arm, positioned with a deliberate 0.4mm air gap from the wall (comfortably above the 0.3mm minimum below) so it can move without rubbing.",
+        "dimensions": {
+          "length": 2,
+          "width": 8,
+          "height": 12
+        },
+        "position": {
+          "x": 3.4,
+          "y": 0,
+          "z": 0
+        }
+      }
+    ],
+    "constraints": [
+      {
+        "type": "clearance",
+        "id": "latch_arm_clearance",
+        "description": "The latch arm must clear the wall by at least 0.3mm to flex freely without rubbing.",
+        "a": "wall",
+        "b": "latchArm",
+        "minDistance": 0.3
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

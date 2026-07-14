@@ -1,3 +1,17 @@
 [tool.pytest.ini_options]
 testpaths = ["tests/python", "tests/schema"]
 pythonpath = ["packages/python"]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["tests/fixtures"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["printspec"]
+mypy_path = "packages/python"
+ignore_missing_imports = true

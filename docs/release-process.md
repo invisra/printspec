@@ -1,6 +1,6 @@
 # Release process
 
-printspec schema `v0.1.0` is experimental. Publishing is manual for now; this document is a checklist for preparing release candidates without pushing artifacts to npm or PyPI accidentally.
+printspec schema `v0.2.0` is experimental. Publishing is manual for now; this document is a checklist for preparing release candidates without pushing artifacts to npm or PyPI accidentally.
 
 ## Pre-release checklist
 
@@ -32,12 +32,12 @@ printspec schema `v0.1.0` is experimental. Publishing is manual for now; this do
 
 ## Version policy
 
-Before `1.0`, breaking changes are possible. Once a versioned schema directory has been published, treat that directory as immutable. Package patch releases may advance independently from the schema version when schemas do not change. For example, npm package `@invisra/printspec@0.1.1` can remain on schema `$id` paths and `printspecVersion` `0.1.0` when the release only fixes package contents. For schema changes, publish a new versioned schema directory instead of rewriting an existing one.
+Before `1.0`, breaking changes are possible. Once a versioned schema directory has been published, treat that directory as immutable. Package patch releases may advance independently from the schema version when schemas do not change. For example, npm package `@invisra/printspec@0.2.5` can remain on schema `$id` paths and `printspecVersion` `0.2.0` when the release only fixes package contents. For schema changes, publish a new versioned schema directory instead of rewriting an existing one.
 
 
-## v0.1.0 schema immutability warning
+## Schema immutability warning
 
-Once `v0.1.0` is released, do not casually mutate files under `/printspec/0.1.0/`. Versioned schema URLs are intended to be stable references. For schema changes, publish a new versioned path such as `/printspec/0.1.1/` or `/printspec/0.2.0/`. Package patches may happen, but schema `$id` paths and hosted version directories need careful handling so existing consumers are not surprised.
+`v0.1.0` is released and immutable; `v0.2.0` is the current schema version. Once a version is released, do not casually mutate files under its `/printspec/<version>/` path. Versioned schema URLs are intended to be stable references. For schema changes, publish a new versioned path such as `/printspec/0.2.1/` or `/printspec/0.3.0/` -- older versioned directories (like `/printspec/0.1.0/`) stay published, not rewritten. Package patches may happen, but schema `$id` paths and hosted version directories need careful handling so existing consumers are not surprised.
 
 ## npm publishing future path
 
@@ -49,4 +49,4 @@ The PyPI package name is `printspec`. Build the package and run `python -m twine
 
 ## GitHub release
 
-Use tag format `v0.1.0`. Include a changelog excerpt, links to hosted schemas such as `https://schemas.invisra.ai/printspec/0.1.0/`, and the current npm/PyPI package status. Do not claim packages are published until they are actually available.
+Use tag format `vX.Y.Z` (e.g. `v0.2.0`). Include a changelog excerpt, links to hosted schemas such as `https://schemas.invisra.ai/printspec/0.2.0/`, and the current npm/PyPI package status. Do not claim packages are published until they are actually available.

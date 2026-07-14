@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/wall-mount-bracket.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/drawer-divider.schema.json",
   "type": "object",
-  "title": "Wall mount bracket",
-  "description": "Simple flat wall bracket with a light-duty shelf/tab.",
+  "title": "Drawer divider",
+  "description": "Customizable drawer divider strip with optional interlocking notches.",
   "required": [
     "type",
     "label",
@@ -11,7 +11,7 @@
   ],
   "properties": {
     "type": {
-      "const": "wall_mount_bracket",
+      "const": "drawer_divider",
       "title": "Part type",
       "description": "Stable printspec part family identifier."
     },
@@ -26,21 +26,33 @@
     },
     "parameters": {
       "type": "object",
-      "title": "Wall mount bracket parameters",
-      "description": "Simple flat wall bracket with a light-duty shelf/tab.",
+      "title": "Drawer divider parameters",
+      "description": "Customizable drawer divider strip with optional interlocking notches.",
       "required": [
-        "width",
+        "length",
         "height",
-        "thickness",
-        "tabDepth",
-        "screwHoleDiameter",
-        "screwHoleSpacing"
+        "thickness"
       ],
       "properties": {
-        "width": {
+        "length": {
           "type": "number",
-          "title": "Width",
-          "description": "Width parameter.",
+          "title": "Length",
+          "description": "Overall divider length in millimeters, running along the drawer.",
+          "default": 120,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            120
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "height": {
+          "type": "number",
+          "title": "Height",
+          "description": "Divider height in millimeters, measured from the drawer floor.",
           "default": 40,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -52,85 +64,10 @@
           "minimum": 0,
           "maximum": 10000
         },
-        "height": {
-          "type": "number",
-          "title": "Height",
-          "description": "Height parameter.",
-          "default": 60,
-          "x-printspec-control": "number",
-          "x-printspec-unit": "mm",
-          "x-printspec-step": 0.1,
-          "x-printspec-priority": "primary",
-          "examples": [
-            60
-          ],
-          "minimum": 0,
-          "maximum": 10000
-        },
         "thickness": {
           "type": "number",
           "title": "Thickness",
-          "description": "Thickness parameter.",
-          "default": 4,
-          "x-printspec-control": "number",
-          "x-printspec-unit": "mm",
-          "x-printspec-step": 0.1,
-          "x-printspec-priority": "primary",
-          "examples": [
-            4
-          ],
-          "minimum": 0,
-          "maximum": 10000
-        },
-        "tabDepth": {
-          "type": "number",
-          "title": "Tab depth",
-          "description": "Tab depth parameter.",
-          "default": 20,
-          "x-printspec-control": "number",
-          "x-printspec-unit": "mm",
-          "x-printspec-step": 0.1,
-          "x-printspec-priority": "primary",
-          "examples": [
-            20
-          ],
-          "minimum": 0,
-          "maximum": 10000
-        },
-        "screwHoleDiameter": {
-          "type": "number",
-          "title": "Screw hole diameter",
-          "description": "Screw hole diameter parameter.",
-          "default": 4,
-          "x-printspec-control": "number",
-          "x-printspec-unit": "mm",
-          "x-printspec-step": 0.1,
-          "x-printspec-priority": "primary",
-          "examples": [
-            4
-          ],
-          "minimum": 0,
-          "maximum": 10000
-        },
-        "screwHoleSpacing": {
-          "type": "number",
-          "title": "Screw hole spacing",
-          "description": "Screw hole spacing parameter.",
-          "default": 36,
-          "x-printspec-control": "number",
-          "x-printspec-unit": "mm",
-          "x-printspec-step": 0.1,
-          "x-printspec-priority": "primary",
-          "examples": [
-            36
-          ],
-          "minimum": 0,
-          "maximum": 10000
-        },
-        "cornerRadius": {
-          "type": "number",
-          "title": "Corner radius",
-          "description": "Corner radius parameter.",
+          "description": "Divider panel thickness in millimeters.",
           "default": 3,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -141,31 +78,84 @@
           ],
           "minimum": 0,
           "maximum": 10000
+        },
+        "notchCount": {
+          "type": "integer",
+          "title": "Notch count",
+          "description": "Number of interlocking notches cut into the top edge of the divider.",
+          "default": 0,
+          "x-printspec-control": "integer",
+          "x-printspec-unit": "count",
+          "x-printspec-step": 1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            0
+          ],
+          "minimum": 0,
+          "maximum": 12
+        },
+        "notchWidth": {
+          "type": "number",
+          "title": "Notch width",
+          "description": "Notch width in millimeters.",
+          "default": 3,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            3
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "notchDepth": {
+          "type": "number",
+          "title": "Notch depth",
+          "description": "Notch depth in millimeters, measured down from the top edge.",
+          "default": 10,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            10
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "endTab": {
+          "type": "boolean",
+          "title": "End tabs",
+          "description": "Add small end tabs.",
+          "default": false,
+          "x-printspec-control": "checkbox",
+          "x-printspec-priority": "advanced"
         }
       },
       "additionalProperties": false,
       "x-printspec-ui": {
         "order": [
-          "width",
+          "length",
           "height",
           "thickness",
-          "tabDepth",
-          "screwHoleDiameter",
-          "screwHoleSpacing",
-          "cornerRadius"
+          "notchCount",
+          "notchWidth",
+          "notchDepth",
+          "endTab"
         ],
         "groups": [
           {
             "id": "parameters",
             "title": "Parameters",
             "fields": [
-              "width",
+              "length",
               "height",
               "thickness",
-              "tabDepth",
-              "screwHoleDiameter",
-              "screwHoleSpacing",
-              "cornerRadius"
+              "notchCount",
+              "notchWidth",
+              "notchDepth",
+              "endTab"
             ]
           }
         ]

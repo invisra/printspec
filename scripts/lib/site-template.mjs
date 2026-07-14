@@ -1,0 +1,98 @@
+// Shared HTML page chrome (brand assets, theme toggle, header, styles) for
+// every static page under public/ -- used by both scripts/sync-schemas.mjs
+// (schema site) and scripts/build-docs-site.mjs (docs site) so they render
+// as one consistent site rather than two visually-diverging ones.
+
+import { PROJECT_NAME, SCHEMA_VERSION } from "./project-info.mjs";
+
+const ENABLE_VERCEL_ANALYTICS = process.env.ENABLE_VERCEL_ANALYTICS === "1";
+
+export function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function analyticsSnippet() {
+  if (!ENABLE_VERCEL_ANALYTICS) return "";
+  return `\n<script>\n  window.va =\n    window.va ||\n    function () {\n      (window.vaq = window.vaq || []).push(arguments);\n    };\n</script>\n<script defer src="/_vercel/insights/script.js"></script>`;
+}
+
+const BRAND_BASE = "https://assets.invisra.ai/brand/v1";
+
+function brandHead() {
+  return `  <link rel="stylesheet" href="${BRAND_BASE}/brand.min.css">\n  <link rel="icon" href="${BRAND_BASE}/favicon.svg" type="image/svg+xml">\n  <link rel="icon" href="${BRAND_BASE}/favicon-32.png" sizes="32x32" type="image/png">\n  <link rel="icon" href="${BRAND_BASE}/favicon-16.png" sizes="16x16" type="image/png">\n  <link rel="apple-touch-icon" href="${BRAND_BASE}/apple-touch-icon.png">\n  <meta name="theme-color" content="#020617">`;
+}
+
+function themeScript() {
+  return `<script>
+  (function () {
+    var key = 'invisra-theme';
+    var saved = localStorage.getItem(key);
+    var theme = saved === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+
+    function updateThemeButton() {
+      var button = document.querySelector('[data-theme-toggle]');
+      if (button) {
+        button.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        button.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme');
+      }
+    }
+
+    window.toggleInvisraTheme = function () {
+      var current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+      var next = current === 'dark' ? 'light' : 'dark';
+      theme = next;
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem(key, next);
+      updateThemeButton();
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateThemeButton);
+    } else {
+      updateThemeButton();
+    }
+  })();
+</script>`;
+}
+
+function logoMarkup() {
+  return `<a class="invisra-logo-lockup" href="/${PROJECT_NAME}/" aria-label="printspec home">
+      <svg class="invisra-logo-mark invisra-logo-mark-sm" viewBox="0 0 160 380" role="img" aria-hidden="true" focusable="false"><path fill="currentColor" d="M80 6 8 222 38 256 80 356 122 256 152 222Z M80 118 112 214 80 248 48 214Z"></path></svg>
+      <span class="invisra-logo-wordmark">Invisra</span>
+      <span class="invisra-text-muted">/ printspec</span>
+    </a>`;
+}
+
+export function siteHeader() {
+  return `<header class="invisra-header">
+  <div class="invisra-container site-nav">
+    ${logoMarkup()}
+    <nav class="site-links" aria-label="Site navigation">
+      <a href="/${PROJECT_NAME}/">Home</a>
+      <a href="/${PROJECT_NAME}/${SCHEMA_VERSION}/docs/">Docs</a>
+      <a href="/${PROJECT_NAME}/validator/">Validator</a>
+      <a href="/${PROJECT_NAME}/${SCHEMA_VERSION}/">Schemas</a>
+      <a href="/llms.txt">llms.txt</a>
+      <a href="https://cad.invisra.ai">PartPilot</a>
+      <a href="https://invisra.ai">Invisra</a>
+      <button type="button" class="invisra-button invisra-button-ghost theme-toggle" data-theme-toggle onclick="window.toggleInvisraTheme()" aria-label="Switch theme">Light</button>
+    </nav>
+  </div>
+</header>`;
+}
+
+function localStyles() {
+  return `<style>
+    :root{color-scheme:dark light}body.invisra-theme{margin:0;background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.22),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.18),transparent 30rem),var(--invisra-bg,#020617);color:var(--invisra-text,#e5eefb);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.invisra-header{background:color-mix(in srgb,var(--invisra-bg,#020617),transparent 10%);border-bottom:1px solid var(--invisra-border,rgba(148,163,184,.22));box-shadow:none}.invisra-header::before,.invisra-header::after{display:none;background:transparent;box-shadow:none}html[data-theme=light] .invisra-header{background:rgba(255,255,255,.82);border-bottom-color:rgba(15,23,42,.12);box-shadow:0 1px 0 rgba(255,255,255,.78) inset,0 12px 28px rgba(15,23,42,.06)}html[data-theme=light] body.invisra-theme{background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.12),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.1),transparent 30rem),var(--invisra-bg,#f8fafc)}html[data-theme=light] .invisra-shell,html[data-theme=light] footer{background:transparent;color:var(--invisra-text,#0f172a)}html[data-theme=light] .invisra-header::before,html[data-theme=light] .invisra-header::after{display:none;background:transparent;box-shadow:none}.site-nav{display:flex;align-items:center;justify-content:space-between;gap:1rem}.site-links{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}.site-links a,.card-grid .invisra-card>a,.link-row a:not(.invisra-button),.schema h3 a{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border:1px solid var(--invisra-border,rgba(148,163,184,.24));border-radius:999px;background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 28%);box-shadow:0 10px 24px rgba(15,23,42,.08);color:var(--invisra-text,#e5eefb);text-decoration:none;font-weight:800;line-height:1.1;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}.site-links a{padding:.52rem .78rem;font-size:.94rem}.card-grid .invisra-card>a,.link-row a:not(.invisra-button),.schema h3 a{padding:.62rem .9rem}.site-links a:hover,.card-grid .invisra-card>a:hover,.link-row a:not(.invisra-button):hover,.schema h3 a:hover{border-color:color-mix(in srgb,var(--invisra-accent,#38bdf8),transparent 35%);background:color-mix(in srgb,var(--invisra-accent,#38bdf8),transparent 88%);box-shadow:0 14px 30px rgba(14,165,233,.14);transform:translateY(-1px)}.schema-grid,.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}.card-grid .invisra-card{text-align:center;padding:clamp(1.25rem,3vw,2rem)}.card-grid .invisra-card ul{display:inline-block;text-align:left;margin-left:0;padding-left:1.2rem}.card-grid .link-row{justify-content:center}.card-grid pre{text-align:left}.hero-card{padding:clamp(1.5rem,4vw,3rem);margin:2rem auto;text-align:center}.hero-card .lede{margin-left:auto;margin-right:auto}.hero-card .hero-actions,.hero-card .link-row{justify-content:center}.hero-actions,.link-row{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center}.schema{text-align:center;padding:clamp(1.25rem,3vw,2rem)}.schema h3{margin-left:auto;margin-right:auto}.schema code,.invisra-code{overflow-wrap:anywhere}.muted{color:var(--invisra-muted,#94a3b8)}footer{padding:2rem 0;color:var(--invisra-muted,#94a3b8)}pre.invisra-code{white-space:pre-wrap;padding:1rem;border-radius:1rem}.theme-toggle{padding:.52rem .8rem}@media(max-width:760px){.site-nav{align-items:flex-start;flex-direction:column}.site-links{gap:.6rem}}.doc-body{max-width:52rem}.doc-body h1,.doc-body h2,.doc-body h3{line-height:1.25}.doc-body h2{margin-top:2.5rem;border-top:1px solid var(--invisra-border,rgba(148,163,184,.22));padding-top:1.5rem}.doc-body pre{background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 20%);border:1px solid var(--invisra-border,rgba(148,163,184,.22));border-radius:.75rem;padding:1rem;overflow-x:auto}.doc-body code{background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 35%);border-radius:.35rem;padding:.1em .35em;overflow-wrap:anywhere}.doc-body pre code{background:none;padding:0}.doc-body table{border-collapse:collapse;display:block;overflow-x:auto;width:max-content;max-width:100%}.doc-body th,.doc-body td{border:1px solid var(--invisra-border,rgba(148,163,184,.22));padding:.4rem .7rem;text-align:left}.doc-body blockquote{margin:1rem 0;padding:.25rem 1rem;border-left:3px solid var(--invisra-accent,#38bdf8);color:var(--invisra-muted,#94a3b8)}.doc-index-list{list-style:none;margin:0;padding:0;display:grid;gap:.6rem}.doc-index-list a{font-weight:700}
+  </style>`;
+}
+
+export function page(title, body) {
+  return `<!doctype html>\n<html lang="en" data-theme="dark">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>${escapeHtml(title)}</title>\n${brandHead()}\n  ${localStyles()}${analyticsSnippet()}\n</head>\n<body class="invisra-theme">\n${themeScript()}\n${siteHeader()}\n${body}\n</body>\n</html>\n`;
+}

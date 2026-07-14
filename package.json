@@ -1,7 +1,7 @@
 {
   "name": "printspec-monorepo",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "workspaces": [
     "packages/typescript"
   ],
@@ -12,7 +12,10 @@
     "test:ts": "npm --workspace @invisra/printspec test",
     "test:python": "npm run sync:schemas && pytest tests/python tests/schema",
     "test:schema": "npm run sync:schemas && python -m pytest tests/schema",
-    "lint": "npm run build",
+    "lint": "npm run lint:ts && npm run lint:python",
+    "lint:ts": "eslint . && prettier --check \"**/*.{ts,js,mjs}\" && npm run build",
+    "lint:python": "ruff check . && ruff format --check . && mypy",
+    "format": "prettier --write \"**/*.{ts,js,mjs}\"",
     "sync:schemas": "node scripts/sync-schemas.mjs",
     "pack:ts": "npm run sync:schemas && npm --workspace @invisra/printspec run build && npm --workspace @invisra/printspec pack --dry-run",
     "smoke:npm": "npm run sync:schemas && npm --workspace @invisra/printspec run build && npm run check:npm-package && node scripts/npm-smoke-test.mjs",
@@ -24,9 +27,20 @@
     "check:npm-package": "node scripts/check-npm-package-contents.mjs",
     "smoke:browser-import-graph": "node scripts/smoke-browser-import-graph.mjs",
     "build:schema-validator": "node scripts/build-schema-validator.mjs",
-    "build:schema-site": "npm run sync:schemas && npm run build:schema-validator"
+    "build:docs-site": "node scripts/build-docs-site.mjs",
+    "build:schema-site": "npm run sync:schemas && npm run build:schema-validator && npm run build:docs-site",
+    "verify:brepjs-real-kernel": "node scripts/brepjs-verify/verify.mjs",
+    "inspect:composable-part": "node scripts/brepjs-verify/inspect.mjs",
+    "verify:cadquery-real-kernel": "node scripts/cadquery-verify/verify.mjs"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0"
+    "@eslint/js": "^9.39.5",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^9.1.2",
+    "globals": "^15.15.0",
+    "marked": "^18.0.6",
+    "prettier": "^3.9.5",
+    "typescript-eslint": "^8.63.0"
   }
 }

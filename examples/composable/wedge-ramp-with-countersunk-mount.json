@@ -1,0 +1,69 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Wedge Ramp With Countersunk Mount",
+    "description": "A sloped ramp wedge fused onto a mounting base, with a countersunk mounting hole through the base.",
+    "components": [
+      {
+        "id": "base",
+        "kind": "plate",
+        "operation": "add",
+        "dimensions": {
+          "length": 50,
+          "width": 30,
+          "thickness": 4
+        }
+      },
+      {
+        "id": "ramp",
+        "kind": "wedge",
+        "operation": "add",
+        "dimensions": {
+          "length": 30,
+          "width": 30,
+          "height": 15
+        },
+        "relation": {
+          "type": "on_top_of",
+          "target": "base"
+        },
+        "description": "Sloped ramp rising from the base's top face."
+      }
+    ],
+    "features": [
+      {
+        "id": "mount_hole",
+        "kind": "hole",
+        "target": "base",
+        "position": { "x": -18, "y": 0, "z": 0 },
+        "parameters": {
+          "diameter": 4,
+          "depth": "through"
+        },
+        "description": "Through hole for an M4 flat-head mounting screw."
+      },
+      {
+        "id": "mount_hole_csk",
+        "kind": "countersink",
+        "target": "mount_hole",
+        "position": { "x": 0, "y": 0, "z": 4 },
+        "parameters": {
+          "diameter": 8,
+          "angle": 90
+        },
+        "description": "Countersink for the M4 flat-head screw, stacked on the through hole."
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": ["Wedge geometry is approximate; review the sloped face before manufacturing."]
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

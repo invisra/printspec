@@ -1,0 +1,14 @@
+{
+  "name": "printspec-brepjs-verify",
+  "private": true,
+  "type": "module",
+  "description": "Opt-in real OCCT-WASM kernel verification for printspec's brepjs generator output. Not part of the main package, its dependency tree, or npm workspaces -- run manually via `node scripts/brepjs-verify/verify.mjs` or `node scripts/brepjs-verify/inspect.mjs`. See docs/generators.md.",
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "brepjs": "^18.118.3",
+    "occt-wasm": "^3.6.1",
+    "brepjs-cad": "^0.45.0"
+  }
+}

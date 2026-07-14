@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/l-bracket.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/l-bracket.schema.json",
   "type": "object",
   "required": [
     "type",
@@ -137,17 +137,19 @@
           "type": "object",
           "properties": {
             "enabled": {
-              "type": "boolean"
+              "type": "boolean",
+              "description": "Whether to add a reinforcing rib along the inside corner of the bracket."
             },
             "thickness": {
               "type": "number",
               "exclusiveMinimum": 0,
-              "maximum": 10000
+              "maximum": 10000,
+              "description": "Rib thickness in millimeters."
             }
           },
           "additionalProperties": false,
           "title": "Rib",
-          "description": "Rib parameter.",
+          "description": "Optional reinforcing rib along the inside corner of the bracket.",
           "x-printspec-control": "number",
           "x-printspec-priority": "advanced"
         }

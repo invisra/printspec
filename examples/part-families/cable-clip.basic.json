@@ -1,5 +1,5 @@
 {
-  "printspecVersion": "0.1.0",
+  "printspecVersion": "0.2.0",
   "units": "mm",
   "part": {
     "type": "cable_clip",

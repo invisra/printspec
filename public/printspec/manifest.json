@@ -6,6 +6,11 @@
       "version": "0.1.0",
       "url": "/printspec/0.1.0/",
       "manifest": "/printspec/0.1.0/manifest.json"
+    },
+    {
+      "version": "0.2.0",
+      "url": "/printspec/0.2.0/",
+      "manifest": "/printspec/0.2.0/manifest.json"
     }
   ]
 }

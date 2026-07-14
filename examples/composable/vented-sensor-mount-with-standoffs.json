@@ -1,0 +1,119 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Vented Sensor Mount With Standoffs",
+    "description": "A small sensor mounting plate with two mirrored standoffs, an angled vent slot cut only through the plate, and a counterbored mounting hole.",
+    "components": [
+      {
+        "id": "plate",
+        "kind": "plate",
+        "operation": "add",
+        "description": "Base mounting plate.",
+        "dimensions": {
+          "length": 60,
+          "width": 40,
+          "thickness": 4
+        },
+        "materialRole": "body"
+      },
+      {
+        "id": "standoff_left",
+        "kind": "boss",
+        "operation": "add",
+        "description": "Left mounting standoff for the sensor board.",
+        "dimensions": {
+          "diameter": 6,
+          "height": 8
+        },
+        "position": {
+          "x": -20,
+          "y": 10,
+          "z": 4
+        },
+        "materialRole": "mount"
+      },
+      {
+        "id": "standoff_right",
+        "kind": "boss",
+        "operation": "add",
+        "description": "Right mounting standoff, mirrored from the left standoff.",
+        "dimensions": {
+          "diameter": 6,
+          "height": 8
+        },
+        "relation": {
+          "type": "mirrored_from",
+          "target": "standoff_left"
+        },
+        "materialRole": "mount"
+      },
+      {
+        "id": "vent_cutout",
+        "kind": "box",
+        "operation": "subtract",
+        "description": "Angled vent slot cut only through the plate; does not affect the standoffs.",
+        "appliesTo": [
+          "plate"
+        ],
+        "dimensions": {
+          "length": 20,
+          "width": 6,
+          "height": 4
+        },
+        "position": {
+          "x": 15,
+          "y": -10,
+          "z": 2
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 15
+        },
+        "materialRole": "cutout"
+      }
+    ],
+    "features": [
+      {
+        "id": "mount_hole_left",
+        "kind": "hole",
+        "target": "standoff_left",
+        "description": "M3 clearance hole through the left standoff.",
+        "parameters": {
+          "diameter": 3.2
+        }
+      },
+      {
+        "id": "mount_hole_left_cb",
+        "kind": "counterbore",
+        "target": "mount_hole_left",
+        "description": "Counterbore for an M3 socket head cap screw, stacked on top of the clearance hole.",
+        "parameters": {
+          "diameter": 6,
+          "depth": 3
+        }
+      }
+    ],
+    "groups": [
+      {
+        "id": "standoffs",
+        "description": "Both mounting standoffs, tagged as a unit so other parts of the spec (or a future revision) can refer to them together.",
+        "memberIds": [
+          "standoff_left",
+          "standoff_right"
+        ]
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

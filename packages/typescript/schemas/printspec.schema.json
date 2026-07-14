@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/printspec.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/printspec.schema.json",
   "type": "object",
   "required": [
     "printspecVersion",
@@ -8,7 +8,7 @@
   ],
   "properties": {
     "printspecVersion": {
-      "const": "0.1.0"
+      "const": "0.2.0"
     },
     "units": {
       "const": "mm"

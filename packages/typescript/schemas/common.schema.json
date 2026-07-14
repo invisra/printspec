@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/common.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/common.schema.json",
   "$defs": {
     "Dimension": {
       "type": "number",
       "exclusiveMinimum": 0,
       "maximum": 10000,
       "title": "Dimension",
-      "description": " dimension parameter."
+      "description": "A positive linear measurement in millimeters."
     },
     "Point2D": {
       "type": "object",
@@ -19,17 +19,17 @@
         "x": {
           "type": "number",
           "title": "X",
-          "description": "X parameter."
+          "description": "X coordinate in millimeters, relative to the part's local origin."
         },
         "y": {
           "type": "number",
           "title": "Y",
-          "description": "Y parameter."
+          "description": "Y coordinate in millimeters, relative to the part's local origin."
         }
       },
       "additionalProperties": false,
       "title": "Point2D",
-      "description": " point2 d parameter."
+      "description": "A 2D position in millimeters, relative to the part's local origin."
     },
     "Point3D": {
       "type": "object",
@@ -42,22 +42,22 @@
         "x": {
           "type": "number",
           "title": "X",
-          "description": "X parameter."
+          "description": "X coordinate in millimeters, relative to the part's local origin."
         },
         "y": {
           "type": "number",
           "title": "Y",
-          "description": "Y parameter."
+          "description": "Y coordinate in millimeters, relative to the part's local origin."
         },
         "z": {
           "type": "number",
           "title": "Z",
-          "description": "Z parameter."
+          "description": "Z coordinate in millimeters, relative to the part's local origin."
         }
       },
       "additionalProperties": false,
       "title": "Point3D",
-      "description": " point3 d parameter."
+      "description": "A 3D position in millimeters, relative to the part's local origin."
     },
     "Countersink": {
       "type": "object",
@@ -78,12 +78,12 @@
           "minimum": 1,
           "maximum": 179,
           "title": "Angle",
-          "description": "Angle parameter."
+          "description": "Included angle of the countersink cone, in degrees."
         }
       },
       "additionalProperties": false,
       "title": "Countersink",
-      "description": " countersink for the part."
+      "description": "A countersink recess for a flat-head fastener, defined by diameter and included angle."
     },
     "Counterbore": {
       "type": "object",
@@ -109,7 +109,7 @@
       },
       "additionalProperties": false,
       "title": "Counterbore",
-      "description": " counterbore for the part."
+      "description": "A counterbore recess for a fastener head, defined by diameter and depth."
     },
     "Hole": {
       "type": "object",
@@ -123,17 +123,17 @@
         "id": {
           "type": "string",
           "title": "Id",
-          "description": "Id parameter."
+          "description": "Optional stable identifier for this hole, used to reference it from features or diagnostics."
         },
         "x": {
           "type": "number",
           "title": "X",
-          "description": "X parameter."
+          "description": "X coordinate of the hole center in millimeters, relative to the part's local origin."
         },
         "y": {
           "type": "number",
           "title": "Y",
-          "description": "Y parameter."
+          "description": "Y coordinate of the hole center in millimeters, relative to the part's local origin."
         },
         "diameter": {
           "type": "number",
@@ -151,10 +151,12 @@
               "type": "number",
               "exclusiveMinimum": 0,
               "maximum": 10000,
-              "title": "OneOf",
-              "description": "One of parameter."
+              "title": "Depth",
+              "description": "Hole depth in millimeters."
             }
-          ]
+          ],
+          "title": "Depth",
+          "description": "Hole depth in millimeters, or \"through\" to cut completely through the part."
         },
         "axis": {
           "enum": [
@@ -164,7 +166,7 @@
           ],
           "default": "z",
           "title": "Axis",
-          "description": "Axis parameter.",
+          "description": "Axis the hole is drilled along; \"z\" is the default vertical axis for flat parts.",
           "examples": [
             "z"
           ],
@@ -187,7 +189,7 @@
       },
       "additionalProperties": false,
       "title": "Hole",
-      "description": " hole parameter."
+      "description": "A cylindrical hole to subtract from the part, with an optional countersink or counterbore."
     },
     "Slot": {
       "type": "object",
@@ -203,31 +205,31 @@
         "id": {
           "type": "string",
           "title": "Id",
-          "description": "Id parameter."
+          "description": "Optional stable identifier for this slot, used to reference it from features or diagnostics."
         },
         "x": {
           "type": "number",
           "title": "X",
-          "description": "X parameter."
+          "description": "X coordinate of the slot center in millimeters, relative to the part's local origin."
         },
         "y": {
           "type": "number",
           "title": "Y",
-          "description": "Y parameter."
+          "description": "Y coordinate of the slot center in millimeters, relative to the part's local origin."
         },
         "length": {
           "type": "number",
           "exclusiveMinimum": 0,
           "maximum": 10000,
           "title": "Length",
-          "description": "Length in millimeters."
+          "description": "Slot length in millimeters, measured along its long axis."
         },
         "width": {
           "type": "number",
           "exclusiveMinimum": 0,
           "maximum": 10000,
           "title": "Width",
-          "description": "Width in millimeters."
+          "description": "Slot width in millimeters."
         },
         "depth": {
           "oneOf": [
@@ -238,10 +240,12 @@
               "type": "number",
               "exclusiveMinimum": 0,
               "maximum": 10000,
-              "title": "OneOf",
-              "description": "One of parameter."
+              "title": "Depth",
+              "description": "Slot depth in millimeters."
             }
-          ]
+          ],
+          "title": "Depth",
+          "description": "Slot depth in millimeters, or \"through\" to cut completely through the part."
         },
         "axis": {
           "enum": [
@@ -250,7 +254,7 @@
             "z"
           ],
           "title": "Axis",
-          "description": "Axis parameter.",
+          "description": "Axis the slot is cut along.",
           "default": "z",
           "examples": [
             "z"
@@ -264,7 +268,7 @@
       },
       "additionalProperties": false,
       "title": "Slot",
-      "description": " slot parameter."
+      "description": "A rectangular slot to subtract from the part."
     },
     "Fillet": {
       "type": "object",
@@ -282,12 +286,12 @@
         "target": {
           "type": "string",
           "title": "Target",
-          "description": "Target parameter."
+          "description": "Optional identifier of the edge or feature this fillet applies to; omit to apply it to the whole part where supported."
         }
       },
       "additionalProperties": false,
       "title": "Fillet",
-      "description": " fillet parameter."
+      "description": "A rounded edge finishing request, defined by radius."
     },
     "Chamfer": {
       "type": "object",
@@ -300,17 +304,17 @@
           "exclusiveMinimum": 0,
           "maximum": 10000,
           "title": "Distance",
-          "description": "Distance parameter."
+          "description": "Chamfer distance in millimeters, measured along each adjoining face."
         },
         "target": {
           "type": "string",
           "title": "Target",
-          "description": "Target parameter."
+          "description": "Optional identifier of the edge or feature this chamfer applies to; omit to apply it to the whole part where supported."
         }
       },
       "additionalProperties": false,
       "title": "Chamfer",
-      "description": " chamfer parameter."
+      "description": "A beveled edge finishing request, defined by distance."
     },
     "Pattern": {
       "oneOf": [
@@ -332,33 +336,33 @@
               "minimum": 1,
               "maximum": 100,
               "title": "CountX",
-              "description": "Count x for the part."
+              "description": "Number of repetitions along the X axis."
             },
             "countY": {
               "type": "integer",
               "minimum": 1,
               "maximum": 100,
               "title": "CountY",
-              "description": "Count y for the part."
+              "description": "Number of repetitions along the Y axis."
             },
             "spacingX": {
               "type": "number",
               "exclusiveMinimum": 0,
               "maximum": 10000,
               "title": "SpacingX",
-              "description": "Spacing x in millimeters."
+              "description": "Spacing between repetitions along the X axis, in millimeters."
             },
             "spacingY": {
               "type": "number",
               "exclusiveMinimum": 0,
               "maximum": 10000,
               "title": "SpacingY",
-              "description": "Spacing y in millimeters."
+              "description": "Spacing between repetitions along the Y axis, in millimeters."
             }
           },
           "additionalProperties": false,
-          "title": "OneOf",
-          "description": "One of parameter."
+          "title": "RectangularPattern",
+          "description": "A rectangular grid pattern defined by repetition counts and spacing along the X and Y axes."
         },
         {
           "type": "object",
@@ -376,14 +380,14 @@
               "minimum": 1,
               "maximum": 100,
               "title": "Count",
-              "description": "Count for the part."
+              "description": "Number of repetitions."
             },
             "spacing": {
               "type": "number",
               "exclusiveMinimum": 0,
               "maximum": 10000,
               "title": "Spacing",
-              "description": "Spacing in millimeters."
+              "description": "Spacing between repetitions, in millimeters."
             },
             "axis": {
               "enum": [
@@ -392,7 +396,7 @@
                 "z"
               ],
               "title": "Axis",
-              "description": "Axis parameter.",
+              "description": "Axis the pattern repeats along.",
               "default": "z",
               "examples": [
                 "z"
@@ -405,8 +409,8 @@
             }
           },
           "additionalProperties": false,
-          "title": "OneOf",
-          "description": "One of parameter."
+          "title": "LinearPattern",
+          "description": "A linear pattern defined by a repetition count and spacing along one axis."
         },
         {
           "type": "object",
@@ -424,31 +428,33 @@
               "minimum": 1,
               "maximum": 100,
               "title": "Count",
-              "description": "Count for the part."
+              "description": "Number of repetitions around the circle."
             },
             "radius": {
               "type": "number",
               "exclusiveMinimum": 0,
               "maximum": 10000,
               "title": "Radius",
-              "description": "Radius in millimeters."
+              "description": "Radius of the circle the repetitions are placed on, in millimeters."
             },
             "startAngle": {
               "type": "number",
               "title": "StartAngle",
-              "description": "Start angle parameter."
+              "description": "Starting angle of the first repetition, in degrees, measured counterclockwise from the X axis."
             },
             "sweepAngle": {
               "type": "number",
               "title": "SweepAngle",
-              "description": "Sweep angle parameter."
+              "description": "Total angle the pattern sweeps through, in degrees; omit for a full 360-degree pattern."
             }
           },
           "additionalProperties": false,
-          "title": "OneOf",
-          "description": "One of parameter."
+          "title": "RadialPattern",
+          "description": "A radial (circular) pattern defined by a repetition count around a center point."
         }
-      ]
+      ],
+      "title": "Pattern",
+      "description": "A rectangular, linear, or radial repetition pattern for a feature."
     },
     "SupplierReference": {
       "type": "object",
@@ -461,29 +467,29 @@
           "type": "string",
           "minLength": 1,
           "title": "Supplier",
-          "description": "Supplier parameter."
+          "description": "Supplier or vendor name, for example \"McMaster-Carr\"."
         },
         "partNumber": {
           "type": "string",
           "minLength": 1,
           "title": "PartNumber",
-          "description": "Part number parameter."
+          "description": "Supplier's part number or SKU for this item."
         },
         "url": {
           "type": "string",
           "format": "uri",
           "title": "Url",
-          "description": "Url parameter."
+          "description": "Optional URL to the supplier's product page for this item."
         },
         "description": {
           "type": "string",
           "title": "Description",
-          "description": "Description parameter."
+          "description": "Optional human-readable description of the supplier listing."
         }
       },
       "additionalProperties": false,
       "title": "SupplierReference",
-      "description": " supplier reference parameter."
+      "description": "A reference to where a hardware item can be purchased."
     },
     "HardwareItem": {
       "type": "object",
@@ -497,50 +503,50 @@
           "type": "string",
           "minLength": 1,
           "title": "Id",
-          "description": "Id parameter."
+          "description": "Stable identifier for this hardware item, used in BOM output and project relationships."
         },
         "kind": {
           "type": "string",
           "minLength": 1,
           "title": "Kind",
-          "description": "Kind parameter."
+          "description": "Hardware category, for example \"screw\", \"nut\", or \"insert\"."
         },
         "standard": {
           "type": "string",
           "title": "Standard",
-          "description": "Standard parameter."
+          "description": "Optional fastener standard, for example \"ISO 4762\" or \"DIN 912\"."
         },
         "size": {
           "type": "string",
           "title": "Size",
-          "description": "Size parameter."
+          "description": "Optional size designation, for example \"M3x8\" or \"#4-40\"."
         },
         "quantity": {
           "type": "integer",
           "minimum": 1,
           "maximum": 10000,
           "title": "Quantity",
-          "description": "Quantity parameter."
+          "description": "Number of this hardware item required."
         },
         "role": {
           "type": "string",
           "title": "Role",
-          "description": "Role parameter."
+          "description": "Optional description of how this hardware is used, for example \"lid screw\" or \"heat-set insert\"."
         },
         "supplierReferences": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/SupplierReference",
-            "title": "Items",
-            "description": "Items parameter."
+            "title": "SupplierReference",
+            "description": "A supplier reference for this hardware item."
           },
           "title": "SupplierReferences",
-          "description": "Supplier references parameter."
+          "description": "Optional list of supplier references for sourcing this hardware item."
         }
       },
       "additionalProperties": false,
       "title": "HardwareItem",
-      "description": " hardware item parameter."
+      "description": "A bill-of-materials entry for a fastener, insert, or other hardware component used by the part."
     }
   },
   "title": "Common Printspec Definitions",

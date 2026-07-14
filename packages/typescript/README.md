@@ -2,7 +2,7 @@
 
 TypeScript package for printspec JSON Schemas, offline validation, BOM helpers, browser form metadata helpers, CLI commands, deterministic bundle export, and starter OpenSCAD/CadQuery source generation.
 
-**Status: npm package v0.2.2 / schema v0.1.0 experimental.** Version 0.2.2 adds browser-safe visual preview APIs; schemas and `printspecVersion` remain 0.1.0.
+**Status: npm package v0.3.0 / schema v0.2.0 experimental.** The npm package version and schema version track independently; see `docs/hosted-schemas.md` for the versioning policy.
 
 ## Installation
 
@@ -23,7 +23,7 @@ This package is ESM-only (`"type": "module"`).
 import { validatePrintSpec, generateOpenScad } from "@invisra/printspec";
 
 const spec = {
-  printspecVersion: "0.1.0",
+  printspecVersion: "0.2.0",
   units: "mm",
   part: {
     type: "round_spacer",
@@ -87,7 +87,7 @@ Validation resolves bundled schemas offline. It does not fetch hosted schema URL
 
 ## Hosted schema note
 
-Hosted schemas at `https://schemas.invisra.ai/printspec/0.1.0/` are public references for documentation and external tools. They are not required for package validation.
+Hosted schemas at `https://schemas.invisra.ai/printspec/0.2.0/` are public references for documentation and external tools. They are not required for package validation.
 
 ## Safety note
 
@@ -95,7 +95,7 @@ Browser previews are approximate visual previews: they are dimensionally faithfu
 
 ## Supported part families
 
-printspec 0.2.2 includes these practical, low-risk alpha part families. Generated OpenSCAD/CadQuery source should be reviewed before manufacturing, and preview geometry is visual/non-authoritative.
+printspec 0.3.0 includes these practical, low-risk alpha part families. Generated OpenSCAD/CadQuery source should be reviewed before manufacturing, and preview geometry is visual/non-authoritative.
 
 - `round_spacer` — cylindrical spacer with optional center hole; key parameters: outerDiameter, innerDiameter, height.
 - `spacer_block` — rectangular spacer block with optional holes; key parameters: length, width, height, holes.

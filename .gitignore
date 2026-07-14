@@ -19,15 +19,26 @@ __pycache__/
 **/__pycache__/
 .pytest_cache/
 .DS_Store
+.mypy_cache/
+.ruff_cache/
+
+# Opt-in real-kernel brepjs verification (scripts/brepjs-verify): its
+# node_modules is already covered by the node_modules/ rule above; this is
+# just its per-run scratch output.
+scripts/brepjs-verify/.generated/
 
 # Synced schema artifacts committed for static hosting and package data.
 !public/
 !public/index.html
+!public/llms.txt
 !public/printspec/
 !public/printspec/index.html
 !public/printspec/manifest.json
 !public/printspec/*/
 !public/printspec/*/index.html
+!public/printspec/*/llms.txt
+!public/printspec/*/docs/
+!public/printspec/*/docs/*.html
 !public/printspec/**/*.json
 !public/printspec/**/*.schema.json
 !packages/python/printspec/schemas/

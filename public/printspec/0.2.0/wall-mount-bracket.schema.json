@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/project-enclosure-tray.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/wall-mount-bracket.schema.json",
   "type": "object",
-  "title": "Project enclosure tray",
-  "description": "Open tray for low-voltage electronics and project organization.",
+  "title": "Wall mount bracket",
+  "description": "Simple flat wall bracket with a light-duty shelf/tab.",
   "required": [
     "type",
     "label",
@@ -11,7 +11,7 @@
   ],
   "properties": {
     "type": {
-      "const": "project_enclosure_tray",
+      "const": "wall_mount_bracket",
       "title": "Part type",
       "description": "Stable printspec part family identifier."
     },
@@ -26,95 +26,51 @@
     },
     "parameters": {
       "type": "object",
-      "title": "Project enclosure tray parameters",
-      "description": "Open tray for low-voltage electronics and project organization.",
+      "title": "Wall mount bracket parameters",
+      "description": "Simple flat wall bracket with a light-duty shelf/tab.",
       "required": [
-        "outerWidth",
-        "outerDepth",
-        "wallHeight",
-        "wallThickness",
-        "floorThickness"
+        "width",
+        "height",
+        "thickness",
+        "tabDepth",
+        "screwHoleDiameter",
+        "screwHoleSpacing"
       ],
       "properties": {
-        "outerWidth": {
+        "width": {
           "type": "number",
-          "title": "Outer width",
-          "description": "Outer width parameter.",
-          "default": 80,
+          "title": "Width",
+          "description": "Wall plate width in millimeters.",
+          "default": 40,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
           "x-printspec-step": 0.1,
           "x-printspec-priority": "primary",
           "examples": [
-            80
+            40
           ],
           "minimum": 0,
           "maximum": 10000
         },
-        "outerDepth": {
+        "height": {
           "type": "number",
-          "title": "Outer depth",
-          "description": "Outer depth parameter.",
-          "default": 50,
+          "title": "Height",
+          "description": "Wall plate height in millimeters, measured from the bottom of the tab to the top of the plate.",
+          "default": 60,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
           "x-printspec-step": 0.1,
           "x-printspec-priority": "primary",
           "examples": [
-            50
+            60
           ],
           "minimum": 0,
           "maximum": 10000
         },
-        "wallHeight": {
+        "thickness": {
           "type": "number",
-          "title": "Wall height",
-          "description": "Wall height parameter.",
-          "default": 15,
-          "x-printspec-control": "number",
-          "x-printspec-unit": "mm",
-          "x-printspec-step": 0.1,
-          "x-printspec-priority": "primary",
-          "examples": [
-            15
-          ],
-          "minimum": 0,
-          "maximum": 10000
-        },
-        "wallThickness": {
-          "type": "number",
-          "title": "Wall thickness",
-          "description": "Wall thickness parameter.",
-          "default": 3,
-          "x-printspec-control": "number",
-          "x-printspec-unit": "mm",
-          "x-printspec-step": 0.1,
-          "x-printspec-priority": "primary",
-          "examples": [
-            3
-          ],
-          "minimum": 0,
-          "maximum": 10000
-        },
-        "floorThickness": {
-          "type": "number",
-          "title": "Floor thickness",
-          "description": "Floor thickness parameter.",
-          "default": 3,
-          "x-printspec-control": "number",
-          "x-printspec-unit": "mm",
-          "x-printspec-step": 0.1,
-          "x-printspec-priority": "primary",
-          "examples": [
-            3
-          ],
-          "minimum": 0,
-          "maximum": 10000
-        },
-        "cornerRadius": {
-          "type": "number",
-          "title": "Corner radius",
-          "description": "Corner radius parameter.",
+          "title": "Thickness",
+          "description": "Wall plate and tab thickness in millimeters.",
           "default": 4,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -126,10 +82,55 @@
           "minimum": 0,
           "maximum": 10000
         },
-        "mountHoleDiameter": {
+        "tabDepth": {
           "type": "number",
-          "title": "Mount hole diameter",
-          "description": "Mount hole diameter parameter.",
+          "title": "Tab depth",
+          "description": "Depth the shelf/tab projects out from the wall plate, in millimeters.",
+          "default": 20,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            20
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "screwHoleDiameter": {
+          "type": "number",
+          "title": "Screw hole diameter",
+          "description": "Diameter of the wall-mounting screw holes, in millimeters.",
+          "default": 4,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            4
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "screwHoleSpacing": {
+          "type": "number",
+          "title": "Screw hole spacing",
+          "description": "Center-to-center spacing between the wall-mounting screw holes, in millimeters.",
+          "default": 36,
+          "x-printspec-control": "number",
+          "x-printspec-unit": "mm",
+          "x-printspec-step": 0.1,
+          "x-printspec-priority": "primary",
+          "examples": [
+            36
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "cornerRadius": {
+          "type": "number",
+          "title": "Corner radius",
+          "description": "Outer corner radius in millimeters.",
           "default": 3,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -140,48 +141,31 @@
           ],
           "minimum": 0,
           "maximum": 10000
-        },
-        "mountHoleInset": {
-          "type": "number",
-          "title": "Mount hole inset",
-          "description": "Mount hole inset parameter.",
-          "default": 8,
-          "x-printspec-control": "number",
-          "x-printspec-unit": "mm",
-          "x-printspec-step": 0.1,
-          "x-printspec-priority": "primary",
-          "examples": [
-            8
-          ],
-          "minimum": 0,
-          "maximum": 10000
         }
       },
       "additionalProperties": false,
       "x-printspec-ui": {
         "order": [
-          "outerWidth",
-          "outerDepth",
-          "wallHeight",
-          "wallThickness",
-          "floorThickness",
-          "cornerRadius",
-          "mountHoleDiameter",
-          "mountHoleInset"
+          "width",
+          "height",
+          "thickness",
+          "tabDepth",
+          "screwHoleDiameter",
+          "screwHoleSpacing",
+          "cornerRadius"
         ],
         "groups": [
           {
             "id": "parameters",
             "title": "Parameters",
             "fields": [
-              "outerWidth",
-              "outerDepth",
-              "wallHeight",
-              "wallThickness",
-              "floorThickness",
-              "cornerRadius",
-              "mountHoleDiameter",
-              "mountHoleInset"
+              "width",
+              "height",
+              "thickness",
+              "tabDepth",
+              "screwHoleDiameter",
+              "screwHoleSpacing",
+              "cornerRadius"
             ]
           }
         ]

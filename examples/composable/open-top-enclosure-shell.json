@@ -1,0 +1,55 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Open-Top Enclosure Shell",
+    "description": "A simple hollow enclosure base: a solid box hollowed out with the shell feature (2mm walls, open top for a separate lid), then a cable pass-through hole cut through the now-thin front wall -- demonstrating that a feature declared after a shell feature cuts into the shelled result, not the original solid.",
+    "components": [
+      {
+        "id": "case",
+        "kind": "box",
+        "operation": "add",
+        "description": "60x40x25mm solid box, hollowed out below by the shell feature.",
+        "dimensions": {
+          "length": 60,
+          "width": 40,
+          "height": 25
+        }
+      }
+    ],
+    "features": [
+      {
+        "id": "hollow_case",
+        "kind": "shell",
+        "target": "case",
+        "description": "Hollows the case to 2mm walls with the top face removed, leaving an open-top tray for a separate lid.",
+        "parameters": {
+          "thickness": 2,
+          "openFaces": ["top"]
+        }
+      },
+      {
+        "id": "cable_pass_through",
+        "kind": "hole",
+        "target": "case",
+        "description": "Cable pass-through in the front wall, cut through the shell's 2mm wall thickness (declared after hollow_case, so it cuts the hollowed result, not the original solid box).",
+        "position": { "x": 0, "y": 0, "z": 12 },
+        "parameters": {
+          "diameter": 6,
+          "depth": "through",
+          "axis": "y"
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": ["Print with the open top facing up; no supports needed inside the cavity."]
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "cable_clip",
+    "label": "Cable clip with a mounting hole",
+    "parameters": {
+      "baseLength": 30,
+      "baseWidth": 14,
+      "baseThickness": 3,
+      "clipInnerDiameter": 8,
+      "clipWallThickness": 2,
+      "mountingHoles": [
+        { "x": -9, "y": 0, "diameter": 3.2, "depth": "through" }
+      ]
+    }
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

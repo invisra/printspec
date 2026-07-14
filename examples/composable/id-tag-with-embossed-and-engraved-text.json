@@ -1,0 +1,63 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "ID Tag With Embossed And Engraved Text",
+    "description": "A small identification tag demonstrating both text feature modes on the same target's top face: an embossed (raised) model label and an engraved (recessed) batch code. fontUrl points at a live Google Fonts direct TTF link (Roboto Regular) -- brepjs has no bundled default font, so text features always need a real, fetchable font URL; verifying this example's generated geometry against a real kernel requires network access, unlike every other example in this directory.",
+    "components": [
+      {
+        "id": "tag",
+        "kind": "plate",
+        "operation": "add",
+        "description": "40x20x4mm plate.",
+        "dimensions": {
+          "length": 40,
+          "width": 20,
+          "thickness": 4
+        }
+      }
+    ],
+    "features": [
+      {
+        "id": "model_label",
+        "kind": "text",
+        "target": "tag",
+        "description": "Raised model label near the top edge of the tag's top face.",
+        "relation": { "type": "attached_to_face", "target": "tag", "face": "top" },
+        "position": { "x": 0, "y": 4, "z": 0 },
+        "parameters": {
+          "content": "MK1",
+          "depth": 0.6,
+          "size": 5,
+          "fontUrl": "https://fonts.gstatic.com/s/roboto/v51/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbWmT.ttf",
+          "mode": "emboss"
+        }
+      },
+      {
+        "id": "batch_code",
+        "kind": "text",
+        "target": "tag",
+        "description": "Recessed batch code near the bottom edge of the same face.",
+        "relation": { "type": "attached_to_face", "target": "tag", "face": "top" },
+        "position": { "x": 0, "y": -4, "z": 0 },
+        "parameters": {
+          "content": "007",
+          "depth": 0.8,
+          "size": 5,
+          "fontUrl": "https://fonts.gstatic.com/s/roboto/v51/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbWmT.ttf",
+          "mode": "engrave"
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

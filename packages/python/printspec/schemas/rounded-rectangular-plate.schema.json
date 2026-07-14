@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/rounded-rectangular-plate.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/rounded-rectangular-plate.schema.json",
   "type": "object",
   "required": [
     "type",

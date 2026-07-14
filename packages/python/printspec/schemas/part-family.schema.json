@@ -41,7 +41,7 @@
       "$ref": "project-enclosure-tray.schema.json"
     }
   ],
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/part-family.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/part-family.schema.json",
   "title": "Part Family",
   "description": "Part Family schema for printspec documents."
 }

@@ -1,6 +1,6 @@
 # Getting started
 
-printspec `v0.1.0` is an experimental toolkit for validating practical parametric 3D-printable part specifications and generating starter CAD source for a small set of supported families.
+printspec `v0.2.0` is an experimental toolkit for validating practical parametric 3D-printable part specifications and generating starter CAD source for a small set of supported families.
 
 ## Install
 
@@ -50,7 +50,7 @@ Generated source is intentionally simple and should be reviewed before printing 
 
 ## Schemas
 
-Schemas are bundled in both packages for offline validation. Hosted copies are available for reference at <https://schemas.invisra.ai/printspec/0.1.0/>.
+Schemas are bundled in both packages for offline validation. Hosted copies are available for reference at <https://schemas.invisra.ai/printspec/0.2.0/>.
 
 ## Safety
 

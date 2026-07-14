@@ -1,0 +1,44 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Orifice Plate With O-Ring Groove",
+    "description": "A sealing plate with a circular O-ring groove cut into its top face, using a `torus` component with `operation: \"subtract\"` -- confirming (real-kernel-verified) that the newer component kinds added this session work as subtract/intersect operands, not just as `add` shapes. A central through-hole passes fluid/air through the plate; the groove alone seats a standard O-ring around it.",
+    "components": [
+      {
+        "id": "plate",
+        "kind": "cylinder",
+        "operation": "add",
+        "description": "40mm-diameter, 8mm-thick sealing plate.",
+        "dimensions": { "diameter": 40, "height": 8 }
+      },
+      {
+        "id": "groove",
+        "kind": "torus",
+        "operation": "subtract",
+        "description": "O-ring groove: 28mm pitch diameter, 3mm cross-section, centered on the plate's top face. torus sits with its own base (not center) at Z=0, so position.z is the plate's thickness minus the tube radius, putting the ring's center exactly on the top surface.",
+        "position": { "x": 0, "y": 0, "z": 6.5 },
+        "dimensions": { "outerDiameter": 31, "tubeDiameter": 3 }
+      }
+    ],
+    "features": [
+      {
+        "id": "bore",
+        "kind": "hole",
+        "target": "plate",
+        "description": "Central through-bore.",
+        "parameters": { "diameter": 10, "depth": "through" }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PETG",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

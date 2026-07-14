@@ -1,0 +1,50 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "composable_part",
+    "label": "Flared Hub With Curved Revolve Profile",
+    "description": "A hub that flares smoothly from a narrow neck to a wider base via a curved (arced) transition in its revolve profile, instead of a sharp step -- the kind of smooth, gradually-increasing-radius transition mechanical designers use to avoid a stress-concentrating sharp corner. With an axle bore through it. Curved revolve profiles need extra care versus curved extruded_profile footprints: because the profile sweeps a full 360 degrees around the Z axis, an arc/Bezier through point chosen too aggressively relative to its neighbors (rather than as the curve's own local midpoint) can produce a valid-looking profile that nonetheless fails at the real kernel's revolve() step (REVOLVE_FAILED) -- confirmed by real-kernel testing while building this example. Prefer a modest through point close to the straight-line path between its neighbors, and real-kernel-verify any revolved_profile that uses curve.",
+    "components": [
+      {
+        "id": "hub",
+        "kind": "revolved_profile",
+        "operation": "add",
+        "description": "Flares from radius 5 at the base to radius 10 at the top via an arc through (radius 8, z 5), instead of a sharp step or a straight taper.",
+        "dimensions": {
+          "points": [
+            { "radius": 5, "z": 0, "curve": { "type": "arc", "through": { "radius": 8, "z": 5 } } },
+            { "radius": 10, "z": 10 },
+            { "radius": 0, "z": 10 },
+            { "radius": 0, "z": 0 }
+          ]
+        }
+      }
+    ],
+    "features": [
+      {
+        "id": "axleBore",
+        "kind": "hole",
+        "target": "hub",
+        "description": "Axle bore through the hub.",
+        "relation": {
+          "type": "centered_on",
+          "target": "hub"
+        },
+        "parameters": {
+          "diameter": 4,
+          "depth": "through"
+        }
+      }
+    ]
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

@@ -1,6 +1,6 @@
 [project]
 name = "printspec"
-version = "0.1.0"
+version = "0.2.0"
 description = "JSON schemas, validators, BOM helpers, CLI commands, and starter generators for practical parametric 3D-printable parts."
 readme = "README.md"
 requires-python = ">=3.11"

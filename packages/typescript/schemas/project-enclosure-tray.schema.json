@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/project-enclosure-tray.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/project-enclosure-tray.schema.json",
   "type": "object",
   "title": "Project enclosure tray",
   "description": "Open tray for low-voltage electronics and project organization.",
@@ -39,7 +39,7 @@
         "outerWidth": {
           "type": "number",
           "title": "Outer width",
-          "description": "Outer width parameter.",
+          "description": "Overall tray width in millimeters, including walls.",
           "default": 80,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -54,7 +54,7 @@
         "outerDepth": {
           "type": "number",
           "title": "Outer depth",
-          "description": "Outer depth parameter.",
+          "description": "Overall tray depth in millimeters, including walls.",
           "default": 50,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -69,7 +69,7 @@
         "wallHeight": {
           "type": "number",
           "title": "Wall height",
-          "description": "Wall height parameter.",
+          "description": "Wall height in millimeters, measured from the floor.",
           "default": 15,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -84,7 +84,7 @@
         "wallThickness": {
           "type": "number",
           "title": "Wall thickness",
-          "description": "Wall thickness parameter.",
+          "description": "Wall thickness in millimeters.",
           "default": 3,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -99,7 +99,7 @@
         "floorThickness": {
           "type": "number",
           "title": "Floor thickness",
-          "description": "Floor thickness parameter.",
+          "description": "Floor thickness in millimeters.",
           "default": 3,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -114,7 +114,7 @@
         "cornerRadius": {
           "type": "number",
           "title": "Corner radius",
-          "description": "Corner radius parameter.",
+          "description": "Outer corner radius in millimeters.",
           "default": 4,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -129,7 +129,7 @@
         "mountHoleDiameter": {
           "type": "number",
           "title": "Mount hole diameter",
-          "description": "Mount hole diameter parameter.",
+          "description": "Diameter of the floor mounting holes, in millimeters.",
           "default": 3,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -144,7 +144,7 @@
         "mountHoleInset": {
           "type": "number",
           "title": "Mount hole inset",
-          "description": "Mount hole inset parameter.",
+          "description": "Distance from each outer edge to the center of the nearest mounting hole, in millimeters.",
           "default": 8,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",

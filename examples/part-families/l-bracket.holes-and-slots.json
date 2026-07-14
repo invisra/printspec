@@ -1,0 +1,30 @@
+{
+  "printspecVersion": "0.2.0",
+  "units": "mm",
+  "part": {
+    "type": "l_bracket",
+    "label": "L bracket with mounting holes and a cable slot",
+    "parameters": {
+      "legLengthA": 40,
+      "legLengthB": 30,
+      "width": 20,
+      "thickness": 4,
+      "holes": [
+        { "x": 30, "y": 0, "diameter": 3.2, "depth": "through", "axis": "z" },
+        { "x": 20, "y": 0, "diameter": 3.2, "depth": "through", "axis": "x" }
+      ],
+      "slots": [
+        { "x": 10, "y": -5, "length": 8, "width": 3, "depth": "through", "axis": "z" }
+      ]
+    }
+  },
+  "print": {
+    "intendedMaterial": "PLA",
+    "recommendedOrientation": "flat",
+    "notes": []
+  },
+  "metadata": {
+    "author": "Invisra",
+    "license": "CC0-1.0"
+  }
+}

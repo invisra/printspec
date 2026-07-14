@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.invisra.ai/printspec/0.1.0/drawer-divider.schema.json",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/drawer-divider.schema.json",
   "type": "object",
   "title": "Drawer divider",
   "description": "Customizable drawer divider strip with optional interlocking notches.",
@@ -37,7 +37,7 @@
         "length": {
           "type": "number",
           "title": "Length",
-          "description": "Length parameter.",
+          "description": "Overall divider length in millimeters, running along the drawer.",
           "default": 120,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -52,7 +52,7 @@
         "height": {
           "type": "number",
           "title": "Height",
-          "description": "Height parameter.",
+          "description": "Divider height in millimeters, measured from the drawer floor.",
           "default": 40,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -67,7 +67,7 @@
         "thickness": {
           "type": "number",
           "title": "Thickness",
-          "description": "Thickness parameter.",
+          "description": "Divider panel thickness in millimeters.",
           "default": 3,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -82,7 +82,7 @@
         "notchCount": {
           "type": "integer",
           "title": "Notch count",
-          "description": "Notch count parameter.",
+          "description": "Number of interlocking notches cut into the top edge of the divider.",
           "default": 0,
           "x-printspec-control": "integer",
           "x-printspec-unit": "count",
@@ -97,7 +97,7 @@
         "notchWidth": {
           "type": "number",
           "title": "Notch width",
-          "description": "Notch width parameter.",
+          "description": "Notch width in millimeters.",
           "default": 3,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
@@ -112,7 +112,7 @@
         "notchDepth": {
           "type": "number",
           "title": "Notch depth",
-          "description": "Notch depth parameter.",
+          "description": "Notch depth in millimeters, measured down from the top edge.",
           "default": 10,
           "x-printspec-control": "number",
           "x-printspec-unit": "mm",
