@@ -2,9 +2,9 @@
 
 **Practical JSON Schemas and offline tooling for parametric 3D-printable parts.**
 
-**Status: npm package v0.3.0 / schema and Python v0.2.0 experimental**
+**Status: npm package v0.3.1 / schema and Python v0.2.0 experimental**
 
-printspec is an open-source specification and toolkit from Invisra for describing practical, parameterized 3D-printable parts as JSON. The v0.2.0 schema release focuses on stable schemas, offline TypeScript/Python validation, bundled schema distribution, static hosted schema references, BOM/form helpers, starter source generators, CLI workflows, and deterministic source bundle export—not CAD execution or production manufacturing automation.
+printspec is an open-source specification and toolkit from Invisra for describing practical, parameterized 3D-printable parts as JSON. The v0.2.0 schema release focuses on stable schemas, offline TypeScript/Python validation, bundled schema distribution, static hosted schema references, BOM/form helpers, starter source generators, CLI workflows, and deterministic source bundle export—not runtime CAD execution in the published packages or production manufacturing automation.
 
 ## Installation
 
@@ -125,19 +125,31 @@ if generated["supported"]:
 
 ## Supported part families
 
-v0.2.0 includes practical starter schemas and generator support for:
+printspec 0.2.0 ships these practical, low-risk alpha part families, each with its own JSON Schema under `schemas/`. Generated OpenSCAD/CadQuery source should be reviewed before manufacturing, and preview geometry is visual/non-authoritative.
 
-- `rounded_rectangular_plate`
-- `spacer_block`
-- `round_spacer`
-- `electronics_standoff`
+- `round_spacer` — cylindrical spacer with optional center hole; key parameters: outerDiameter, innerDiameter, height.
+- `spacer_block` — rectangular spacer block with optional holes; key parameters: length, width, height, holes.
+- `electronics_standoff` — low-voltage electronics standoff; key parameters: outerDiameter, height, holeDiameter, optional base.
+- `rounded_rectangular_plate` — rounded utility plate; key parameters: length, width, thickness, cornerRadius, holes.
+- `cable_comb` — flat wire/cable routing comb; key parameters: slotCount, slotWidth, slotDepth, spacing/thickness.
+- `cable_clip` — simple cable retaining clip; key parameters: baseLength, base size, clip diameter/wall.
+- `wall_mount_bracket` — light-duty wall plate with shelf/tab; key parameters: width, height, thickness, tabDepth, screw holes.
+- `l_bracket` — light-duty, non-structural organization/prototyping bracket; key parameters: leg lengths, width, thickness, holes.
+- `drawer_divider` — customizable drawer divider strip; key parameters: length, height, thickness, notches, end tabs.
+- `project_enclosure_tray` — open tray for low-voltage projects; key parameters: outer size, wall/floor thickness, mount holes.
+- `drill_guide` — block used to guide repeated drilled holes; key parameters: length, width, height, holeDiameter, holeCount, holeSpacing.
+- `simple_box` — open-top box or enclosure body with walls and optional cutouts; key parameters: outerLength, outerWidth, outerHeight, wallThickness.
+- `simple_lid` — flat lid with optional lip, holes, and edge finishing; key parameters: length, width, thickness, optional lip.
+
+In addition to these fixed part families, `schemas/composable-part.schema.json` defines a `composable_part` schema for assembling multi-component parts from primitive components, curves, features, patterns, relations, and constraints.
 
 ## Supported generators
 
 - Starter OpenSCAD source generation.
 - Starter CadQuery source generation.
+- brepjs (`generateBrepJs`) and CadQuery (`generateCadQuery`) source generation for `composable_part`.
 
-Generated source is intended as reviewable starting material. printspec does not run OpenSCAD, CadQuery, FreeCAD, slicers, or CAD kernels.
+Generated source is intended as reviewable starting material. printspec does not run OpenSCAD, CadQuery, FreeCAD, slicers, or CAD kernels as part of the published packages or CI. Optional, opt-in real-kernel verification scripts (see below) are developer-run repository tooling only.
 
 ## Bundle export example
 
@@ -173,6 +185,7 @@ printspec list-part-families
 ## What v0.2.0 includes
 
 - JSON Schemas for practical parametric 3D-printable parts.
+- A `composable_part` schema for assembling multi-component parts from primitives, curves, features, patterns, relations, and constraints.
 - Offline TypeScript validation.
 - Offline Python validation.
 - Bundled schemas in both packages.
@@ -182,6 +195,8 @@ printspec list-part-families
 - Browser form metadata helpers.
 - Starter OpenSCAD source generators.
 - Starter CadQuery source generators.
+- brepjs and CadQuery `composable_part` source generators.
+- Optional, opt-in real-kernel geometry verification scripts (`npm run verify:brepjs-real-kernel`, `npm run verify:cadquery-real-kernel`) that build generated parts on a real OpenCascade kernel and check the resulting solids. These are repository tooling only; the published packages never depend on brepjs, occt-wasm, or cadquery.
 - CLI commands.
 - Deterministic project/part bundle export.
 - Optional experimental PartCAD stub metadata.
@@ -192,7 +207,7 @@ printspec list-part-families
 
 - Authoritative preview meshes for manufacturing.
 - STL, STEP, or 3MF export.
-- CAD runtime execution.
+- Runtime CAD execution or CAD-kernel bundling in the published `@invisra/printspec`/`printspec` packages (real-kernel geometry verification exists only as opt-in, developer-run repository tooling, never at package runtime or in CI).
 - Slicer integration.
 - Supplier API calls.
 - McMaster-Carr cart creation.
@@ -217,18 +232,3 @@ printspec is experimental software for describing and generating starter source 
 ## License
 
 Apache-2.0. See package metadata and repository license files for details.
-
-## Supported part families
-
-printspec 0.2.0 includes these practical, low-risk alpha part families. Generated OpenSCAD/CadQuery source should be reviewed before manufacturing, and preview geometry is visual/non-authoritative.
-
-- `round_spacer` — cylindrical spacer with optional center hole; key parameters: outerDiameter, innerDiameter, height.
-- `spacer_block` — rectangular spacer block with optional holes; key parameters: length, width, height, holes.
-- `electronics_standoff` — low-voltage electronics standoff; key parameters: outerDiameter, height, holeDiameter, optional base.
-- `rounded_rectangular_plate` — rounded utility plate; key parameters: length, width, thickness, cornerRadius, holes.
-- `cable_comb` — flat wire/cable routing comb; key parameters: slotCount, slotWidth, slotDepth, spacing/thickness.
-- `cable_clip` — simple cable retaining clip; key parameters: baseLength, base size, clip diameter/wall.
-- `wall_mount_bracket` — light-duty wall plate with shelf/tab; key parameters: width, height, thickness, tabDepth, screw holes.
-- `l_bracket` — light-duty, non-structural organization/prototyping bracket; key parameters: leg lengths, width, thickness, holes.
-- `drawer_divider` — customizable drawer divider strip; key parameters: length, height, thickness, notches, end tabs.
-- `project_enclosure_tray` — open tray for low-voltage projects; key parameters: outer size, wall/floor thickness, mount holes.
