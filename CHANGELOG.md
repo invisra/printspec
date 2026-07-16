@@ -1,10 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.3.1
+
+npm package version:
+- Bump `packages/typescript/package.json` from `0.3.0` to `0.3.1` (patch). The schema and Python version track stays at `0.2.0` (root `package.json` / `packages/python/pyproject.toml`), which is an independent track from the npm package version by design (see `docs/hosted-schemas.md`).
 
 Release tooling:
 - Fix the manual release workflow to validate the independent npm and schema/Python version tracks instead of requiring all package versions to be identical.
-- Use the committed npm lockfile during release verification and document the currently published npm `0.3.0` / schema and Python `0.2.0` versions.
+- Use the committed npm lockfile during release verification and document the currently published npm `0.3.1` / schema and Python `0.2.0` versions.
 
 ## 0.3.0
 
