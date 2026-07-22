@@ -182,7 +182,7 @@ ${versions.map((version) => `      <li><a href="/${PROJECT_NAME}/${version}/">${
   "units": "mm",
   "part": { "type": "round_spacer" }
 }</code></pre></article>
-    <article class="invisra-card"><h2>References</h2><p class="link-row"><a href="/${PROJECT_NAME}/manifest.json">Project manifest</a><a href="${PROJECT_REPO_URL}">GitHub repository</a><a href="https://cad.invisra.ai">PartPilot</a></p></article>
+    <article class="invisra-card"><h2>References</h2><p class="link-row"><a href="/${PROJECT_NAME}/manifest.json">Project manifest</a><a href="${PROJECT_REPO_URL}">GitHub repository</a></p></article>
   </section>
 </main>`,
   ),

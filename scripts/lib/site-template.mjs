@@ -79,7 +79,6 @@ export function siteHeader() {
       <a href="/${PROJECT_NAME}/validator/">Validator</a>
       <a href="/${PROJECT_NAME}/${SCHEMA_VERSION}/">Schemas</a>
       <a href="/llms.txt">llms.txt</a>
-      <a href="https://cad.invisra.ai">PartPilot</a>
       <a href="https://invisra.ai">Invisra</a>
       <button type="button" class="invisra-button invisra-button-ghost theme-toggle" data-theme-toggle onclick="window.toggleInvisraTheme()" aria-label="Switch theme">Light</button>
     </nav>

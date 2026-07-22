@@ -46,7 +46,7 @@ Hosted schemas are public references for documentation and external tooling. Pac
 - Docs site: <https://schemas.invisra.ai/printspec/0.2.0/docs/> (every `docs/*.md` file rendered to HTML)
 - `llms.txt` for AI agents: <https://schemas.invisra.ai/llms.txt> ([llms.txt](https://llmstxt.org)-convention summary, meant to be fetched as plain text)
 
-The online validator runs locally in your browser; no JSON is uploaded. It is intended for validation and developer debugging only. Manufacturing exports belong in the PartPilot/worker pipeline, not in the static schema-site validator.
+The online validator runs locally in your browser; no JSON is uploaded. It is intended for validation and developer debugging only. Manufacturing exports belong in a downstream manufacturing pipeline, not in the static schema-site validator.
 
 The static schema site uses the shared Invisra brand assets pinned to `https://assets.invisra.ai/brand/v1` (not `/brand/latest`). Dark mode is the default, a light theme is available from the static theme toggle, and the validator remains client-side/browser-only with bundled schemas so it can work offline apart from optional hosted CSS, logo, and favicon assets.
 
@@ -84,7 +84,7 @@ if (generated.supported) console.log(generated.code);
 
 ## Browser preview example
 
-The TypeScript package includes a browser-safe, renderer-neutral preview scene generator for immediate UI visualization in tools such as PartPilot. Preview geometry is approximate and visual only: it does not boolean-subtract exact holes, does not execute CAD code, and is not authoritative manufacturing output. Use the OpenSCAD, CadQuery, or external worker pipeline for exact STL/STEP/3MF manufacturing outputs.
+The TypeScript package includes a browser-safe, renderer-neutral preview scene generator for immediate UI visualization in downstream tools. Preview geometry is approximate and visual only: it does not boolean-subtract exact holes, does not execute CAD code, and is not authoritative manufacturing output. Use the OpenSCAD, CadQuery, or an external manufacturing pipeline for exact STL/STEP/3MF manufacturing outputs.
 
 ```js
 import { generatePreviewScene } from "@invisra/printspec/preview";
@@ -211,7 +211,7 @@ printspec list-part-families
 - Slicer integration.
 - Supplier API calls.
 - McMaster-Carr cart creation.
-- PartPilot SaaS app functionality.
+- Hosted SaaS app functionality.
 - A full CAD language or constraint solver.
 - Certified engineering validation.
 
