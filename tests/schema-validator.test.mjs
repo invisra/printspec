@@ -183,9 +183,9 @@ test("schema validator HTML includes Invisra static branding", () => {
   const html = readFileSync(htmlPath, "utf8");
   assert.match(
     html,
-    /https:\/\/assets\.invisra\.ai\/brand\/v1\/brand\.min\.css/,
+    /https:\/\/assets\.invisra\.ai\/brand\/v2\/brand\.min\.css/,
   );
-  assert.match(html, /https:\/\/assets\.invisra\.ai\/brand\/v1\/favicon\.svg/);
+  assert.match(html, /https:\/\/assets\.invisra\.ai\/brand\/v2\/favicon\.svg/);
   assert.match(html, /<html lang="en" data-theme="dark">/);
   assert.match(html, /Invisra/);
   assert.match(html, /printspec validator/);
