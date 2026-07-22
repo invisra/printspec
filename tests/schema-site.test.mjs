@@ -21,12 +21,12 @@ test("schema site pages include pinned Invisra brand assets and dark theme", () 
     const html = readFileSync(page, "utf8");
     assert.match(
       html,
-      /https:\/\/assets\.invisra\.ai\/brand\/v1\/brand\.min\.css/,
+      /https:\/\/assets\.invisra\.ai\/brand\/v2\/brand\.min\.css/,
       page,
     );
     assert.match(
       html,
-      /https:\/\/assets\.invisra\.ai\/brand\/v1\/favicon\.svg/,
+      /https:\/\/assets\.invisra\.ai\/brand\/v2\/favicon\.svg/,
       page,
     );
     assert.match(html, /data-theme="dark"/, page);

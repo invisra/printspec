@@ -34,7 +34,7 @@ test("static schema site files exist", () => {
   }
 });
 
-test("version index links every schema without filesystem paths or analytics by default", () => {
+test("version index links every schema without filesystem paths, with analytics by default", () => {
   const html = fs.readFileSync(path.join(publicDir, "index.html"), "utf8");
   for (const file of schemaFiles)
     assert.match(html, new RegExp(file.replaceAll(".", "\\.")));
@@ -42,7 +42,7 @@ test("version index links every schema without filesystem paths or analytics by 
     html,
     new RegExp(root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
   );
-  assert.doesNotMatch(html, /\/_vercel\/insights\/script\.js/);
+  assert.match(html, /\/_vercel\/insights\/script\.js/);
 });
 
 test("manifests include versions and all schemas", () => {

@@ -5,7 +5,8 @@
 
 import { PROJECT_NAME, SCHEMA_VERSION } from "./project-info.mjs";
 
-const ENABLE_VERCEL_ANALYTICS = process.env.ENABLE_VERCEL_ANALYTICS === "1";
+// Vercel Web Analytics is on by default; set ENABLE_VERCEL_ANALYTICS=0 to opt out.
+const ENABLE_VERCEL_ANALYTICS = process.env.ENABLE_VERCEL_ANALYTICS !== "0";
 
 export function escapeHtml(value) {
   return String(value ?? "")
@@ -21,7 +22,7 @@ function analyticsSnippet() {
   return `\n<script>\n  window.va =\n    window.va ||\n    function () {\n      (window.vaq = window.vaq || []).push(arguments);\n    };\n</script>\n<script defer src="/_vercel/insights/script.js"></script>`;
 }
 
-const BRAND_BASE = "https://assets.invisra.ai/brand/v1";
+const BRAND_BASE = "https://assets.invisra.ai/brand/v2";
 
 function brandHead() {
   return `  <link rel="stylesheet" href="${BRAND_BASE}/brand.min.css">\n  <link rel="icon" href="${BRAND_BASE}/favicon.svg" type="image/svg+xml">\n  <link rel="icon" href="${BRAND_BASE}/favicon-32.png" sizes="32x32" type="image/png">\n  <link rel="icon" href="${BRAND_BASE}/favicon-16.png" sizes="16x16" type="image/png">\n  <link rel="apple-touch-icon" href="${BRAND_BASE}/apple-touch-icon.png">\n  <meta name="theme-color" content="#020617">`;

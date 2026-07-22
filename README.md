@@ -48,7 +48,7 @@ Hosted schemas are public references for documentation and external tooling. Pac
 
 The online validator runs locally in your browser; no JSON is uploaded. It is intended for validation and developer debugging only. Manufacturing exports belong in a downstream manufacturing pipeline, not in the static schema-site validator.
 
-The static schema site uses the shared Invisra brand assets pinned to `https://assets.invisra.ai/brand/v1` (not `/brand/latest`). Dark mode is the default, a light theme is available from the static theme toggle, and the validator remains client-side/browser-only with bundled schemas so it can work offline apart from optional hosted CSS, logo, and favicon assets.
+The static schema site uses the shared Invisra brand assets pinned to `https://assets.invisra.ai/brand/v2` (not `/brand/latest`). Dark mode is the default, a light theme is available from the static theme toggle, and the validator remains client-side/browser-only with bundled schemas so it can work offline apart from optional hosted CSS, logo, and favicon assets.
 
 ## Simple JSON example
 
