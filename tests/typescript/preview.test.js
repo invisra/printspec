@@ -37,7 +37,7 @@ const box = (scene, id) =>
 const byKind = (scene, kind) =>
   scene.objects.filter((object) => object.kind === kind);
 
-test("preview scene generator supports all PartPilot-visible families", async () => {
+test("preview scene generator supports all preview-visible families", async () => {
   const { generatePreviewScene } =
     await import("../../packages/typescript/dist/preview/index.js");
   for (const [partType, spec] of Object.entries(specs)) {

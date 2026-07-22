@@ -59,7 +59,6 @@
       <a href="/printspec/validator/">Validator</a>
       <a href="/printspec/0.2.0/">Schemas</a>
       <a href="/llms.txt">llms.txt</a>
-      <a href="https://cad.invisra.ai">PartPilot</a>
       <a href="https://invisra.ai">Invisra</a>
       <button type="button" class="invisra-button invisra-button-ghost theme-toggle" data-theme-toggle onclick="window.toggleInvisraTheme()" aria-label="Switch theme">Light</button>
     </nav>
@@ -70,11 +69,15 @@
     <p class="link-row"><a href="./">&larr; All docs</a><a href="https://github.com/invisra/printspec/blob/main/CHANGELOG.md">View source on GitHub</a></p>
     <article class="invisra-card doc-body">
 <h1 id="changelog">Changelog</h1>
-<h2 id="unreleased">Unreleased</h2>
+<h2 id="0-3-1">0.3.1</h2>
+<p>npm package version:</p>
+<ul>
+<li>Bump <code>packages/typescript/package.json</code> from <code>0.3.0</code> to <code>0.3.1</code> (patch). The schema and Python version track stays at <code>0.2.0</code> (root <code>package.json</code> / <code>packages/python/pyproject.toml</code>), which is an independent track from the npm package version by design (see <code>docs/hosted-schemas.md</code>).</li>
+</ul>
 <p>Release tooling:</p>
 <ul>
 <li>Fix the manual release workflow to validate the independent npm and schema/Python version tracks instead of requiring all package versions to be identical.</li>
-<li>Use the committed npm lockfile during release verification and document the currently published npm <code>0.3.0</code> / schema and Python <code>0.2.0</code> versions.</li>
+<li>Use the committed npm lockfile during release verification and document the currently published npm <code>0.3.1</code> / schema and Python <code>0.2.0</code> versions.</li>
 </ul>
 <h2 id="0-3-0">0.3.0</h2>
 <p>Schema version:</p>
