@@ -3129,7 +3129,7 @@ test("composable-part brepjs generator implements text embossing and engraving",
             content: "Hi",
             depth: mode === "engrave" ? 1 : 0.6,
             size: 5,
-            fontUrl: "https://example.com/font.ttf",
+            fontUrl: "https://fonts.gstatic.com/font.ttf",
             mode,
           },
         },
@@ -3148,7 +3148,7 @@ test("composable-part brepjs generator implements text embossing and engraving",
     );
     assert.match(
       result.code,
-      /unwrap\(await loadFont\("https:\/\/example\.com\/font\.ttf", "font_0"\)\);/,
+      /unwrap\(await loadFont\("https:\/\/fonts\.gstatic\.com\/font\.ttf", "font_0"\)\);/,
       mode,
     );
     assert.match(
@@ -3192,8 +3192,8 @@ test("composable-part brepjs generator dedupes loadFont calls by fontUrl across 
     },
   });
   const sameUrl = spec([
-    feature("t1", "https://example.com/font.ttf"),
-    feature("t2", "https://example.com/font.ttf"),
+    feature("t1", "https://fonts.gstatic.com/font.ttf"),
+    feature("t2", "https://fonts.gstatic.com/font.ttf"),
   ]);
   const sameUrlCode = generateBrepJs(sameUrl).code;
   assert.equal((sameUrlCode.match(/loadFont\(/g) ?? []).length, 1);
@@ -3201,18 +3201,18 @@ test("composable-part brepjs generator dedupes loadFont calls by fontUrl across 
   assert.doesNotMatch(sameUrlCode, /font_1/);
 
   const twoUrls = spec([
-    feature("t1", "https://example.com/font-a.ttf"),
-    feature("t2", "https://example.com/font-b.ttf"),
+    feature("t1", "https://fonts.gstatic.com/font-a.ttf"),
+    feature("t2", "https://fonts.gstatic.com/font-b.ttf"),
   ]);
   const twoUrlsCode = generateBrepJs(twoUrls).code;
   assert.equal((twoUrlsCode.match(/loadFont\(/g) ?? []).length, 2);
   assert.match(
     twoUrlsCode,
-    /loadFont\("https:\/\/example\.com\/font-a\.ttf", "font_0"\)/,
+    /loadFont\("https:\/\/fonts\.gstatic\.com\/font-a\.ttf", "font_0"\)/,
   );
   assert.match(
     twoUrlsCode,
-    /loadFont\("https:\/\/example\.com\/font-b\.ttf", "font_1"\)/,
+    /loadFont\("https:\/\/fonts\.gstatic\.com\/font-b\.ttf", "font_1"\)/,
   );
 });
 test("composable-part brepjs generator only emits the 'brepjs\\/text' import when a spec has a text feature", () => {
@@ -3277,22 +3277,125 @@ test("composable-part rejects a text feature with a malformed or unfetchable-sch
     validatePrintSpec(spec("file:///home/user/fonts/Custom.ttf")).errors.join(
       " ",
     ),
-    /feature t \(text\) fontUrl must be an http\(s\):\/\/ URL or a data: URI \(got "file:"\)/,
+    /feature t \(text\) fontUrl must be a data: URI or an https:\/\/ URL on an allowlisted font host \(got "file:"\)/,
   );
-  // an allowed-but-irrelevant scheme (e.g. ftp:) is rejected the same way.
+  // a non-fetchable scheme (e.g. ftp:) is rejected the same way.
   assert.match(
-    validatePrintSpec(spec("ftp://example.com/font.ttf")).errors.join(" "),
-    /feature t \(text\) fontUrl must be an http\(s\):\/\/ URL or a data: URI \(got "ftp:"\)/,
+    validatePrintSpec(spec("ftp://fonts.gstatic.com/font.ttf")).errors.join(
+      " ",
+    ),
+    /feature t \(text\) fontUrl must be a data: URI or an https:\/\/ URL on an allowlisted font host \(got "ftp:"\)/,
   );
-  // http(s):// and data: URIs are both fine.
-  assert.deepEqual(validatePrintSpec(spec("https://example.com/font.ttf")), {
-    valid: true,
-    errors: [],
-  });
+  // http:// is rejected: fontUrl is fetched at kernel runtime, so cleartext
+  // and arbitrary hosts are an SSRF risk even on an otherwise-allowed host.
+  assert.match(
+    validatePrintSpec(spec("http://fonts.gstatic.com/font.ttf")).errors.join(
+      " ",
+    ),
+    /fontUrl must be a data: URI or an https:\/\/ URL on an allowlisted font host \(got "http:"\)/,
+  );
+  // https:// on a non-allowlisted host is rejected (the SSRF surface).
+  assert.match(
+    validatePrintSpec(spec("https://attacker.invalid/font.ttf")).errors.join(
+      " ",
+    ),
+    /feature t \(text\) fontUrl host "attacker\.invalid" is not on the allowlist/,
+  );
+  // https:// on an allowlisted host and inert data: URIs are both fine.
+  assert.deepEqual(
+    validatePrintSpec(spec("https://fonts.gstatic.com/font.ttf")),
+    { valid: true, errors: [] },
+  );
   assert.deepEqual(validatePrintSpec(spec("data:font/ttf;base64,AAAA")), {
     valid: true,
     errors: [],
   });
+});
+test("composable-part rejects text content longer than the 256-char limit", () => {
+  const spec = (content) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: {
+      type: "composable_part",
+      label: "content length test",
+      components: [
+        {
+          id: "a",
+          kind: "box",
+          operation: "add",
+          dimensions: { length: 20, width: 20, height: 6 },
+        },
+      ],
+      features: [
+        {
+          id: "t",
+          kind: "text",
+          target: "a",
+          parameters: {
+            content,
+            depth: 0.6,
+            fontUrl: "data:font/ttf;base64,AAAA",
+            mode: "emboss",
+          },
+        },
+      ],
+    },
+  });
+  assert.equal(validatePrintSpec(spec("A".repeat(256))).valid, true);
+  assert.equal(validatePrintSpec(spec("A".repeat(257))).valid, false);
+});
+test("composable-part rejects a spec whose patterns expand beyond the instance limit", () => {
+  const spec = (countX, countY) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: {
+      type: "composable_part",
+      label: "instance explosion test",
+      components: [
+        {
+          id: "a",
+          kind: "box",
+          operation: "add",
+          dimensions: { length: 2, width: 2, height: 2 },
+          pattern: {
+            type: "rectangular",
+            countX,
+            countY,
+            spacingX: 5,
+            spacingY: 5,
+          },
+        },
+      ],
+    },
+  });
+  // 100x100 = 10,000 instances is within the 20,000 ceiling.
+  assert.equal(validatePrintSpec(spec(100, 100)).valid, true);
+  // Two 100x100 patterns (20,000) plus one more instance tips it over.
+  const over = spec(100, 100);
+  over.part.components.push(
+    {
+      id: "b",
+      kind: "box",
+      operation: "add",
+      dimensions: { length: 2, width: 2, height: 2 },
+      pattern: {
+        type: "rectangular",
+        countX: 100,
+        countY: 100,
+        spacingX: 5,
+        spacingY: 5,
+      },
+    },
+    {
+      id: "c",
+      kind: "box",
+      operation: "add",
+      dimensions: { length: 2, width: 2, height: 2 },
+    },
+  );
+  const result = validatePrintSpec(over);
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join(" "), /exceeding the 20000 limit/);
 });
 test("composable-part rejects a text feature whose engrave depth exceeds its target's depth dimension", () => {
   const spec = {
@@ -3317,7 +3420,7 @@ test("composable-part rejects a text feature whose engrave depth exceeds its tar
           parameters: {
             content: "Hi",
             depth: 8,
-            fontUrl: "https://example.com/font.ttf",
+            fontUrl: "https://fonts.gstatic.com/font.ttf",
             mode: "engrave",
           },
         },

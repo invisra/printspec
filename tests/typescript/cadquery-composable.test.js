@@ -528,7 +528,7 @@ test("composable-part cadquery generator warns and skips unimplemented thread/te
         parameters: {
           content: "Hi",
           depth: 0.6,
-          fontUrl: "https://example.com/font.ttf",
+          fontUrl: "https://fonts.gstatic.com/font.ttf",
         },
       },
     ],
