@@ -22,15 +22,16 @@ function invalid(validatePrintSpec: ValidatePrintSpec, spec: PrintSpec) {
 // don't implement. Rather than silently drop them, report a warning so
 // callers know the request was ignored. Pass cornerRadius: false for the one
 // family (rounded_rectangular_plate) that actually implements cornerRadius,
-// and chamfer: false for a family/case that actually builds the chamfer.
+// and chamfer/fillet: false for a family/case that actually builds them.
 function warnings(
   a: any,
-  opts: { cornerRadius?: boolean; chamfer?: boolean } = {},
+  opts: { cornerRadius?: boolean; chamfer?: boolean; fillet?: boolean } = {},
 ) {
   const w: string[] = [];
   if (opts.chamfer !== false && a.chamfer != null)
     w.push("chamfer requested but not implemented");
-  if (a.fillet != null) w.push("fillet requested but not implemented");
+  if (opts.fillet !== false && a.fillet != null)
+    w.push("fillet requested but not implemented");
   if (a.rib?.enabled) w.push("rib requested but not implemented");
   if (opts.cornerRadius !== false && a.cornerRadius != null)
     w.push("cornerRadius requested but not implemented");
@@ -43,6 +44,12 @@ function wholePartChamfer(a: any): number | null {
   return a.chamfer != null && a.chamfer.target == null
     ? a.chamfer.distance
     : null;
+}
+
+// Only whole-part fillets (no target) are built. Chamfer takes precedence when
+// both are requested, so the two never fight over the same edges.
+function wholePartFillet(a: any): number | null {
+  return a.fillet != null && a.fillet.target == null ? a.fillet.radius : null;
 }
 
 function holes(hs: any[] = []) {
@@ -136,18 +143,23 @@ export function generateOpenScadWithValidator(
   }
   if (p.type === "round_spacer") {
     const c = wholePartChamfer(a);
+    const f = c == null ? wholePartFillet(a) : null;
     const inner =
       a.innerDiameter != null
         ? `\n  translate([0, 0, -0.1]) cylinder(h = height + 0.2, d = inner_diameter, $fn = 64);`
         : "";
+    // The fillet arc points are emitted as symbolic OpenSCAD (sin/cos evaluated
+    // at render time) so the TypeScript and Python generators stay identical.
     const outerSolid =
       c != null
         ? `rotate_extrude($fn = 64) polygon([[0, 0], [outer_diameter/2 - chamfer, 0], [outer_diameter/2, chamfer], [outer_diameter/2, height - chamfer], [outer_diameter/2 - chamfer, height], [0, height]])`
-        : `cylinder(h = height, d = outer_diameter, $fn = 64)`;
+        : f != null
+          ? `rotate_extrude($fn = 64) polygon(concat([[0, 0]], [for (i = [0:8]) [outer_diameter/2 - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]], [for (i = [0:8]) [outer_diameter/2 - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]], [[0, height]]))`
+          : `cylinder(h = height, d = outer_diameter, $fn = 64)`;
     return {
       supported: true,
-      warnings: warnings(a, { chamfer: c == null }),
-      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};${c != null ? `\nchamfer = ${c};` : ""}${a.innerDiameter != null ? `\ninner_diameter = ${a.innerDiameter};` : ""}\n\ndifference() {\n  ${outerSolid};${inner}\n}\n`,
+      warnings: warnings(a, { chamfer: c == null, fillet: f == null }),
+      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};${c != null ? `\nchamfer = ${c};` : ""}${f != null ? `\nfillet = ${f};` : ""}${a.innerDiameter != null ? `\ninner_diameter = ${a.innerDiameter};` : ""}\n\ndifference() {\n  ${outerSolid};${inner}\n}\n`,
     };
   }
   if (p.type === "electronics_standoff") {

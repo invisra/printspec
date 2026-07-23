@@ -9,19 +9,19 @@ def _or(v, d):
     return d if v is None else v
 
 
-def _warnings(a, corner_radius=True, chamfer=True):
+def _warnings(a, corner_radius=True, chamfer=True, fillet=True):
     """Several part families' schemas include chamfer/fillet/cornerRadius
     (and, for l_bracket, rib) as optional finishing requests that most
     generators don't implement. Rather than silently drop them, report a
     warning so callers know the request was ignored. Pass corner_radius=False
     for the one family (rounded_rectangular_plate) that actually implements
-    cornerRadius, and chamfer=False for a family/case that actually builds the
-    requested chamfer.
+    cornerRadius, and chamfer=False / fillet=False for a family/case that
+    actually builds the requested chamfer / fillet.
     """
     w = []
     if chamfer and a.get("chamfer") is not None:
         w.append("chamfer requested but not implemented")
-    if a.get("fillet") is not None:
+    if fillet and a.get("fillet") is not None:
         w.append("fillet requested but not implemented")
     if (a.get("rib") or {}).get("enabled"):
         w.append("rib requested but not implemented")
@@ -39,6 +39,19 @@ def _whole_part_chamfer(a):
     c = a.get("chamfer")
     if c is not None and c.get("target") is None:
         return c.get("distance")
+    return None
+
+
+def _whole_part_fillet(a):
+    """Return the fillet radius to apply to the whole part, or None.
+
+    Only whole-part fillets (no ``target``) are built. Chamfer takes precedence
+    when both are requested (callers should pass fillet only when no chamfer is
+    applied), so the two never fight over the same edges.
+    """
+    f = a.get("fillet")
+    if f is not None and f.get("target") is None:
+        return f.get("radius")
     return None
 
 
@@ -141,21 +154,27 @@ def generate_openscad(spec):
         }
     if p["type"] == "round_spacer":
         c = _whole_part_chamfer(a)
+        f = _whole_part_fillet(a) if c is None else None
         inner = (
             "\n  translate([0, 0, -0.1]) cylinder(h = height + 0.2, d = inner_diameter, $fn = 64);"
             if a.get("innerDiameter") is not None
             else ""
         )
-        outer_solid = (
-            "rotate_extrude($fn = 64) polygon([[0, 0], [outer_diameter/2 - chamfer, 0], [outer_diameter/2, chamfer], [outer_diameter/2, height - chamfer], [outer_diameter/2 - chamfer, height], [0, height]])"
-            if c is not None
-            else "cylinder(h = height, d = outer_diameter, $fn = 64)"
-        )
+        if c is not None:
+            outer_solid = "rotate_extrude($fn = 64) polygon([[0, 0], [outer_diameter/2 - chamfer, 0], [outer_diameter/2, chamfer], [outer_diameter/2, height - chamfer], [outer_diameter/2 - chamfer, height], [0, height]])"
+        elif f is not None:
+            # Round the outer top/bottom edges. The arc points are emitted as
+            # symbolic OpenSCAD (sin/cos evaluated at render time) so the Python
+            # and TypeScript generators stay byte-identical.
+            outer_solid = "rotate_extrude($fn = 64) polygon(concat([[0, 0]], [for (i = [0:8]) [outer_diameter/2 - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]], [for (i = [0:8]) [outer_diameter/2 - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]], [[0, height]]))"
+        else:
+            outer_solid = "cylinder(h = height, d = outer_diameter, $fn = 64)"
         return {
             "supported": True,
-            "warnings": _warnings(a, chamfer=c is None),
+            "warnings": _warnings(a, chamfer=c is None, fillet=f is None),
             "code": f"{HEADER}outer_diameter = {a['outerDiameter']};\nheight = {a['height']};"
             + (f"\nchamfer = {c};" if c is not None else "")
+            + (f"\nfillet = {f};" if f is not None else "")
             + (
                 f"\ninner_diameter = {a['innerDiameter']};"
                 if a.get("innerDiameter") is not None

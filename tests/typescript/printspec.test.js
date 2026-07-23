@@ -175,6 +175,27 @@ test("spacer_block chamfer builds a hulled chamfered box in OpenSCAD", () => {
   assert.match(scad.code, /hull\(\) \{/);
   assert.match(scad.code, /chamfered_box\(\);/);
 });
+test("round spacer fillet is built in OpenSCAD via a rotate_extrude arc", () => {
+  const s = read("examples/part-families/round-spacer.basic.json");
+  s.part.parameters.fillet = { radius: 0.5 };
+  const scad = generateOpenScad(s);
+  assert.deepEqual(scad.warnings, []);
+  assert.match(scad.code, /fillet = 0.5;/);
+  assert.match(scad.code, /rotate_extrude\(\$fn = 64\) polygon\(concat\(/);
+  assert.match(scad.code, /sin\(i\*90\/8\)/);
+  // Chamfer wins when both are requested; the fillet then still warns.
+  const both = read("examples/part-families/round-spacer.basic.json");
+  both.part.parameters.chamfer = { distance: 0.5 };
+  both.part.parameters.fillet = { radius: 0.5 };
+  const rb = generateOpenScad(both);
+  assert.deepEqual(rb.warnings, ["fillet requested but not implemented"]);
+  assert.doesNotMatch(rb.code, /fillet =/);
+  // CadQuery does not implement fillet yet, so it still warns.
+  assert.match(
+    generateCadQuery(s).warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+});
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });

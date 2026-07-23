@@ -1631,6 +1631,34 @@ def test_openscad_builds_whole_part_chamfer_for_spacer_and_round_spacer():
     assert "chamfer requested but not implemented" in generate_cadquery(block)["warnings"]
 
 
+def test_openscad_builds_whole_part_fillet_for_round_spacer():
+    spacer = read(Path("examples/part-families/round-spacer.basic.json"))
+    spacer["part"]["parameters"]["fillet"] = {"radius": 0.5}
+    r = generate_openscad(spacer)
+    assert r["supported"]
+    assert "fillet requested but not implemented" not in r["warnings"]
+    assert "fillet = 0.5;" in r["code"]
+    assert "rotate_extrude($fn = 64) polygon(concat(" in r["code"]
+    assert "sin(i*90/8)" in r["code"]
+
+    # Chamfer takes precedence when both are requested; the fillet then warns.
+    both = read(Path("examples/part-families/round-spacer.basic.json"))
+    both["part"]["parameters"]["chamfer"] = {"distance": 0.5}
+    both["part"]["parameters"]["fillet"] = {"radius": 0.5}
+    rb = generate_openscad(both)
+    assert "chamfer requested but not implemented" not in rb["warnings"]
+    assert "fillet requested but not implemented" in rb["warnings"]
+    assert "chamfer = 0.5;" in rb["code"] and "fillet =" not in rb["code"]
+
+    # A targeted fillet isn't built yet, so it still warns.
+    targeted = read(Path("examples/part-families/round-spacer.basic.json"))
+    targeted["part"]["parameters"]["fillet"] = {"radius": 0.5, "target": "top"}
+    assert "fillet requested but not implemented" in generate_openscad(targeted)["warnings"]
+
+    # CadQuery does not implement fillet yet, so it still warns.
+    assert "fillet requested but not implemented" in generate_cadquery(spacer)["warnings"]
+
+
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():
     # part.type is a valid composable_part discriminator, but this
     # component's position is missing y/z (both required on Point3D).

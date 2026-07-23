@@ -4,6 +4,7 @@
 
 Feature:
 - OpenSCAD generator: implement whole-part `chamfer` for the `round_spacer` and `spacer_block` part families (honoring `chamfer.distance`). `round_spacer` uses a `rotate_extrude` chamfered profile; `spacer_block` uses a `hull()` of inset/full cross-sections. A targeted chamfer (`chamfer.target` set), `fillet`, and chamfers on the other families still report the existing "requested but not implemented" warning, and CadQuery is unchanged. The Python and TypeScript OpenSCAD generators emit identical output, enforced by the generator parity test.
+- OpenSCAD generator: implement whole-part `fillet` for `round_spacer` (honoring `fillet.radius`) via a `rotate_extrude` arc profile whose points are emitted as symbolic OpenSCAD (`sin`/`cos` evaluated at render time), keeping the Python and TypeScript output byte-identical. Chamfer takes precedence when both are requested. Targeted fillets and fillets on the other families still warn; box-edge fillet (`spacer_block`) is deferred because it is not cleanly expressible in dependency-free OpenSCAD.
 
 ## 0.3.1
 
