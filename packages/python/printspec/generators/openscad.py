@@ -9,16 +9,17 @@ def _or(v, d):
     return d if v is None else v
 
 
-def _warnings(a, corner_radius=True):
+def _warnings(a, corner_radius=True, chamfer=True):
     """Several part families' schemas include chamfer/fillet/cornerRadius
     (and, for l_bracket, rib) as optional finishing requests that most
     generators don't implement. Rather than silently drop them, report a
     warning so callers know the request was ignored. Pass corner_radius=False
     for the one family (rounded_rectangular_plate) that actually implements
-    cornerRadius.
+    cornerRadius, and chamfer=False for a family/case that actually builds the
+    requested chamfer.
     """
     w = []
-    if a.get("chamfer") is not None:
+    if chamfer and a.get("chamfer") is not None:
         w.append("chamfer requested but not implemented")
     if a.get("fillet") is not None:
         w.append("fillet requested but not implemented")
@@ -27,6 +28,18 @@ def _warnings(a, corner_radius=True):
     if corner_radius and a.get("cornerRadius") is not None:
         w.append("cornerRadius requested but not implemented")
     return w
+
+
+def _whole_part_chamfer(a):
+    """Return the chamfer distance to apply to the whole part, or None.
+
+    Only whole-part chamfers (no ``target``) are built; a targeted chamfer
+    stays an unimplemented-warning until per-edge targeting is supported.
+    """
+    c = a.get("chamfer")
+    if c is not None and c.get("target") is None:
+        return c.get("distance")
+    return None
 
 
 def _holes(holes):
@@ -110,27 +123,45 @@ def generate_openscad(spec):
             "code": f"{HEADER}length = {a['length']};\nwidth = {a['width']};\nheight = {a['thickness']};\ncorner_radius = {a['cornerRadius']};\n\nmodule rounded_plate() {{\n  hull() {{\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) cylinder(h = height, r = corner_radius, $fn = 32);\n  }}\n}}\n\ndifference() {{\n  rounded_plate();\n{_holes(a.get('holes'))}\n}}\n",
         }
     if p["type"] == "spacer_block":
+        c = _whole_part_chamfer(a)
+        if c is not None:
+            body = (
+                f"chamfer = {c};\n\nmodule chamfered_box() {{\n  hull() {{\n"
+                "    linear_extrude(0.01) square([length - 2*chamfer, width - 2*chamfer], center = true);\n"
+                "    translate([0, 0, chamfer]) linear_extrude(height - 2*chamfer) square([length, width], center = true);\n"
+                "    translate([0, 0, height - 0.01]) linear_extrude(0.01) square([length - 2*chamfer, width - 2*chamfer], center = true);\n"
+                f"  }}\n}}\n\ndifference() {{\n  chamfered_box();\n{_holes(a.get('holes'))}\n}}\n"
+            )
+        else:
+            body = f"\ndifference() {{\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n{_holes(a.get('holes'))}\n}}\n"
         return {
             "supported": True,
-            "warnings": _warnings(a),
-            "code": f"{HEADER}length = {a['length']};\nwidth = {a['width']};\nheight = {a['height']};\n\ndifference() {{\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n{_holes(a.get('holes'))}\n}}\n",
+            "warnings": _warnings(a, chamfer=c is None),
+            "code": f"{HEADER}length = {a['length']};\nwidth = {a['width']};\nheight = {a['height']};\n{body}",
         }
     if p["type"] == "round_spacer":
+        c = _whole_part_chamfer(a)
         inner = (
             "\n  translate([0, 0, -0.1]) cylinder(h = height + 0.2, d = inner_diameter, $fn = 64);"
             if a.get("innerDiameter") is not None
             else ""
         )
+        outer_solid = (
+            "rotate_extrude($fn = 64) polygon([[0, 0], [outer_diameter/2 - chamfer, 0], [outer_diameter/2, chamfer], [outer_diameter/2, height - chamfer], [outer_diameter/2 - chamfer, height], [0, height]])"
+            if c is not None
+            else "cylinder(h = height, d = outer_diameter, $fn = 64)"
+        )
         return {
             "supported": True,
-            "warnings": _warnings(a),
+            "warnings": _warnings(a, chamfer=c is None),
             "code": f"{HEADER}outer_diameter = {a['outerDiameter']};\nheight = {a['height']};"
+            + (f"\nchamfer = {c};" if c is not None else "")
             + (
                 f"\ninner_diameter = {a['innerDiameter']};"
                 if a.get("innerDiameter") is not None
                 else ""
             )
-            + f"\n\ndifference() {{\n  cylinder(h = height, d = outer_diameter, $fn = 64);{inner}\n}}\n",
+            + f"\n\ndifference() {{\n  {outer_solid};{inner}\n}}\n",
         }
     if p["type"] == "electronics_standoff":
         has_base = a.get("baseDiameter") is not None and a.get("baseHeight") is not None

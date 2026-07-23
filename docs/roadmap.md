@@ -45,7 +45,7 @@ printspec bom examples/projects/simple-enclosure-project.json --format markdown
 node packages/typescript/dist/cli.js validate examples/part-families/rounded-rectangular-plate.basic.json
 ```
 
-Generators currently emit source code only and do not require or execute OpenSCAD, CadQuery, FreeCAD, or any CAD runtime. See [docs/generators.md](generators.md) for the current supported family list, which is the same for both the TypeScript and Python packages. Validation runs before generation. Valid but unsupported optional generator features, such as spacer chamfers or fillets, produce stable warnings rather than being silently ignored. BOM helpers format local spec hardware data only; printspec does not scrape suppliers or create carts. The v0.2.0 line is experimental and intended for review before manufacturing.
+Generators currently emit source code only and do not require or execute OpenSCAD, CadQuery, FreeCAD, or any CAD runtime. See [docs/generators.md](generators.md) for the current supported family list, which is the same for both the TypeScript and Python packages. Validation runs before generation. Optional finishing features are built where a generator supports them and otherwise produce stable warnings rather than being silently ignored: the OpenSCAD generator builds a whole-part `chamfer` for the `round_spacer` and `spacer_block` families, while targeted chamfers, `fillet`, and chamfers on other families still warn. BOM helpers format local spec hardware data only; printspec does not scrape suppliers or create carts. The v0.2.0 line is experimental and intended for review before manufacturing.
 
 ## Hosted schema release readiness
 

@@ -77,6 +77,11 @@
     <p class="link-row"><a href="./">&larr; All docs</a><a href="https://github.com/invisra/printspec/blob/main/CHANGELOG.md">View source on GitHub</a></p>
     <article class="invisra-card doc-body">
 <h1 id="changelog">Changelog</h1>
+<h2 id="unreleased">Unreleased</h2>
+<p>Feature:</p>
+<ul>
+<li>OpenSCAD generator: implement whole-part <code>chamfer</code> for the <code>round_spacer</code> and <code>spacer_block</code> part families (honoring <code>chamfer.distance</code>). <code>round_spacer</code> uses a <code>rotate_extrude</code> chamfered profile; <code>spacer_block</code> uses a <code>hull()</code> of inset/full cross-sections. A targeted chamfer (<code>chamfer.target</code> set), <code>fillet</code>, and chamfers on the other families still report the existing &quot;requested but not implemented&quot; warning, and CadQuery is unchanged. The Python and TypeScript OpenSCAD generators emit identical output, enforced by the generator parity test.</li>
+</ul>
 <h2 id="0-3-1">0.3.1</h2>
 <p>npm package version:</p>
 <ul>

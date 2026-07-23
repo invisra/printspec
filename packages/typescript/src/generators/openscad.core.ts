@@ -21,15 +21,28 @@ function invalid(validatePrintSpec: ValidatePrintSpec, spec: PrintSpec) {
 // for l_bracket, rib) as optional finishing requests that most generators
 // don't implement. Rather than silently drop them, report a warning so
 // callers know the request was ignored. Pass cornerRadius: false for the one
-// family (rounded_rectangular_plate) that actually implements cornerRadius.
-function warnings(a: any, opts: { cornerRadius?: boolean } = {}) {
+// family (rounded_rectangular_plate) that actually implements cornerRadius,
+// and chamfer: false for a family/case that actually builds the chamfer.
+function warnings(
+  a: any,
+  opts: { cornerRadius?: boolean; chamfer?: boolean } = {},
+) {
   const w: string[] = [];
-  if (a.chamfer != null) w.push("chamfer requested but not implemented");
+  if (opts.chamfer !== false && a.chamfer != null)
+    w.push("chamfer requested but not implemented");
   if (a.fillet != null) w.push("fillet requested but not implemented");
   if (a.rib?.enabled) w.push("rib requested but not implemented");
   if (opts.cornerRadius !== false && a.cornerRadius != null)
     w.push("cornerRadius requested but not implemented");
   return w;
+}
+
+// Only whole-part chamfers (no target) are built; a targeted chamfer stays an
+// unimplemented-warning until per-edge targeting is supported.
+function wholePartChamfer(a: any): number | null {
+  return a.chamfer != null && a.chamfer.target == null
+    ? a.chamfer.distance
+    : null;
 }
 
 function holes(hs: any[] = []) {
@@ -109,22 +122,32 @@ export function generateOpenScadWithValidator(
       warnings: warnings(a, { cornerRadius: false }),
       code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.thickness};\ncorner_radius = ${a.cornerRadius};\n\nmodule rounded_plate() {\n  hull() {\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) cylinder(h = height, r = corner_radius, $fn = 32);\n  }\n}\n\ndifference() {\n  rounded_plate();\n${holes(a.holes)}\n}\n`,
     };
-  if (p.type === "spacer_block")
+  if (p.type === "spacer_block") {
+    const c = wholePartChamfer(a);
+    const body =
+      c != null
+        ? `chamfer = ${c};\n\nmodule chamfered_box() {\n  hull() {\n    linear_extrude(0.01) square([length - 2*chamfer, width - 2*chamfer], center = true);\n    translate([0, 0, chamfer]) linear_extrude(height - 2*chamfer) square([length, width], center = true);\n    translate([0, 0, height - 0.01]) linear_extrude(0.01) square([length - 2*chamfer, width - 2*chamfer], center = true);\n  }\n}\n\ndifference() {\n  chamfered_box();\n${holes(a.holes)}\n}\n`
+        : `\ndifference() {\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n${holes(a.holes)}\n}\n`;
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.height};\n\ndifference() {\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n${holes(a.holes)}\n}\n`,
+      warnings: warnings(a, { chamfer: c == null }),
+      code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.height};\n${body}`,
     };
+  }
   if (p.type === "round_spacer") {
-    const w = warnings(a);
+    const c = wholePartChamfer(a);
     const inner =
       a.innerDiameter != null
         ? `\n  translate([0, 0, -0.1]) cylinder(h = height + 0.2, d = inner_diameter, $fn = 64);`
         : "";
+    const outerSolid =
+      c != null
+        ? `rotate_extrude($fn = 64) polygon([[0, 0], [outer_diameter/2 - chamfer, 0], [outer_diameter/2, chamfer], [outer_diameter/2, height - chamfer], [outer_diameter/2 - chamfer, height], [0, height]])`
+        : `cylinder(h = height, d = outer_diameter, $fn = 64)`;
     return {
       supported: true,
-      warnings: w,
-      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};${a.innerDiameter != null ? `\ninner_diameter = ${a.innerDiameter};` : ""}\n\ndifference() {\n  cylinder(h = height, d = outer_diameter, $fn = 64);${inner}\n}\n`,
+      warnings: warnings(a, { chamfer: c == null }),
+      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};${c != null ? `\nchamfer = ${c};` : ""}${a.innerDiameter != null ? `\ninner_diameter = ${a.innerDiameter};` : ""}\n\ndifference() {\n  ${outerSolid};${inner}\n}\n`,
     };
   }
   if (p.type === "electronics_standoff") {

@@ -1577,23 +1577,58 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
             "rounded-rectangular-plate.schema.json",
         ),
     ]
+    # The OpenSCAD generator builds a whole-part chamfer for these families, so
+    # it no longer warns for a (targetless) chamfer on them; CadQuery still does.
+    openscad_chamfer_families = {"spacer_block", "round_spacer"}
     for file, schema_file in families:
         props = read(Path("schemas") / schema_file)["properties"]["parameters"]["properties"]
         s = read(Path("examples/part-families") / file)
+        part_type = s["part"]["type"]
         expect_chamfer_warning = "chamfer" in props
         # Only rounded_rectangular_plate actually implements cornerRadius.
         expect_corner_radius_warning = file != "rounded-rectangular-plate.basic.json"
         if expect_chamfer_warning:
             s["part"]["parameters"]["chamfer"] = {"distance": 0.5}
         s["part"]["parameters"]["cornerRadius"] = 1
-        for generate in (generate_openscad, generate_cadquery):
+        for generate, gen_name in (
+            (generate_openscad, "openscad"),
+            (generate_cadquery, "cadquery"),
+        ):
             w = " ".join(generate(s)["warnings"])
-            if expect_chamfer_warning:
-                assert "chamfer requested but not implemented" in w, f"{file} chamfer"
+            chamfer_built = gen_name == "openscad" and part_type in openscad_chamfer_families
+            if expect_chamfer_warning and not chamfer_built:
+                assert "chamfer requested but not implemented" in w, f"{file} {gen_name} chamfer"
+            if chamfer_built:
+                assert "chamfer requested but not implemented" not in w, f"{file} {gen_name} built"
             if expect_corner_radius_warning:
                 assert "cornerRadius requested but not implemented" in w, f"{file} cornerRadius"
             else:
                 assert "cornerRadius requested but not implemented" not in w, file
+
+
+def test_openscad_builds_whole_part_chamfer_for_spacer_and_round_spacer():
+    block = read(Path("examples/part-families/spacer-block.four-hole.json"))
+    block["part"]["parameters"]["chamfer"] = {"distance": 0.5}
+    r = generate_openscad(block)
+    assert r["supported"]
+    assert "chamfer requested but not implemented" not in r["warnings"]
+    assert "chamfer = 0.5;" in r["code"]
+    assert "module chamfered_box()" in r["code"] and "hull()" in r["code"]
+
+    spacer = read(Path("examples/part-families/round-spacer.basic.json"))
+    spacer["part"]["parameters"]["chamfer"] = {"distance": 0.5}
+    r2 = generate_openscad(spacer)
+    assert r2["supported"]
+    assert "chamfer requested but not implemented" not in r2["warnings"]
+    assert "rotate_extrude($fn = 64) polygon(" in r2["code"]
+
+    # A targeted chamfer isn't built yet, so it still warns.
+    targeted = read(Path("examples/part-families/round-spacer.basic.json"))
+    targeted["part"]["parameters"]["chamfer"] = {"distance": 0.5, "target": "top"}
+    assert "chamfer requested but not implemented" in generate_openscad(targeted)["warnings"]
+
+    # CadQuery does not implement chamfer yet, so it still warns.
+    assert "chamfer requested but not implemented" in generate_cadquery(block)["warnings"]
 
 
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():

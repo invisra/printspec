@@ -141,10 +141,22 @@ test("generator snapshots match fixtures", () => {
     );
   }
 });
-test("round spacer warnings and standoff semantic validation", () => {
+test("round spacer chamfer is built in OpenSCAD; standoff semantic validation", () => {
   const s = read("examples/part-families/round-spacer.basic.json");
   s.part.parameters.chamfer = { distance: 0.5 };
-  assert.deepEqual(generateOpenScad(s).warnings, [
+  const scad = generateOpenScad(s);
+  // OpenSCAD now builds a whole-part chamfer, so it no longer warns for it.
+  assert.deepEqual(scad.warnings, []);
+  assert.match(scad.code, /rotate_extrude\(\$fn = 64\) polygon/);
+  assert.match(scad.code, /chamfer = 0.5;/);
+  // CadQuery does not implement chamfer yet, so it still warns.
+  assert.deepEqual(generateCadQuery(s).warnings, [
+    "chamfer requested but not implemented",
+  ]);
+  // A targeted chamfer is not built yet and still warns in OpenSCAD.
+  const targeted = read("examples/part-families/round-spacer.basic.json");
+  targeted.part.parameters.chamfer = { distance: 0.5, target: "top" };
+  assert.deepEqual(generateOpenScad(targeted).warnings, [
     "chamfer requested but not implemented",
   ]);
   assert.equal(
@@ -153,6 +165,15 @@ test("round spacer warnings and standoff semantic validation", () => {
     ).valid,
     false,
   );
+});
+test("spacer_block chamfer builds a hulled chamfered box in OpenSCAD", () => {
+  const s = read("examples/part-families/spacer-block.four-hole.json");
+  s.part.parameters.chamfer = { distance: 0.5 };
+  const scad = generateOpenScad(s);
+  assert.deepEqual(scad.warnings, []);
+  assert.match(scad.code, /module chamfered_box\(\) \{/);
+  assert.match(scad.code, /hull\(\) \{/);
+  assert.match(scad.code, /chamfered_box\(\);/);
 });
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
@@ -3834,10 +3855,15 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
       "rounded-rectangular-plate.schema.json",
     ],
   ];
+  // The OpenSCAD generator builds a whole-part chamfer for these families, so
+  // it no longer warns for a (targetless) chamfer on them; CadQuery and the
+  // family BRepJS generator still do.
+  const openscadChamferFamilies = new Set(["spacer_block", "round_spacer"]);
   for (const [file, schemaFile] of families) {
     const props = read("schemas/" + schemaFile).properties.parameters
       .properties;
     const s = read("examples/part-families/" + file);
+    const partType = s.part.type;
     const expectChamferWarning = "chamfer" in props;
     // Only rounded_rectangular_plate actually implements cornerRadius.
     const expectCornerRadiusWarning =
@@ -3850,11 +3876,19 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
       generateBrepJs,
     ]) {
       const w = generate(s).warnings.join(" ");
-      if (expectChamferWarning)
+      const chamferBuilt =
+        generate === generateOpenScad && openscadChamferFamilies.has(partType);
+      if (expectChamferWarning && !chamferBuilt)
         assert.match(
           w,
           /chamfer requested but not implemented/,
           `${file} chamfer`,
+        );
+      if (chamferBuilt)
+        assert.doesNotMatch(
+          w,
+          /chamfer requested but not implemented/,
+          `${file} chamfer built`,
         );
       if (expectCornerRadiusWarning)
         assert.match(

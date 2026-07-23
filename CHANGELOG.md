@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+Feature:
+- OpenSCAD generator: implement whole-part `chamfer` for the `round_spacer` and `spacer_block` part families (honoring `chamfer.distance`). `round_spacer` uses a `rotate_extrude` chamfered profile; `spacer_block` uses a `hull()` of inset/full cross-sections. A targeted chamfer (`chamfer.target` set), `fillet`, and chamfers on the other families still report the existing "requested but not implemented" warning, and CadQuery is unchanged. The Python and TypeScript OpenSCAD generators emit identical output, enforced by the generator parity test.
+
 ## 0.3.1
 
 npm package version:
