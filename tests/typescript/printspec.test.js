@@ -196,6 +196,27 @@ test("round spacer fillet is built in OpenSCAD via a rotate_extrude arc", () => 
     /fillet requested but not implemented/,
   );
 });
+test("rounded rectangular plate chamfer and fillet build hulled profiled columns", () => {
+  const ch = read(
+    "examples/part-families/rounded-rectangular-plate.basic.json",
+  );
+  ch.part.parameters.chamfer = { distance: 0.5 };
+  const rc = generateOpenScad(ch);
+  assert.deepEqual(rc.warnings, []);
+  assert.match(rc.code, /chamfer = 0.5;/);
+  assert.match(
+    rc.code,
+    /rotate_extrude\(\$fn = 32\) polygon\(\[\[0, 0\], \[corner_radius - chamfer, 0\]/,
+  );
+  const fi = read(
+    "examples/part-families/rounded-rectangular-plate.basic.json",
+  );
+  fi.part.parameters.fillet = { radius: 0.5 };
+  const rf = generateOpenScad(fi);
+  assert.deepEqual(rf.warnings, []);
+  assert.match(rf.code, /fillet = 0.5;/);
+  assert.match(rf.code, /rotate_extrude\(\$fn = 32\) polygon\(concat\(/);
+});
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });
@@ -3879,7 +3900,11 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
   // The OpenSCAD generator builds a whole-part chamfer for these families, so
   // it no longer warns for a (targetless) chamfer on them; CadQuery and the
   // family BRepJS generator still do.
-  const openscadChamferFamilies = new Set(["spacer_block", "round_spacer"]);
+  const openscadChamferFamilies = new Set([
+    "spacer_block",
+    "round_spacer",
+    "rounded_rectangular_plate",
+  ]);
   for (const [file, schemaFile] of families) {
     const props = read("schemas/" + schemaFile).properties.parameters
       .properties;

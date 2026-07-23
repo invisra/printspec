@@ -130,10 +130,23 @@ def generate_openscad(spec):
         }
     a = p["parameters"]
     if p["type"] == "rounded_rectangular_plate":
+        c = _whole_part_chamfer(a)
+        f = _whole_part_fillet(a) if c is None else None
+        # The plate is a hull() of corner columns; finishing the columns'
+        # top/bottom edges finishes the whole plate perimeter uniformly.
+        if c is not None:
+            column = "rotate_extrude($fn = 32) polygon([[0, 0], [corner_radius - chamfer, 0], [corner_radius, chamfer], [corner_radius, height - chamfer], [corner_radius - chamfer, height], [0, height]])"
+        elif f is not None:
+            column = "rotate_extrude($fn = 32) polygon(concat([[0, 0]], [for (i = [0:8]) [corner_radius - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]], [for (i = [0:8]) [corner_radius - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]], [[0, height]]))"
+        else:
+            column = "cylinder(h = height, r = corner_radius, $fn = 32)"
         return {
             "supported": True,
-            "warnings": _warnings(a, corner_radius=False),
-            "code": f"{HEADER}length = {a['length']};\nwidth = {a['width']};\nheight = {a['thickness']};\ncorner_radius = {a['cornerRadius']};\n\nmodule rounded_plate() {{\n  hull() {{\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) cylinder(h = height, r = corner_radius, $fn = 32);\n  }}\n}}\n\ndifference() {{\n  rounded_plate();\n{_holes(a.get('holes'))}\n}}\n",
+            "warnings": _warnings(a, corner_radius=False, chamfer=c is None, fillet=f is None),
+            "code": f"{HEADER}length = {a['length']};\nwidth = {a['width']};\nheight = {a['thickness']};\ncorner_radius = {a['cornerRadius']};"
+            + (f"\nchamfer = {c};" if c is not None else "")
+            + (f"\nfillet = {f};" if f is not None else "")
+            + f"\n\nmodule rounded_plate() {{\n  hull() {{\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) {column};\n  }}\n}}\n\ndifference() {{\n  rounded_plate();\n{_holes(a.get('holes'))}\n}}\n",
         }
     if p["type"] == "spacer_block":
         c = _whole_part_chamfer(a)

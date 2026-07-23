@@ -1579,7 +1579,7 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
     ]
     # The OpenSCAD generator builds a whole-part chamfer for these families, so
     # it no longer warns for a (targetless) chamfer on them; CadQuery still does.
-    openscad_chamfer_families = {"spacer_block", "round_spacer"}
+    openscad_chamfer_families = {"spacer_block", "round_spacer", "rounded_rectangular_plate"}
     for file, schema_file in families:
         props = read(Path("schemas") / schema_file)["properties"]["parameters"]["properties"]
         s = read(Path("examples/part-families") / file)
@@ -1657,6 +1657,26 @@ def test_openscad_builds_whole_part_fillet_for_round_spacer():
 
     # CadQuery does not implement fillet yet, so it still warns.
     assert "fillet requested but not implemented" in generate_cadquery(spacer)["warnings"]
+
+
+def test_openscad_builds_chamfer_and_fillet_for_rounded_rectangular_plate():
+    ch = read(Path("examples/part-families/rounded-rectangular-plate.basic.json"))
+    ch["part"]["parameters"]["chamfer"] = {"distance": 0.5}
+    rc = generate_openscad(ch)
+    assert rc["supported"]
+    assert "chamfer requested but not implemented" not in rc["warnings"]
+    assert "chamfer = 0.5;" in rc["code"]
+    assert (
+        "rotate_extrude($fn = 32) polygon([[0, 0], [corner_radius - chamfer, 0]" in rc["code"]
+    )
+
+    fi = read(Path("examples/part-families/rounded-rectangular-plate.basic.json"))
+    fi["part"]["parameters"]["fillet"] = {"radius": 0.5}
+    rf = generate_openscad(fi)
+    assert rf["supported"]
+    assert "fillet requested but not implemented" not in rf["warnings"]
+    assert "fillet = 0.5;" in rf["code"]
+    assert "rotate_extrude($fn = 32) polygon(concat(" in rf["code"]
 
 
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():

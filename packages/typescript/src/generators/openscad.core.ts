@@ -123,12 +123,27 @@ export function generateOpenScadWithValidator(
       warnings: [],
     };
   const a = p.parameters;
-  if (p.type === "rounded_rectangular_plate")
+  if (p.type === "rounded_rectangular_plate") {
+    const c = wholePartChamfer(a);
+    const f = c == null ? wholePartFillet(a) : null;
+    // The plate is a hull() of corner columns; finishing the columns' top/bottom
+    // edges finishes the whole plate perimeter uniformly.
+    const column =
+      c != null
+        ? `rotate_extrude($fn = 32) polygon([[0, 0], [corner_radius - chamfer, 0], [corner_radius, chamfer], [corner_radius, height - chamfer], [corner_radius - chamfer, height], [0, height]])`
+        : f != null
+          ? `rotate_extrude($fn = 32) polygon(concat([[0, 0]], [for (i = [0:8]) [corner_radius - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]], [for (i = [0:8]) [corner_radius - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]], [[0, height]]))`
+          : `cylinder(h = height, r = corner_radius, $fn = 32)`;
     return {
       supported: true,
-      warnings: warnings(a, { cornerRadius: false }),
-      code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.thickness};\ncorner_radius = ${a.cornerRadius};\n\nmodule rounded_plate() {\n  hull() {\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) cylinder(h = height, r = corner_radius, $fn = 32);\n  }\n}\n\ndifference() {\n  rounded_plate();\n${holes(a.holes)}\n}\n`,
+      warnings: warnings(a, {
+        cornerRadius: false,
+        chamfer: c == null,
+        fillet: f == null,
+      }),
+      code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.thickness};\ncorner_radius = ${a.cornerRadius};${c != null ? `\nchamfer = ${c};` : ""}${f != null ? `\nfillet = ${f};` : ""}\n\nmodule rounded_plate() {\n  hull() {\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) ${column};\n  }\n}\n\ndifference() {\n  rounded_plate();\n${holes(a.holes)}\n}\n`,
     };
+  }
   if (p.type === "spacer_block") {
     const c = wholePartChamfer(a);
     const body =
