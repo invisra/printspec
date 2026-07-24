@@ -253,10 +253,23 @@ export function generateOpenScadWithValidator(
   }
   if (p.type === "electronics_standoff") {
     const hasBase = a.baseDiameter != null && a.baseHeight != null;
+    // A base-less standoff is a plain cylinder + hole, so its outer top/bottom
+    // edges finish exactly like round_spacer. A based standoff is stepped, so a
+    // whole-part finish is ambiguous and stays a warning for now.
+    const ch = hasBase ? null : chamferInfo(a);
+    const fi = !hasBase && ch == null ? filletInfo(a) : null;
+    const body =
+      ch != null
+        ? `${chamferSolid(64, "outer_diameter/2", ch[1])};`
+        : fi != null
+          ? `${filletSolid(64, "outer_diameter/2", fi[1])};`
+          : hasBase
+            ? `union() {\n    cylinder(h = base_height, d = base_diameter, $fn = 64);\n    translate([0, 0, base_height]) cylinder(h = height, d = outer_diameter, $fn = 64);\n  }`
+            : `cylinder(h = height, d = outer_diameter, $fn = 64);`;
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};\nhole_diameter = ${a.holeDiameter};${hasBase ? `\nbase_diameter = ${a.baseDiameter};\nbase_height = ${a.baseHeight};` : ""}\n\ndifference() {\n  ${hasBase ? `union() {\n    cylinder(h = base_height, d = base_diameter, $fn = 64);\n    translate([0, 0, base_height]) cylinder(h = height, d = outer_diameter, $fn = 64);\n  }` : `cylinder(h = height, d = outer_diameter, $fn = 64);`}\n  translate([0, 0, -0.1]) cylinder(h = ${hasBase ? "base_height + height" : "height"} + 0.2, d = hole_diameter, $fn = 64);\n}\n`,
+      warnings: warnings(a, { chamfer: ch == null, fillet: fi == null }),
+      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};\nhole_diameter = ${a.holeDiameter};${hasBase ? `\nbase_diameter = ${a.baseDiameter};\nbase_height = ${a.baseHeight};` : ""}${ch != null ? `\nchamfer = ${ch[0]};` : ""}${fi != null ? `\nfillet = ${fi[0]};` : ""}\n\ndifference() {\n  ${body}\n  translate([0, 0, -0.1]) cylinder(h = ${hasBase ? "base_height + height" : "height"} + 0.2, d = hole_diameter, $fn = 64);\n}\n`,
     };
   }
 

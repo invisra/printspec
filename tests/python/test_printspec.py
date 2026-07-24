@@ -1736,6 +1736,26 @@ def test_openscad_builds_fillet_for_spacer_block():
     assert "fillet requested but not implemented" in generate_cadquery(s)["warnings"]
 
 
+def test_openscad_finishes_baseless_standoff_defers_based():
+    # A base-less standoff finishes like a plain cylinder.
+    s = read(Path("examples/part-families/electronics-standoff.m3.json"))
+    del s["part"]["parameters"]["baseDiameter"]
+    del s["part"]["parameters"]["baseHeight"]
+    s["part"]["parameters"]["chamfer"] = {"distance": 0.5, "target": "top"}
+    r = generate_openscad(s)
+    assert r["supported"], r.get("message")
+    assert "chamfer requested but not implemented" not in r["warnings"]
+    assert "chamfer = 0.5;" in r["code"]
+    assert "rotate_extrude($fn = 64) polygon(" in r["code"]
+
+    # A based standoff defers finishing, so it still warns and keeps its geometry.
+    b = read(Path("examples/part-families/electronics-standoff.m3.json"))
+    b["part"]["parameters"]["fillet"] = {"radius": 0.5}
+    rb = generate_openscad(b)
+    assert "fillet requested but not implemented" in rb["warnings"]
+    assert "union() {" in rb["code"] and "rotate_extrude" not in rb["code"]
+
+
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():
     # part.type is a valid composable_part discriminator, but this
     # component's position is missing y/z (both required on Point3D).

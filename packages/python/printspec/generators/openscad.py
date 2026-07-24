@@ -264,20 +264,30 @@ def generate_openscad(spec):
         }
     if p["type"] == "electronics_standoff":
         has_base = a.get("baseDiameter") is not None and a.get("baseHeight") is not None
-        body = (
-            "union() {\n    cylinder(h = base_height, d = base_diameter, $fn = 64);\n    translate([0, 0, base_height]) cylinder(h = height, d = outer_diameter, $fn = 64);\n  }"
-            if has_base
-            else "cylinder(h = height, d = outer_diameter, $fn = 64);"
-        )
+        # A base-less standoff is a plain cylinder + hole, so its outer top/bottom
+        # edges finish exactly like round_spacer. A based standoff is stepped, so
+        # a whole-part finish is ambiguous and stays a warning for now.
+        ch = _chamfer(a) if not has_base else None
+        fi = _fillet(a) if (not has_base and ch is None) else None
+        if ch is not None:
+            body = f"{_chamfer_solid(64, 'outer_diameter/2', ch[1])};"
+        elif fi is not None:
+            body = f"{_fillet_solid(64, 'outer_diameter/2', fi[1])};"
+        elif has_base:
+            body = "union() {\n    cylinder(h = base_height, d = base_diameter, $fn = 64);\n    translate([0, 0, base_height]) cylinder(h = height, d = outer_diameter, $fn = 64);\n  }"
+        else:
+            body = "cylinder(h = height, d = outer_diameter, $fn = 64);"
         return {
             "supported": True,
-            "warnings": _warnings(a),
+            "warnings": _warnings(a, chamfer=ch is None, fillet=fi is None),
             "code": f"{HEADER}outer_diameter = {a['outerDiameter']};\nheight = {a['height']};\nhole_diameter = {a['holeDiameter']};"
             + (
                 f"\nbase_diameter = {a['baseDiameter']};\nbase_height = {a['baseHeight']};"
                 if has_base
                 else ""
             )
+            + (f"\nchamfer = {ch[0]};" if ch is not None else "")
+            + (f"\nfillet = {fi[0]};" if fi is not None else "")
             + f"\n\ndifference() {{\n  {body}\n  translate([0, 0, -0.1]) cylinder(h = {'base_height + height' if has_base else 'height'} + 0.2, d = hole_diameter, $fn = 64);\n}}\n",
         }
     if p["type"] == "cable_comb":

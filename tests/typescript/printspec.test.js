@@ -276,6 +276,23 @@ test("spacer_block fillet builds a hulled filleted box in OpenSCAD", () => {
     /linear_extrude\(0.001\) square\(\[length, width\], center = true\);/,
   );
 });
+test("base-less electronics_standoff finishes; based standoff defers", () => {
+  const s = read("examples/part-families/electronics-standoff.m3.json");
+  delete s.part.parameters.baseDiameter;
+  delete s.part.parameters.baseHeight;
+  s.part.parameters.chamfer = { distance: 0.5, target: "top" };
+  const r = generateOpenScad(s);
+  assert.deepEqual(r.warnings, []);
+  assert.match(r.code, /chamfer = 0.5;/);
+  assert.match(r.code, /rotate_extrude\(\$fn = 64\) polygon\(/);
+
+  const b = read("examples/part-families/electronics-standoff.m3.json");
+  b.part.parameters.fillet = { radius: 0.5 };
+  const rb = generateOpenScad(b);
+  assert.match(rb.warnings.join(" "), /fillet requested but not implemented/);
+  assert.match(rb.code, /union\(\) \{/);
+  assert.doesNotMatch(rb.code, /rotate_extrude/);
+});
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });
