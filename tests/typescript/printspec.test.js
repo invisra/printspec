@@ -258,6 +258,24 @@ test("targeted top/bottom chamfers and fillets in OpenSCAD", () => {
     /chamfer requested but not implemented/,
   );
 });
+test("spacer_block fillet builds a hulled filleted box in OpenSCAD", () => {
+  const s = read("examples/part-families/spacer-block.four-hole.json");
+  s.part.parameters.fillet = { radius: 0.5 };
+  const r = generateOpenScad(s);
+  assert.deepEqual(r.warnings, []);
+  assert.match(r.code, /fillet = 0.5;/);
+  assert.match(r.code, /module filleted_box\(\) \{/);
+  assert.match(r.code, /fillet - fillet\*cos\(i\*90\/8\)/);
+  // top-only fillet keeps the bottom face full.
+  const top = read("examples/part-families/spacer-block.four-hole.json");
+  top.part.parameters.fillet = { radius: 0.5, target: "top" };
+  const rt = generateOpenScad(top);
+  assert.deepEqual(rt.warnings, []);
+  assert.match(
+    rt.code,
+    /linear_extrude\(0.001\) square\(\[length, width\], center = true\);/,
+  );
+});
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });

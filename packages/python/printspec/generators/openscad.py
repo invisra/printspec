@@ -108,6 +108,24 @@ def _chamfered_box_body(edges):
     return f"module chamfered_box() {{\n  hull() {{\n{body}\n  }}\n}}"
 
 
+def _filleted_box_body(edges):
+    """A ``filleted_box()`` module: a hull() of thin cross-section slices whose
+    inset follows the fillet arc, rounding the requested top/bottom perimeter
+    edge(s). The arc is sampled symbolically (sin/cos at render time)."""
+    bottom_arc = "    for (i = [0:8]) translate([0, 0, fillet - fillet*cos(i*90/8)]) linear_extrude(0.001) square([length - 2*fillet + 2*fillet*sin(i*90/8), width - 2*fillet + 2*fillet*sin(i*90/8)], center = true);"
+    top_arc = "    for (i = [0:8]) translate([0, 0, height - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([length - 2*fillet + 2*fillet*cos(i*90/8), width - 2*fillet + 2*fillet*cos(i*90/8)], center = true);"
+    full_bottom = "    linear_extrude(0.001) square([length, width], center = true);"
+    full_top = "    translate([0, 0, height - 0.001]) linear_extrude(0.001) square([length, width], center = true);"
+    if edges == "top":
+        parts = [full_bottom, top_arc]
+    elif edges == "bottom":
+        parts = [bottom_arc, full_top]
+    else:
+        parts = [bottom_arc, top_arc]
+    body = "\n".join(parts)
+    return f"module filleted_box() {{\n  hull() {{\n{body}\n  }}\n}}"
+
+
 def _holes(holes):
     return "\n".join(
         f"  translate([{h['x']}, {h['y']}, -0.1]) cylinder(h = height + 0.2, d = {h['diameter']}, $fn = 48);"
@@ -205,13 +223,16 @@ def generate_openscad(spec):
         }
     if p["type"] == "spacer_block":
         ch = _chamfer(a)
+        fi = _fillet(a) if ch is None else None
         if ch is not None:
             body = f"chamfer = {ch[0]};\n\n{_chamfered_box_body(ch[1])}\n\ndifference() {{\n  chamfered_box();\n{_holes(a.get('holes'))}\n}}\n"
+        elif fi is not None:
+            body = f"fillet = {fi[0]};\n\n{_filleted_box_body(fi[1])}\n\ndifference() {{\n  filleted_box();\n{_holes(a.get('holes'))}\n}}\n"
         else:
             body = f"\ndifference() {{\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n{_holes(a.get('holes'))}\n}}\n"
         return {
             "supported": True,
-            "warnings": _warnings(a, chamfer=ch is None),
+            "warnings": _warnings(a, chamfer=ch is None, fillet=fi is None),
             "code": f"{HEADER}length = {a['length']};\nwidth = {a['width']};\nheight = {a['height']};\n{body}",
         }
     if p["type"] == "round_spacer":

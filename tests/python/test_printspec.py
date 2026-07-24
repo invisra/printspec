@@ -1714,6 +1714,28 @@ def test_openscad_targeted_top_bottom_chamfer_and_fillet():
     assert "chamfer requested but not implemented" in generate_openscad(u)["warnings"]
 
 
+def test_openscad_builds_fillet_for_spacer_block():
+    s = read(Path("examples/part-families/spacer-block.four-hole.json"))
+    s["part"]["parameters"]["fillet"] = {"radius": 0.5}
+    r = generate_openscad(s)
+    assert r["supported"]
+    assert "fillet requested but not implemented" not in r["warnings"]
+    assert "fillet = 0.5;" in r["code"]
+    assert "module filleted_box()" in r["code"] and "hull()" in r["code"]
+    assert "fillet - fillet*cos(i*90/8)" in r["code"]
+
+    # top-only fillet leaves the bottom face full.
+    top = read(Path("examples/part-families/spacer-block.four-hole.json"))
+    top["part"]["parameters"]["fillet"] = {"radius": 0.5, "target": "top"}
+    rt = generate_openscad(top)
+    assert "fillet requested but not implemented" not in rt["warnings"]
+    assert "filleted_box()" in rt["code"]
+    assert "linear_extrude(0.001) square([length, width], center = true);" in rt["code"]
+
+    # CadQuery does not implement fillet yet, so it still warns.
+    assert "fillet requested but not implemented" in generate_cadquery(s)["warnings"]
+
+
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():
     # part.type is a valid composable_part discriminator, but this
     # component's position is missing y/z (both required on Point3D).

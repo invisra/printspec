@@ -109,6 +109,22 @@ function chamferedBoxBody(edges: string): string {
   return `module chamfered_box() {\n  hull() {\n${parts.join("\n")}\n  }\n}`;
 }
 
+// A filleted_box() module: a hull() of thin cross-section slices whose inset
+// follows the fillet arc, rounding the requested top/bottom perimeter edge(s).
+function filletedBoxBody(edges: string): string {
+  const bottomArc = `    for (i = [0:8]) translate([0, 0, fillet - fillet*cos(i*90/8)]) linear_extrude(0.001) square([length - 2*fillet + 2*fillet*sin(i*90/8), width - 2*fillet + 2*fillet*sin(i*90/8)], center = true);`;
+  const topArc = `    for (i = [0:8]) translate([0, 0, height - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([length - 2*fillet + 2*fillet*cos(i*90/8), width - 2*fillet + 2*fillet*cos(i*90/8)], center = true);`;
+  const fullBottom = `    linear_extrude(0.001) square([length, width], center = true);`;
+  const fullTop = `    translate([0, 0, height - 0.001]) linear_extrude(0.001) square([length, width], center = true);`;
+  const parts =
+    edges === "top"
+      ? [fullBottom, topArc]
+      : edges === "bottom"
+        ? [bottomArc, fullTop]
+        : [bottomArc, topArc];
+  return `module filleted_box() {\n  hull() {\n${parts.join("\n")}\n  }\n}`;
+}
+
 function holes(hs: any[] = []) {
   return hs
     .map(
@@ -203,13 +219,16 @@ export function generateOpenScadWithValidator(
   }
   if (p.type === "spacer_block") {
     const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
     const body =
       ch != null
         ? `chamfer = ${ch[0]};\n\n${chamferedBoxBody(ch[1])}\n\ndifference() {\n  chamfered_box();\n${holes(a.holes)}\n}\n`
-        : `\ndifference() {\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n${holes(a.holes)}\n}\n`;
+        : fi != null
+          ? `fillet = ${fi[0]};\n\n${filletedBoxBody(fi[1])}\n\ndifference() {\n  filleted_box();\n${holes(a.holes)}\n}\n`
+          : `\ndifference() {\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n${holes(a.holes)}\n}\n`;
     return {
       supported: true,
-      warnings: warnings(a, { chamfer: ch == null }),
+      warnings: warnings(a, { chamfer: ch == null, fillet: fi == null }),
       code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.height};\n${body}`,
     };
   }
