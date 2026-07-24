@@ -30,29 +30,82 @@ def _warnings(a, corner_radius=True, chamfer=True, fillet=True):
     return w
 
 
-def _whole_part_chamfer(a):
-    """Return the chamfer distance to apply to the whole part, or None.
+def _finish(feature, size_key):
+    """Parse a chamfer/fillet request into ``(size, edges)`` or ``None``.
 
-    Only whole-part chamfers (no ``target``) are built; a targeted chamfer
-    stays an unimplemented-warning until per-edge targeting is supported.
+    ``edges`` is ``"both"`` when no ``target`` is given, or ``"top"``/``"bottom"``
+    for those recognized targets. Any other target returns ``None`` (not built),
+    so it still reports the unimplemented-warning.
     """
-    c = a.get("chamfer")
-    if c is not None and c.get("target") is None:
-        return c.get("distance")
+    if feature is None:
+        return None
+    t = feature.get("target")
+    if t is None:
+        return (feature.get(size_key), "both")
+    if t in ("top", "bottom"):
+        return (feature.get(size_key), t)
     return None
 
 
-def _whole_part_fillet(a):
-    """Return the fillet radius to apply to the whole part, or None.
+def _chamfer(a):
+    return _finish(a.get("chamfer"), "distance")
 
-    Only whole-part fillets (no ``target``) are built. Chamfer takes precedence
-    when both are requested (callers should pass fillet only when no chamfer is
-    applied), so the two never fight over the same edges.
-    """
-    f = a.get("fillet")
-    if f is not None and f.get("target") is None:
-        return f.get("radius")
-    return None
+
+def _fillet(a):
+    # Chamfer takes precedence when both are requested, so callers pass the
+    # fillet only when no chamfer is applied and the two never fight over edges.
+    return _finish(a.get("fillet"), "radius")
+
+
+def _chamfer_solid(fn, r, edges):
+    """A chamfered solid of revolution: outer radius ``r`` over ``height``, with
+    the requested top/bottom outer edge(s) beveled by ``chamfer``."""
+    if edges == "top":
+        pts = f"[[0, 0], [{r}, 0], [{r}, height - chamfer], [{r} - chamfer, height], [0, height]]"
+    elif edges == "bottom":
+        pts = f"[[0, 0], [{r} - chamfer, 0], [{r}, chamfer], [{r}, height], [0, height]]"
+    else:
+        pts = f"[[0, 0], [{r} - chamfer, 0], [{r}, chamfer], [{r}, height - chamfer], [{r} - chamfer, height], [0, height]]"
+    return f"rotate_extrude($fn = {fn}) polygon({pts})"
+
+
+def _fillet_solid(fn, r, edges):
+    """A filleted solid of revolution. The arc points are emitted as symbolic
+    OpenSCAD (sin/cos at render time) so the Python and TS output stay identical."""
+    bottom_arc = f"[for (i = [0:8]) [{r} - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]]"
+    top_arc = f"[for (i = [0:8]) [{r} - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]]"
+    if edges == "top":
+        pts = f"concat([[0, 0], [{r}, 0]], {top_arc}, [[0, height]])"
+    elif edges == "bottom":
+        pts = f"concat([[0, 0]], {bottom_arc}, [[{r}, height], [0, height]])"
+    else:
+        pts = f"concat([[0, 0]], {bottom_arc}, {top_arc}, [[0, height]])"
+    return f"rotate_extrude($fn = {fn}) polygon({pts})"
+
+
+def _chamfered_box_body(edges):
+    """A ``chamfered_box()`` module: a hull() of inset/full cross-sections that
+    bevels the requested top/bottom perimeter edge(s) of a centered box."""
+    inset = "square([length - 2*chamfer, width - 2*chamfer], center = true)"
+    full = "square([length, width], center = true)"
+    if edges == "top":
+        parts = [
+            f"    linear_extrude(height - chamfer) {full};",
+            f"    translate([0, 0, height - 0.01]) linear_extrude(0.01) {inset};",
+        ]
+    elif edges == "bottom":
+        parts = [
+            f"    linear_extrude(0.01) {inset};",
+            f"    translate([0, 0, chamfer]) linear_extrude(height - chamfer) {full};",
+        ]
+    else:
+        parts = [
+            f"    linear_extrude(0.01) {inset};",
+            f"    translate([0, 0, chamfer]) linear_extrude(height - 2*chamfer) {full};",
+            f"    translate([0, 0, height - 0.01]) linear_extrude(0.01) {inset};",
+        ]
+    body = "\n".join(parts)
+    return f"module chamfered_box() {{\n  hull() {{\n{body}\n  }}\n}}"
 
 
 def _holes(holes):
@@ -130,64 +183,57 @@ def generate_openscad(spec):
         }
     a = p["parameters"]
     if p["type"] == "rounded_rectangular_plate":
-        c = _whole_part_chamfer(a)
-        f = _whole_part_fillet(a) if c is None else None
+        ch = _chamfer(a)
+        fi = _fillet(a) if ch is None else None
         # The plate is a hull() of corner columns; finishing the columns'
         # top/bottom edges finishes the whole plate perimeter uniformly.
-        if c is not None:
-            column = "rotate_extrude($fn = 32) polygon([[0, 0], [corner_radius - chamfer, 0], [corner_radius, chamfer], [corner_radius, height - chamfer], [corner_radius - chamfer, height], [0, height]])"
-        elif f is not None:
-            column = "rotate_extrude($fn = 32) polygon(concat([[0, 0]], [for (i = [0:8]) [corner_radius - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]], [for (i = [0:8]) [corner_radius - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]], [[0, height]]))"
+        if ch is not None:
+            column = _chamfer_solid(32, "corner_radius", ch[1])
+        elif fi is not None:
+            column = _fillet_solid(32, "corner_radius", fi[1])
         else:
             column = "cylinder(h = height, r = corner_radius, $fn = 32)"
         return {
             "supported": True,
-            "warnings": _warnings(a, corner_radius=False, chamfer=c is None, fillet=f is None),
+            "warnings": _warnings(
+                a, corner_radius=False, chamfer=ch is None, fillet=fi is None
+            ),
             "code": f"{HEADER}length = {a['length']};\nwidth = {a['width']};\nheight = {a['thickness']};\ncorner_radius = {a['cornerRadius']};"
-            + (f"\nchamfer = {c};" if c is not None else "")
-            + (f"\nfillet = {f};" if f is not None else "")
+            + (f"\nchamfer = {ch[0]};" if ch is not None else "")
+            + (f"\nfillet = {fi[0]};" if fi is not None else "")
             + f"\n\nmodule rounded_plate() {{\n  hull() {{\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) {column};\n  }}\n}}\n\ndifference() {{\n  rounded_plate();\n{_holes(a.get('holes'))}\n}}\n",
         }
     if p["type"] == "spacer_block":
-        c = _whole_part_chamfer(a)
-        if c is not None:
-            body = (
-                f"chamfer = {c};\n\nmodule chamfered_box() {{\n  hull() {{\n"
-                "    linear_extrude(0.01) square([length - 2*chamfer, width - 2*chamfer], center = true);\n"
-                "    translate([0, 0, chamfer]) linear_extrude(height - 2*chamfer) square([length, width], center = true);\n"
-                "    translate([0, 0, height - 0.01]) linear_extrude(0.01) square([length - 2*chamfer, width - 2*chamfer], center = true);\n"
-                f"  }}\n}}\n\ndifference() {{\n  chamfered_box();\n{_holes(a.get('holes'))}\n}}\n"
-            )
+        ch = _chamfer(a)
+        if ch is not None:
+            body = f"chamfer = {ch[0]};\n\n{_chamfered_box_body(ch[1])}\n\ndifference() {{\n  chamfered_box();\n{_holes(a.get('holes'))}\n}}\n"
         else:
             body = f"\ndifference() {{\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n{_holes(a.get('holes'))}\n}}\n"
         return {
             "supported": True,
-            "warnings": _warnings(a, chamfer=c is None),
+            "warnings": _warnings(a, chamfer=ch is None),
             "code": f"{HEADER}length = {a['length']};\nwidth = {a['width']};\nheight = {a['height']};\n{body}",
         }
     if p["type"] == "round_spacer":
-        c = _whole_part_chamfer(a)
-        f = _whole_part_fillet(a) if c is None else None
+        ch = _chamfer(a)
+        fi = _fillet(a) if ch is None else None
         inner = (
             "\n  translate([0, 0, -0.1]) cylinder(h = height + 0.2, d = inner_diameter, $fn = 64);"
             if a.get("innerDiameter") is not None
             else ""
         )
-        if c is not None:
-            outer_solid = "rotate_extrude($fn = 64) polygon([[0, 0], [outer_diameter/2 - chamfer, 0], [outer_diameter/2, chamfer], [outer_diameter/2, height - chamfer], [outer_diameter/2 - chamfer, height], [0, height]])"
-        elif f is not None:
-            # Round the outer top/bottom edges. The arc points are emitted as
-            # symbolic OpenSCAD (sin/cos evaluated at render time) so the Python
-            # and TypeScript generators stay byte-identical.
-            outer_solid = "rotate_extrude($fn = 64) polygon(concat([[0, 0]], [for (i = [0:8]) [outer_diameter/2 - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]], [for (i = [0:8]) [outer_diameter/2 - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]], [[0, height]]))"
+        if ch is not None:
+            outer_solid = _chamfer_solid(64, "outer_diameter/2", ch[1])
+        elif fi is not None:
+            outer_solid = _fillet_solid(64, "outer_diameter/2", fi[1])
         else:
             outer_solid = "cylinder(h = height, d = outer_diameter, $fn = 64)"
         return {
             "supported": True,
-            "warnings": _warnings(a, chamfer=c is None, fillet=f is None),
+            "warnings": _warnings(a, chamfer=ch is None, fillet=fi is None),
             "code": f"{HEADER}outer_diameter = {a['outerDiameter']};\nheight = {a['height']};"
-            + (f"\nchamfer = {c};" if c is not None else "")
-            + (f"\nfillet = {f};" if f is not None else "")
+            + (f"\nchamfer = {ch[0]};" if ch is not None else "")
+            + (f"\nfillet = {fi[0]};" if fi is not None else "")
             + (
                 f"\ninner_diameter = {a['innerDiameter']};"
                 if a.get("innerDiameter") is not None

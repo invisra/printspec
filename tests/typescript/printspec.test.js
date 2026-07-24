@@ -153,9 +153,9 @@ test("round spacer chamfer is built in OpenSCAD; standoff semantic validation", 
   assert.deepEqual(generateCadQuery(s).warnings, [
     "chamfer requested but not implemented",
   ]);
-  // A targeted chamfer is not built yet and still warns in OpenSCAD.
+  // An unrecognized chamfer target is not built and still warns in OpenSCAD.
   const targeted = read("examples/part-families/round-spacer.basic.json");
-  targeted.part.parameters.chamfer = { distance: 0.5, target: "top" };
+  targeted.part.parameters.chamfer = { distance: 0.5, target: "inner_edge" };
   assert.deepEqual(generateOpenScad(targeted).warnings, [
     "chamfer requested but not implemented",
   ]);
@@ -216,6 +216,47 @@ test("rounded rectangular plate chamfer and fillet build hulled profiled columns
   assert.deepEqual(rf.warnings, []);
   assert.match(rf.code, /fillet = 0.5;/);
   assert.match(rf.code, /rotate_extrude\(\$fn = 32\) polygon\(concat\(/);
+});
+test("targeted top/bottom chamfers and fillets in OpenSCAD", () => {
+  const top = read("examples/part-families/round-spacer.basic.json");
+  top.part.parameters.chamfer = { distance: 0.5, target: "top" };
+  const rt = generateOpenScad(top);
+  assert.deepEqual(rt.warnings, []);
+  assert.match(
+    rt.code,
+    /\[outer_diameter\/2, 0\], \[outer_diameter\/2, height - chamfer\]/,
+  );
+
+  const bot = read("examples/part-families/round-spacer.basic.json");
+  bot.part.parameters.fillet = { radius: 0.5, target: "bottom" };
+  const rb = generateOpenScad(bot);
+  assert.deepEqual(rb.warnings, []);
+  assert.match(rb.code, /\[outer_diameter\/2, height\], \[0, height\]/);
+
+  const sb = read("examples/part-families/spacer-block.four-hole.json");
+  sb.part.parameters.chamfer = { distance: 0.5, target: "top" };
+  const rsb = generateOpenScad(sb);
+  assert.deepEqual(rsb.warnings, []);
+  assert.match(
+    rsb.code,
+    /linear_extrude\(height - chamfer\) square\(\[length, width\]/,
+  );
+
+  const pl = read(
+    "examples/part-families/rounded-rectangular-plate.basic.json",
+  );
+  pl.part.parameters.fillet = { radius: 0.5, target: "bottom" };
+  const rp = generateOpenScad(pl);
+  assert.deepEqual(rp.warnings, []);
+  assert.match(rp.code, /\[corner_radius, height\], \[0, height\]/);
+
+  // An unrecognized target is not built, so it still warns.
+  const u = read("examples/part-families/round-spacer.basic.json");
+  u.part.parameters.chamfer = { distance: 0.5, target: "inner_edge" };
+  assert.match(
+    generateOpenScad(u).warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
 });
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");

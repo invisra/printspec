@@ -38,18 +38,75 @@ function warnings(
   return w;
 }
 
-// Only whole-part chamfers (no target) are built; a targeted chamfer stays an
-// unimplemented-warning until per-edge targeting is supported.
-function wholePartChamfer(a: any): number | null {
-  return a.chamfer != null && a.chamfer.target == null
-    ? a.chamfer.distance
-    : null;
+// A chamfer/fillet request parses to [size, edges] or null. edges is "both"
+// (no target), or "top"/"bottom" for those recognized targets; any other target
+// returns null (not built), so it still reports the unimplemented-warning.
+type Finish = [number, "both" | "top" | "bottom"] | null;
+function finish(feature: any, sizeKey: string): Finish {
+  if (feature == null) return null;
+  const t = feature.target;
+  if (t == null) return [feature[sizeKey], "both"];
+  if (t === "top" || t === "bottom") return [feature[sizeKey], t];
+  return null;
+}
+function chamferInfo(a: any): Finish {
+  return finish(a.chamfer, "distance");
+}
+// Chamfer takes precedence when both are requested, so callers pass the fillet
+// only when no chamfer is applied and the two never fight over the same edges.
+function filletInfo(a: any): Finish {
+  return finish(a.fillet, "radius");
 }
 
-// Only whole-part fillets (no target) are built. Chamfer takes precedence when
-// both are requested, so the two never fight over the same edges.
-function wholePartFillet(a: any): number | null {
-  return a.fillet != null && a.fillet.target == null ? a.fillet.radius : null;
+// A chamfered solid of revolution: outer radius r over height, with the
+// requested top/bottom outer edge(s) beveled by chamfer.
+function chamferSolid(fn: number, r: string, edges: string): string {
+  const pts =
+    edges === "top"
+      ? `[[0, 0], [${r}, 0], [${r}, height - chamfer], [${r} - chamfer, height], [0, height]]`
+      : edges === "bottom"
+        ? `[[0, 0], [${r} - chamfer, 0], [${r}, chamfer], [${r}, height], [0, height]]`
+        : `[[0, 0], [${r} - chamfer, 0], [${r}, chamfer], [${r}, height - chamfer], [${r} - chamfer, height], [0, height]]`;
+  return `rotate_extrude($fn = ${fn}) polygon(${pts})`;
+}
+
+// A filleted solid of revolution. Arc points are emitted as symbolic OpenSCAD
+// (sin/cos at render time) so the TS and Python output stay identical.
+function filletSolid(fn: number, r: string, edges: string): string {
+  const bottomArc = `[for (i = [0:8]) [${r} - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]]`;
+  const topArc = `[for (i = [0:8]) [${r} - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]]`;
+  const pts =
+    edges === "top"
+      ? `concat([[0, 0], [${r}, 0]], ${topArc}, [[0, height]])`
+      : edges === "bottom"
+        ? `concat([[0, 0]], ${bottomArc}, [[${r}, height], [0, height]])`
+        : `concat([[0, 0]], ${bottomArc}, ${topArc}, [[0, height]])`;
+  return `rotate_extrude($fn = ${fn}) polygon(${pts})`;
+}
+
+// A chamfered_box() module: a hull() of inset/full cross-sections that bevels
+// the requested top/bottom perimeter edge(s) of a centered box.
+function chamferedBoxBody(edges: string): string {
+  const inset =
+    "square([length - 2*chamfer, width - 2*chamfer], center = true)";
+  const full = "square([length, width], center = true)";
+  const parts =
+    edges === "top"
+      ? [
+          `    linear_extrude(height - chamfer) ${full};`,
+          `    translate([0, 0, height - 0.01]) linear_extrude(0.01) ${inset};`,
+        ]
+      : edges === "bottom"
+        ? [
+            `    linear_extrude(0.01) ${inset};`,
+            `    translate([0, 0, chamfer]) linear_extrude(height - chamfer) ${full};`,
+          ]
+        : [
+            `    linear_extrude(0.01) ${inset};`,
+            `    translate([0, 0, chamfer]) linear_extrude(height - 2*chamfer) ${full};`,
+            `    translate([0, 0, height - 0.01]) linear_extrude(0.01) ${inset};`,
+          ];
+  return `module chamfered_box() {\n  hull() {\n${parts.join("\n")}\n  }\n}`;
 }
 
 function holes(hs: any[] = []) {
@@ -124,57 +181,55 @@ export function generateOpenScadWithValidator(
     };
   const a = p.parameters;
   if (p.type === "rounded_rectangular_plate") {
-    const c = wholePartChamfer(a);
-    const f = c == null ? wholePartFillet(a) : null;
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
     // The plate is a hull() of corner columns; finishing the columns' top/bottom
     // edges finishes the whole plate perimeter uniformly.
     const column =
-      c != null
-        ? `rotate_extrude($fn = 32) polygon([[0, 0], [corner_radius - chamfer, 0], [corner_radius, chamfer], [corner_radius, height - chamfer], [corner_radius - chamfer, height], [0, height]])`
-        : f != null
-          ? `rotate_extrude($fn = 32) polygon(concat([[0, 0]], [for (i = [0:8]) [corner_radius - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]], [for (i = [0:8]) [corner_radius - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]], [[0, height]]))`
+      ch != null
+        ? chamferSolid(32, "corner_radius", ch[1])
+        : fi != null
+          ? filletSolid(32, "corner_radius", fi[1])
           : `cylinder(h = height, r = corner_radius, $fn = 32)`;
     return {
       supported: true,
       warnings: warnings(a, {
         cornerRadius: false,
-        chamfer: c == null,
-        fillet: f == null,
+        chamfer: ch == null,
+        fillet: fi == null,
       }),
-      code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.thickness};\ncorner_radius = ${a.cornerRadius};${c != null ? `\nchamfer = ${c};` : ""}${f != null ? `\nfillet = ${f};` : ""}\n\nmodule rounded_plate() {\n  hull() {\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) ${column};\n  }\n}\n\ndifference() {\n  rounded_plate();\n${holes(a.holes)}\n}\n`,
+      code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.thickness};\ncorner_radius = ${a.cornerRadius};${ch != null ? `\nchamfer = ${ch[0]};` : ""}${fi != null ? `\nfillet = ${fi[0]};` : ""}\n\nmodule rounded_plate() {\n  hull() {\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) ${column};\n  }\n}\n\ndifference() {\n  rounded_plate();\n${holes(a.holes)}\n}\n`,
     };
   }
   if (p.type === "spacer_block") {
-    const c = wholePartChamfer(a);
+    const ch = chamferInfo(a);
     const body =
-      c != null
-        ? `chamfer = ${c};\n\nmodule chamfered_box() {\n  hull() {\n    linear_extrude(0.01) square([length - 2*chamfer, width - 2*chamfer], center = true);\n    translate([0, 0, chamfer]) linear_extrude(height - 2*chamfer) square([length, width], center = true);\n    translate([0, 0, height - 0.01]) linear_extrude(0.01) square([length - 2*chamfer, width - 2*chamfer], center = true);\n  }\n}\n\ndifference() {\n  chamfered_box();\n${holes(a.holes)}\n}\n`
+      ch != null
+        ? `chamfer = ${ch[0]};\n\n${chamferedBoxBody(ch[1])}\n\ndifference() {\n  chamfered_box();\n${holes(a.holes)}\n}\n`
         : `\ndifference() {\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n${holes(a.holes)}\n}\n`;
     return {
       supported: true,
-      warnings: warnings(a, { chamfer: c == null }),
+      warnings: warnings(a, { chamfer: ch == null }),
       code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.height};\n${body}`,
     };
   }
   if (p.type === "round_spacer") {
-    const c = wholePartChamfer(a);
-    const f = c == null ? wholePartFillet(a) : null;
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
     const inner =
       a.innerDiameter != null
         ? `\n  translate([0, 0, -0.1]) cylinder(h = height + 0.2, d = inner_diameter, $fn = 64);`
         : "";
-    // The fillet arc points are emitted as symbolic OpenSCAD (sin/cos evaluated
-    // at render time) so the TypeScript and Python generators stay identical.
     const outerSolid =
-      c != null
-        ? `rotate_extrude($fn = 64) polygon([[0, 0], [outer_diameter/2 - chamfer, 0], [outer_diameter/2, chamfer], [outer_diameter/2, height - chamfer], [outer_diameter/2 - chamfer, height], [0, height]])`
-        : f != null
-          ? `rotate_extrude($fn = 64) polygon(concat([[0, 0]], [for (i = [0:8]) [outer_diameter/2 - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]], [for (i = [0:8]) [outer_diameter/2 - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]], [[0, height]]))`
+      ch != null
+        ? chamferSolid(64, "outer_diameter/2", ch[1])
+        : fi != null
+          ? filletSolid(64, "outer_diameter/2", fi[1])
           : `cylinder(h = height, d = outer_diameter, $fn = 64)`;
     return {
       supported: true,
-      warnings: warnings(a, { chamfer: c == null, fillet: f == null }),
-      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};${c != null ? `\nchamfer = ${c};` : ""}${f != null ? `\nfillet = ${f};` : ""}${a.innerDiameter != null ? `\ninner_diameter = ${a.innerDiameter};` : ""}\n\ndifference() {\n  ${outerSolid};${inner}\n}\n`,
+      warnings: warnings(a, { chamfer: ch == null, fillet: fi == null }),
+      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};${ch != null ? `\nchamfer = ${ch[0]};` : ""}${fi != null ? `\nfillet = ${fi[0]};` : ""}${a.innerDiameter != null ? `\ninner_diameter = ${a.innerDiameter};` : ""}\n\ndifference() {\n  ${outerSolid};${inner}\n}\n`,
     };
   }
   if (p.type === "electronics_standoff") {

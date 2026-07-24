@@ -1622,9 +1622,9 @@ def test_openscad_builds_whole_part_chamfer_for_spacer_and_round_spacer():
     assert "chamfer requested but not implemented" not in r2["warnings"]
     assert "rotate_extrude($fn = 64) polygon(" in r2["code"]
 
-    # A targeted chamfer isn't built yet, so it still warns.
+    # An unrecognized chamfer target isn't built, so it still warns.
     targeted = read(Path("examples/part-families/round-spacer.basic.json"))
-    targeted["part"]["parameters"]["chamfer"] = {"distance": 0.5, "target": "top"}
+    targeted["part"]["parameters"]["chamfer"] = {"distance": 0.5, "target": "inner_edge"}
     assert "chamfer requested but not implemented" in generate_openscad(targeted)["warnings"]
 
     # CadQuery does not implement chamfer yet, so it still warns.
@@ -1650,9 +1650,9 @@ def test_openscad_builds_whole_part_fillet_for_round_spacer():
     assert "fillet requested but not implemented" in rb["warnings"]
     assert "chamfer = 0.5;" in rb["code"] and "fillet =" not in rb["code"]
 
-    # A targeted fillet isn't built yet, so it still warns.
+    # An unrecognized fillet target isn't built, so it still warns.
     targeted = read(Path("examples/part-families/round-spacer.basic.json"))
-    targeted["part"]["parameters"]["fillet"] = {"radius": 0.5, "target": "top"}
+    targeted["part"]["parameters"]["fillet"] = {"radius": 0.5, "target": "some_edge"}
     assert "fillet requested but not implemented" in generate_openscad(targeted)["warnings"]
 
     # CadQuery does not implement fillet yet, so it still warns.
@@ -1677,6 +1677,41 @@ def test_openscad_builds_chamfer_and_fillet_for_rounded_rectangular_plate():
     assert "fillet requested but not implemented" not in rf["warnings"]
     assert "fillet = 0.5;" in rf["code"]
     assert "rotate_extrude($fn = 32) polygon(concat(" in rf["code"]
+
+
+def test_openscad_targeted_top_bottom_chamfer_and_fillet():
+    # round_spacer: top-only chamfer keeps the bottom edge square.
+    top = read(Path("examples/part-families/round-spacer.basic.json"))
+    top["part"]["parameters"]["chamfer"] = {"distance": 0.5, "target": "top"}
+    rt = generate_openscad(top)
+    assert "chamfer requested but not implemented" not in rt["warnings"]
+    assert "[outer_diameter/2, 0], [outer_diameter/2, height - chamfer]" in rt["code"]
+
+    # round_spacer: bottom-only fillet keeps the top edge square.
+    bot = read(Path("examples/part-families/round-spacer.basic.json"))
+    bot["part"]["parameters"]["fillet"] = {"radius": 0.5, "target": "bottom"}
+    rb = generate_openscad(bot)
+    assert "fillet requested but not implemented" not in rb["warnings"]
+    assert "[outer_diameter/2, height], [0, height]" in rb["code"]
+
+    # spacer_block: top-only chamfer leaves the bottom face full.
+    sb = read(Path("examples/part-families/spacer-block.four-hole.json"))
+    sb["part"]["parameters"]["chamfer"] = {"distance": 0.5, "target": "top"}
+    rsb = generate_openscad(sb)
+    assert "chamfer requested but not implemented" not in rsb["warnings"]
+    assert "linear_extrude(height - chamfer) square([length, width]" in rsb["code"]
+
+    # plate: bottom-only fillet.
+    pl = read(Path("examples/part-families/rounded-rectangular-plate.basic.json"))
+    pl["part"]["parameters"]["fillet"] = {"radius": 0.5, "target": "bottom"}
+    rp = generate_openscad(pl)
+    assert "fillet requested but not implemented" not in rp["warnings"]
+    assert "[corner_radius, height], [0, height]" in rp["code"]
+
+    # An unrecognized target is not built, so it still warns.
+    u = read(Path("examples/part-families/round-spacer.basic.json"))
+    u["part"]["parameters"]["chamfer"] = {"distance": 0.5, "target": "inner_edge"}
+    assert "chamfer requested but not implemented" in generate_openscad(u)["warnings"]
 
 
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():
