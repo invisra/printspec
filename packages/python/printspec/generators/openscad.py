@@ -75,8 +75,12 @@ def _fillet_solid(fn, r, edges, h="height"):
     """A filleted solid of revolution. The arc points are emitted as symbolic
     OpenSCAD (sin/cos at render time) so the Python and TS output stay identical.
     ``h`` is the extrusion height expression (see :func:`_chamfer_solid`)."""
-    bottom_arc = f"[for (i = [0:8]) [{r} - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]]"
-    top_arc = f"[for (i = [0:8]) [{r} - fillet + fillet*cos(i*90/8), {h} - fillet + fillet*sin(i*90/8)]]"
+    bottom_arc = (
+        f"[for (i = [0:8]) [{r} - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]]"
+    )
+    top_arc = (
+        f"[for (i = [0:8]) [{r} - fillet + fillet*cos(i*90/8), {h} - fillet + fillet*sin(i*90/8)]]"
+    )
     if edges == "top":
         pts = f"concat([[0, 0], [{r}, 0]], {top_arc}, [[0, {h}]])"
     elif edges == "bottom":
@@ -86,11 +90,14 @@ def _fillet_solid(fn, r, edges, h="height"):
     return f"rotate_extrude($fn = {fn}) polygon({pts})"
 
 
-def _chamfered_box_body(edges):
+def _chamfered_box_body(edges, length="length", width="width"):
     """A ``chamfered_box()`` module: a hull() of inset/full cross-sections that
-    bevels the requested top/bottom perimeter edge(s) of a centered box."""
-    inset = "square([length - 2*chamfer, width - 2*chamfer], center = true)"
-    full = "square([length, width], center = true)"
+    bevels the requested top/bottom perimeter edge(s) of a centered box.
+    ``length``/``width`` name the cross-section dimensions (as OpenSCAD variable
+    expressions) so a thin box family can reuse this with, e.g., ``thickness``
+    for its second dimension."""
+    inset = f"square([{length} - 2*chamfer, {width} - 2*chamfer], center = true)"
+    full = f"square([{length}, {width}], center = true)"
     if edges == "top":
         parts = [
             f"    linear_extrude(height - chamfer) {full};",
@@ -111,14 +118,16 @@ def _chamfered_box_body(edges):
     return f"module chamfered_box() {{\n  hull() {{\n{body}\n  }}\n}}"
 
 
-def _filleted_box_body(edges):
+def _filleted_box_body(edges, length="length", width="width"):
     """A ``filleted_box()`` module: a hull() of thin cross-section slices whose
     inset follows the fillet arc, rounding the requested top/bottom perimeter
-    edge(s). The arc is sampled symbolically (sin/cos at render time)."""
-    bottom_arc = "    for (i = [0:8]) translate([0, 0, fillet - fillet*cos(i*90/8)]) linear_extrude(0.001) square([length - 2*fillet + 2*fillet*sin(i*90/8), width - 2*fillet + 2*fillet*sin(i*90/8)], center = true);"
-    top_arc = "    for (i = [0:8]) translate([0, 0, height - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([length - 2*fillet + 2*fillet*cos(i*90/8), width - 2*fillet + 2*fillet*cos(i*90/8)], center = true);"
-    full_bottom = "    linear_extrude(0.001) square([length, width], center = true);"
-    full_top = "    translate([0, 0, height - 0.001]) linear_extrude(0.001) square([length, width], center = true);"
+    edge(s). The arc is sampled symbolically (sin/cos at render time).
+    ``length``/``width`` name the cross-section dimensions (see
+    :func:`_chamfered_box_body`)."""
+    bottom_arc = f"    for (i = [0:8]) translate([0, 0, fillet - fillet*cos(i*90/8)]) linear_extrude(0.001) square([{length} - 2*fillet + 2*fillet*sin(i*90/8), {width} - 2*fillet + 2*fillet*sin(i*90/8)], center = true);"
+    top_arc = f"    for (i = [0:8]) translate([0, 0, height - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([{length} - 2*fillet + 2*fillet*cos(i*90/8), {width} - 2*fillet + 2*fillet*cos(i*90/8)], center = true);"
+    full_bottom = f"    linear_extrude(0.001) square([{length}, {width}], center = true);"
+    full_top = f"    translate([0, 0, height - 0.001]) linear_extrude(0.001) square([{length}, {width}], center = true);"
     if edges == "top":
         parts = [full_bottom, top_arc]
     elif edges == "bottom":
@@ -216,9 +225,7 @@ def generate_openscad(spec):
             column = "cylinder(h = height, r = corner_radius, $fn = 32)"
         return {
             "supported": True,
-            "warnings": _warnings(
-                a, corner_radius=False, chamfer=ch is None, fillet=fi is None
-            ),
+            "warnings": _warnings(a, corner_radius=False, chamfer=ch is None, fillet=fi is None),
             "code": f"{HEADER}length = {a['length']};\nwidth = {a['width']};\nheight = {a['thickness']};\ncorner_radius = {a['cornerRadius']};"
             + (f"\nchamfer = {ch[0]};" if ch is not None else "")
             + (f"\nfillet = {fi[0]};" if fi is not None else "")
@@ -361,10 +368,31 @@ def generate_openscad(spec):
         }
     if p["type"] == "drawer_divider":
         notch_count = _or(a.get("notchCount"), 0)
+        # A divider is a thin box (length x thickness x height) with notches
+        # cut from the top, so its top/bottom perimeter edges can be finished by
+        # reusing the box-body helpers (with thickness as the cross-section
+        # width) and subtracting the notches from the finished box.
+        ch = _chamfer(a)
+        fi = _fillet(a) if ch is None else None
+        if ch is not None:
+            module_block = (
+                f"chamfer = {ch[0]};\n\n{_chamfered_box_body(ch[1], width='thickness')}\n\n"
+            )
+            panel = "  chamfered_box();"
+        elif fi is not None:
+            module_block = (
+                f"fillet = {fi[0]};\n\n{_filleted_box_body(fi[1], width='thickness')}\n\n"
+            )
+            panel = "  filleted_box();"
+        else:
+            module_block = ""
+            panel = "  translate([-length/2, -thickness/2, 0]) cube([length, thickness, height]);"
+        vars_line = f"length = {a['length']}; height = {a['height']}; thickness = {a['thickness']}; notch_count = {notch_count}; notch_width = {a.get('notchWidth')}; notch_depth = {a.get('notchDepth')};"
+        notches = "  for (i = [1:notch_count]) translate([-length/2 + i * length / (notch_count + 1) - notch_width/2, -thickness/2 - 0.1, height - notch_depth]) cube([notch_width, thickness + 0.2, notch_depth + 0.1]);"
         return {
             "supported": True,
-            "warnings": _warnings(a),
-            "code": f"{HEADER}// Part family: drawer_divider\n// Parameters: {json.dumps(a)}\n\nlength = {a['length']}; height = {a['height']}; thickness = {a['thickness']}; notch_count = {notch_count}; notch_width = {a.get('notchWidth')}; notch_depth = {a.get('notchDepth')};\ndifference() {{\n  translate([-length/2, -thickness/2, 0]) cube([length, thickness, height]);\n  for (i = [1:notch_count]) translate([-length/2 + i * length / (notch_count + 1) - notch_width/2, -thickness/2 - 0.1, height - notch_depth]) cube([notch_width, thickness + 0.2, notch_depth + 0.1]);\n}}\n",
+            "warnings": _warnings(a, chamfer=ch is None, fillet=fi is None),
+            "code": f"{HEADER}// Part family: drawer_divider\n// Parameters: {json.dumps(a)}\n\n{vars_line}\n{module_block}difference() {{\n{panel}\n{notches}\n}}\n",
         }
     if p["type"] == "project_enclosure_tray":
         mount_hole_diameter = _or(a.get("mountHoleDiameter"), 3)

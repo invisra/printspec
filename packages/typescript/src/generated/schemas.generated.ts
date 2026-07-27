@@ -2936,6 +2936,20 @@ export const bundledSchemas = {
             "default": false,
             "x-printspec-control": "checkbox",
             "x-printspec-priority": "advanced"
+          },
+          "chamfer": {
+            "$ref": "common.schema.json#/$defs/Chamfer",
+            "title": "Chamfer",
+            "description": "Optional chamfer edge finishing request.",
+            "x-printspec-control": "number",
+            "x-printspec-priority": "advanced"
+          },
+          "fillet": {
+            "$ref": "common.schema.json#/$defs/Fillet",
+            "title": "Fillet",
+            "description": "Optional fillet edge finishing request.",
+            "x-printspec-control": "number",
+            "x-printspec-priority": "advanced"
           }
         },
         "additionalProperties": false,
@@ -2947,7 +2961,9 @@ export const bundledSchemas = {
             "notchCount",
             "notchWidth",
             "notchDepth",
-            "endTab"
+            "endTab",
+            "chamfer",
+            "fillet"
           ],
           "groups": [
             {
@@ -2961,6 +2977,14 @@ export const bundledSchemas = {
                 "notchWidth",
                 "notchDepth",
                 "endTab"
+              ]
+            },
+            {
+              "id": "finishing",
+              "title": "Finishing",
+              "fields": [
+                "chamfer",
+                "fillet"
               ]
             }
           ]

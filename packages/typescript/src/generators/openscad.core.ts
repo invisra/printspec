@@ -98,10 +98,15 @@ function filletSolid(
 
 // A chamfered_box() module: a hull() of inset/full cross-sections that bevels
 // the requested top/bottom perimeter edge(s) of a centered box.
-function chamferedBoxBody(edges: string): string {
-  const inset =
-    "square([length - 2*chamfer, width - 2*chamfer], center = true)";
-  const full = "square([length, width], center = true)";
+// `l`/`w` name the cross-section dimensions (default length/width) so a thin
+// box family can reuse this with, e.g., `thickness` for its second dimension.
+function chamferedBoxBody(
+  edges: string,
+  l: string = "length",
+  w: string = "width",
+): string {
+  const inset = `square([${l} - 2*chamfer, ${w} - 2*chamfer], center = true)`;
+  const full = `square([${l}, ${w}], center = true)`;
   const parts =
     edges === "top"
       ? [
@@ -123,11 +128,15 @@ function chamferedBoxBody(edges: string): string {
 
 // A filleted_box() module: a hull() of thin cross-section slices whose inset
 // follows the fillet arc, rounding the requested top/bottom perimeter edge(s).
-function filletedBoxBody(edges: string): string {
-  const bottomArc = `    for (i = [0:8]) translate([0, 0, fillet - fillet*cos(i*90/8)]) linear_extrude(0.001) square([length - 2*fillet + 2*fillet*sin(i*90/8), width - 2*fillet + 2*fillet*sin(i*90/8)], center = true);`;
-  const topArc = `    for (i = [0:8]) translate([0, 0, height - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([length - 2*fillet + 2*fillet*cos(i*90/8), width - 2*fillet + 2*fillet*cos(i*90/8)], center = true);`;
-  const fullBottom = `    linear_extrude(0.001) square([length, width], center = true);`;
-  const fullTop = `    translate([0, 0, height - 0.001]) linear_extrude(0.001) square([length, width], center = true);`;
+function filletedBoxBody(
+  edges: string,
+  l: string = "length",
+  w: string = "width",
+): string {
+  const bottomArc = `    for (i = [0:8]) translate([0, 0, fillet - fillet*cos(i*90/8)]) linear_extrude(0.001) square([${l} - 2*fillet + 2*fillet*sin(i*90/8), ${w} - 2*fillet + 2*fillet*sin(i*90/8)], center = true);`;
+  const topArc = `    for (i = [0:8]) translate([0, 0, height - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([${l} - 2*fillet + 2*fillet*cos(i*90/8), ${w} - 2*fillet + 2*fillet*cos(i*90/8)], center = true);`;
+  const fullBottom = `    linear_extrude(0.001) square([${l}, ${w}], center = true);`;
+  const fullTop = `    translate([0, 0, height - 0.001]) linear_extrude(0.001) square([${l}, ${w}], center = true);`;
   const parts =
     edges === "top"
       ? [fullBottom, topArc]
@@ -356,12 +365,33 @@ export function generateOpenScadWithValidator(
       code: `${header}// Part family: l_bracket\n// Parameters: ${JSON.stringify(a)}\n\nleg_a = ${a.legLengthA}; leg_b = ${a.legLengthB}; width = ${a.width}; thickness = ${a.thickness};\ndifference() {\n  union() {\n    translate([0, -width/2, 0]) cube([leg_a, width, thickness]);\n    translate([0, -width/2, 0]) cube([thickness, width, leg_b]);\n  }\n${cuts.code}\n}\n`,
     };
   }
-  if (p.type === "drawer_divider")
+  if (p.type === "drawer_divider") {
+    // A divider is a thin box (length x thickness x height) with notches cut
+    // from the top, so its top/bottom perimeter edges can be finished by
+    // reusing the box-body helpers (with thickness as the cross-section width)
+    // and subtracting the notches from the finished box.
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    const moduleBlock =
+      ch != null
+        ? `chamfer = ${ch[0]};\n\n${chamferedBoxBody(ch[1], "length", "thickness")}\n\n`
+        : fi != null
+          ? `fillet = ${fi[0]};\n\n${filletedBoxBody(fi[1], "length", "thickness")}\n\n`
+          : "";
+    const panel =
+      ch != null
+        ? "  chamfered_box();"
+        : fi != null
+          ? "  filleted_box();"
+          : "  translate([-length/2, -thickness/2, 0]) cube([length, thickness, height]);";
+    const varsLine = `length = ${a.length}; height = ${a.height}; thickness = ${a.thickness}; notch_count = ${a.notchCount ?? 0}; notch_width = ${a.notchWidth}; notch_depth = ${a.notchDepth};`;
+    const notches = `  for (i = [1:notch_count]) translate([-length/2 + i * length / (notch_count + 1) - notch_width/2, -thickness/2 - 0.1, height - notch_depth]) cube([notch_width, thickness + 0.2, notch_depth + 0.1]);`;
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header}// Part family: drawer_divider\n// Parameters: ${JSON.stringify(a)}\n\nlength = ${a.length}; height = ${a.height}; thickness = ${a.thickness}; notch_count = ${a.notchCount ?? 0}; notch_width = ${a.notchWidth}; notch_depth = ${a.notchDepth};\ndifference() {\n  translate([-length/2, -thickness/2, 0]) cube([length, thickness, height]);\n  for (i = [1:notch_count]) translate([-length/2 + i * length / (notch_count + 1) - notch_width/2, -thickness/2 - 0.1, height - notch_depth]) cube([notch_width, thickness + 0.2, notch_depth + 0.1]);\n}\n`,
+      warnings: warnings(a, { chamfer: ch == null, fillet: fi == null }),
+      code: `${header}// Part family: drawer_divider\n// Parameters: ${JSON.stringify(a)}\n\n${varsLine}\n${moduleBlock}difference() {\n${panel}\n${notches}\n}\n`,
     };
+  }
   if (p.type === "project_enclosure_tray")
     return {
       supported: true,

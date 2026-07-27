@@ -316,6 +316,48 @@ test("electronics_standoff finishes base-less and based (per-edge)", () => {
   assert.match(u.warnings.join(" "), /chamfer requested but not implemented/);
   assert.doesNotMatch(u.code, /rotate_extrude/);
 });
+test("drawer_divider finishes its top/bottom edges via the box-body helpers", () => {
+  const divider = (finish) => {
+    const s = read("examples/part-families/drawer-divider.basic.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  // A divider is a thin box, finished via the box-body helpers with the notches
+  // subtracted from the finished box.
+  const ch = generateOpenScad(divider({ chamfer: { distance: 0.5 } }));
+  assert.deepEqual(ch.warnings, []);
+  assert.match(ch.code, /chamfer = 0\.5;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(ch.code, /hull\(\)/);
+  // The cross-section uses thickness as its second dimension, not width.
+  assert.match(ch.code, /square\(\[length, thickness\], center = true\)/);
+  assert.doesNotMatch(ch.code, /square\(\[length, width/);
+  assert.match(ch.code, /chamfered_box\(\);/);
+  // The notches are still cut from the finished box.
+  assert.match(ch.code, /for \(i = \[1:notch_count\]\)/);
+
+  const fi = generateOpenScad(divider({ fillet: { radius: 0.5 } }));
+  assert.deepEqual(fi.warnings, []);
+  assert.match(fi.code, /module filleted_box\(\)/);
+
+  // Top target finishes only the top.
+  const top = generateOpenScad(
+    divider({ chamfer: { distance: 0.5, target: "top" } }),
+  );
+  assert.deepEqual(top.warnings, []);
+  assert.match(
+    top.code,
+    /linear_extrude\(height - chamfer\) square\(\[length, thickness\]/,
+  );
+
+  // Unrecognized target still warns (geometry unchanged).
+  const u = generateOpenScad(
+    divider({ chamfer: { distance: 0.5, target: "middle" } }),
+  );
+  assert.match(u.warnings.join(" "), /chamfer requested but not implemented/);
+  assert.doesNotMatch(u.code, /module chamfered_box\(\)/);
+});
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });
@@ -3995,6 +4037,7 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
       "rounded-rectangular-plate.basic.json",
       "rounded-rectangular-plate.schema.json",
     ],
+    ["drawer-divider.basic.json", "drawer-divider.schema.json"],
   ];
   // The OpenSCAD generator builds a whole-part chamfer for these families, so
   // it no longer warns for a (targetless) chamfer on them; CadQuery and the
@@ -4004,6 +4047,7 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
     "round_spacer",
     "rounded_rectangular_plate",
     "electronics_standoff",
+    "drawer_divider",
   ]);
   for (const [file, schemaFile] of families) {
     const props = read("schemas/" + schemaFile).properties.parameters
@@ -4011,11 +4055,14 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
     const s = read("examples/part-families/" + file);
     const partType = s.part.type;
     const expectChamferWarning = "chamfer" in props;
-    // Only rounded_rectangular_plate actually implements cornerRadius.
+    // Only rounded_rectangular_plate actually implements cornerRadius; a family
+    // whose schema has no cornerRadius (e.g. drawer_divider) can't be sent one
+    // at all under additionalProperties:false.
+    const hasCornerRadius = "cornerRadius" in props;
     const expectCornerRadiusWarning =
-      file !== "rounded-rectangular-plate.basic.json";
+      hasCornerRadius && file !== "rounded-rectangular-plate.basic.json";
     if (expectChamferWarning) s.part.parameters.chamfer = { distance: 0.5 };
-    s.part.parameters.cornerRadius = 1;
+    if (hasCornerRadius) s.part.parameters.cornerRadius = 1;
     for (const generate of [
       generateOpenScad,
       generateCadQuery,

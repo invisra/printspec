@@ -1576,6 +1576,7 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
             "rounded-rectangular-plate.basic.json",
             "rounded-rectangular-plate.schema.json",
         ),
+        ("drawer-divider.basic.json", "drawer-divider.schema.json"),
     ]
     # The OpenSCAD generator builds a whole-part chamfer for these families, so
     # it no longer warns for a (targetless) chamfer on them; CadQuery still does.
@@ -1584,17 +1585,24 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
         "round_spacer",
         "rounded_rectangular_plate",
         "electronics_standoff",
+        "drawer_divider",
     }
     for file, schema_file in families:
         props = read(Path("schemas") / schema_file)["properties"]["parameters"]["properties"]
         s = read(Path("examples/part-families") / file)
         part_type = s["part"]["type"]
         expect_chamfer_warning = "chamfer" in props
-        # Only rounded_rectangular_plate actually implements cornerRadius.
-        expect_corner_radius_warning = file != "rounded-rectangular-plate.basic.json"
+        # Only rounded_rectangular_plate actually implements cornerRadius; a
+        # family whose schema has no cornerRadius (e.g. drawer_divider) can't be
+        # sent one at all under additionalProperties:false.
+        has_corner_radius = "cornerRadius" in props
+        expect_corner_radius_warning = (
+            has_corner_radius and file != "rounded-rectangular-plate.basic.json"
+        )
         if expect_chamfer_warning:
             s["part"]["parameters"]["chamfer"] = {"distance": 0.5}
-        s["part"]["parameters"]["cornerRadius"] = 1
+        if has_corner_radius:
+            s["part"]["parameters"]["cornerRadius"] = 1
         for generate, gen_name in (
             (generate_openscad, "openscad"),
             (generate_cadquery, "cadquery"),
@@ -1671,9 +1679,7 @@ def test_openscad_builds_chamfer_and_fillet_for_rounded_rectangular_plate():
     assert rc["supported"]
     assert "chamfer requested but not implemented" not in rc["warnings"]
     assert "chamfer = 0.5;" in rc["code"]
-    assert (
-        "rotate_extrude($fn = 32) polygon([[0, 0], [corner_radius - chamfer, 0]" in rc["code"]
-    )
+    assert "rotate_extrude($fn = 32) polygon([[0, 0], [corner_radius - chamfer, 0]" in rc["code"]
 
     fi = read(Path("examples/part-families/rounded-rectangular-plate.basic.json"))
     fi["part"]["parameters"]["fillet"] = {"radius": 0.5}
@@ -1778,6 +1784,44 @@ def test_openscad_finishes_electronics_standoff():
     u = generate_openscad(standoff(chamfer={"distance": 0.5, "target": "middle"}))
     assert "chamfer requested but not implemented" in u["warnings"]
     assert "rotate_extrude" not in u["code"]
+
+
+def test_openscad_finishes_drawer_divider():
+    def divider(**finish):
+        s = read(Path("examples/part-families/drawer-divider.basic.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # A divider is a thin box, so it finishes via the box-body helpers with the
+    # notches subtracted from the finished box.
+    ch = generate_openscad(divider(chamfer={"distance": 0.5}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 0.5;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"] and "hull()" in ch["code"]
+    # The cross-section uses thickness as its second dimension, not width.
+    assert "square([length, thickness], center = true)" in ch["code"]
+    assert "square([length, width" not in ch["code"]
+    assert "chamfered_box();" in ch["code"]
+    # The notches are still cut from the finished box.
+    assert "for (i = [1:notch_count])" in ch["code"]
+
+    fi = generate_openscad(divider(fillet={"radius": 0.5}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+
+    # Top target finishes only the top; bottom stays a full square slice.
+    top = generate_openscad(divider(chamfer={"distance": 0.5, "target": "top"}))
+    assert "chamfer requested but not implemented" not in top["warnings"]
+    assert "linear_extrude(height - chamfer) square([length, thickness]" in top["code"]
+
+    bottom = generate_openscad(divider(chamfer={"distance": 0.5, "target": "bottom"}))
+    assert "chamfer requested but not implemented" not in bottom["warnings"]
+
+    # Unrecognized target isn't built, so it still warns (geometry unchanged).
+    u = generate_openscad(divider(chamfer={"distance": 0.5, "target": "middle"}))
+    assert "chamfer requested but not implemented" in u["warnings"]
+    assert "module chamfered_box()" not in u["code"]
 
 
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():
