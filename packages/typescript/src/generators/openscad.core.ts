@@ -21,15 +21,129 @@ function invalid(validatePrintSpec: ValidatePrintSpec, spec: PrintSpec) {
 // for l_bracket, rib) as optional finishing requests that most generators
 // don't implement. Rather than silently drop them, report a warning so
 // callers know the request was ignored. Pass cornerRadius: false for the one
-// family (rounded_rectangular_plate) that actually implements cornerRadius.
-function warnings(a: any, opts: { cornerRadius?: boolean } = {}) {
+// family (rounded_rectangular_plate) that actually implements cornerRadius,
+// and chamfer/fillet: false for a family/case that actually builds them.
+function warnings(
+  a: any,
+  opts: { cornerRadius?: boolean; chamfer?: boolean; fillet?: boolean } = {},
+) {
   const w: string[] = [];
-  if (a.chamfer != null) w.push("chamfer requested but not implemented");
-  if (a.fillet != null) w.push("fillet requested but not implemented");
+  if (opts.chamfer !== false && a.chamfer != null)
+    w.push("chamfer requested but not implemented");
+  if (opts.fillet !== false && a.fillet != null)
+    w.push("fillet requested but not implemented");
   if (a.rib?.enabled) w.push("rib requested but not implemented");
   if (opts.cornerRadius !== false && a.cornerRadius != null)
     w.push("cornerRadius requested but not implemented");
   return w;
+}
+
+// A chamfer/fillet request parses to [size, edges] or null. edges is "both"
+// (no target), or "top"/"bottom" for those recognized targets; any other target
+// returns null (not built), so it still reports the unimplemented-warning.
+type Finish = [number, "both" | "top" | "bottom"] | null;
+function finish(feature: any, sizeKey: string): Finish {
+  if (feature == null) return null;
+  const t = feature.target;
+  if (t == null) return [feature[sizeKey], "both"];
+  if (t === "top" || t === "bottom") return [feature[sizeKey], t];
+  return null;
+}
+function chamferInfo(a: any): Finish {
+  return finish(a.chamfer, "distance");
+}
+// Chamfer takes precedence when both are requested, so callers pass the fillet
+// only when no chamfer is applied and the two never fight over the same edges.
+function filletInfo(a: any): Finish {
+  return finish(a.fillet, "radius");
+}
+
+// A chamfered solid of revolution: outer radius r over height h, with the
+// requested top/bottom outer edge(s) beveled by chamfer. h lets a stepped part
+// reuse this for a sub-cylinder of a different height (e.g. a standoff base).
+function chamferSolid(
+  fn: number,
+  r: string,
+  edges: string,
+  h = "height",
+): string {
+  const pts =
+    edges === "top"
+      ? `[[0, 0], [${r}, 0], [${r}, ${h} - chamfer], [${r} - chamfer, ${h}], [0, ${h}]]`
+      : edges === "bottom"
+        ? `[[0, 0], [${r} - chamfer, 0], [${r}, chamfer], [${r}, ${h}], [0, ${h}]]`
+        : `[[0, 0], [${r} - chamfer, 0], [${r}, chamfer], [${r}, ${h} - chamfer], [${r} - chamfer, ${h}], [0, ${h}]]`;
+  return `rotate_extrude($fn = ${fn}) polygon(${pts})`;
+}
+
+// A filleted solid of revolution. Arc points are emitted as symbolic OpenSCAD
+// (sin/cos at render time) so the TS and Python output stay identical. h is the
+// extrusion height expression (see chamferSolid).
+function filletSolid(
+  fn: number,
+  r: string,
+  edges: string,
+  h = "height",
+): string {
+  const bottomArc = `[for (i = [0:8]) [${r} - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]]`;
+  const topArc = `[for (i = [0:8]) [${r} - fillet + fillet*cos(i*90/8), ${h} - fillet + fillet*sin(i*90/8)]]`;
+  const pts =
+    edges === "top"
+      ? `concat([[0, 0], [${r}, 0]], ${topArc}, [[0, ${h}]])`
+      : edges === "bottom"
+        ? `concat([[0, 0]], ${bottomArc}, [[${r}, ${h}], [0, ${h}]])`
+        : `concat([[0, 0]], ${bottomArc}, ${topArc}, [[0, ${h}]])`;
+  return `rotate_extrude($fn = ${fn}) polygon(${pts})`;
+}
+
+// A chamfered_box() module: a hull() of inset/full cross-sections that bevels
+// the requested top/bottom perimeter edge(s) of a centered box.
+// `l`/`w` name the cross-section dimensions (default length/width) so a thin
+// box family can reuse this with, e.g., `thickness` for its second dimension.
+function chamferedBoxBody(
+  edges: string,
+  l: string = "length",
+  w: string = "width",
+): string {
+  const inset = `square([${l} - 2*chamfer, ${w} - 2*chamfer], center = true)`;
+  const full = `square([${l}, ${w}], center = true)`;
+  const parts =
+    edges === "top"
+      ? [
+          `    linear_extrude(height - chamfer) ${full};`,
+          `    translate([0, 0, height - 0.01]) linear_extrude(0.01) ${inset};`,
+        ]
+      : edges === "bottom"
+        ? [
+            `    linear_extrude(0.01) ${inset};`,
+            `    translate([0, 0, chamfer]) linear_extrude(height - chamfer) ${full};`,
+          ]
+        : [
+            `    linear_extrude(0.01) ${inset};`,
+            `    translate([0, 0, chamfer]) linear_extrude(height - 2*chamfer) ${full};`,
+            `    translate([0, 0, height - 0.01]) linear_extrude(0.01) ${inset};`,
+          ];
+  return `module chamfered_box() {\n  hull() {\n${parts.join("\n")}\n  }\n}`;
+}
+
+// A filleted_box() module: a hull() of thin cross-section slices whose inset
+// follows the fillet arc, rounding the requested top/bottom perimeter edge(s).
+function filletedBoxBody(
+  edges: string,
+  l: string = "length",
+  w: string = "width",
+): string {
+  const bottomArc = `    for (i = [0:8]) translate([0, 0, fillet - fillet*cos(i*90/8)]) linear_extrude(0.001) square([${l} - 2*fillet + 2*fillet*sin(i*90/8), ${w} - 2*fillet + 2*fillet*sin(i*90/8)], center = true);`;
+  const topArc = `    for (i = [0:8]) translate([0, 0, height - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([${l} - 2*fillet + 2*fillet*cos(i*90/8), ${w} - 2*fillet + 2*fillet*cos(i*90/8)], center = true);`;
+  const fullBottom = `    linear_extrude(0.001) square([${l}, ${w}], center = true);`;
+  const fullTop = `    translate([0, 0, height - 0.001]) linear_extrude(0.001) square([${l}, ${w}], center = true);`;
+  const parts =
+    edges === "top"
+      ? [fullBottom, topArc]
+      : edges === "bottom"
+        ? [bottomArc, fullTop]
+        : [bottomArc, topArc];
+  return `module filleted_box() {\n  hull() {\n${parts.join("\n")}\n  }\n}`;
 }
 
 function holes(hs: any[] = []) {
@@ -103,36 +217,93 @@ export function generateOpenScadWithValidator(
       warnings: [],
     };
   const a = p.parameters;
-  if (p.type === "rounded_rectangular_plate")
+  if (p.type === "rounded_rectangular_plate") {
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    // The plate is a hull() of corner columns; finishing the columns' top/bottom
+    // edges finishes the whole plate perimeter uniformly.
+    const column =
+      ch != null
+        ? chamferSolid(32, "corner_radius", ch[1])
+        : fi != null
+          ? filletSolid(32, "corner_radius", fi[1])
+          : `cylinder(h = height, r = corner_radius, $fn = 32)`;
     return {
       supported: true,
-      warnings: warnings(a, { cornerRadius: false }),
-      code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.thickness};\ncorner_radius = ${a.cornerRadius};\n\nmodule rounded_plate() {\n  hull() {\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) cylinder(h = height, r = corner_radius, $fn = 32);\n  }\n}\n\ndifference() {\n  rounded_plate();\n${holes(a.holes)}\n}\n`,
+      warnings: warnings(a, {
+        cornerRadius: false,
+        chamfer: ch == null,
+        fillet: fi == null,
+      }),
+      code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.thickness};\ncorner_radius = ${a.cornerRadius};${ch != null ? `\nchamfer = ${ch[0]};` : ""}${fi != null ? `\nfillet = ${fi[0]};` : ""}\n\nmodule rounded_plate() {\n  hull() {\n    for (x = [-length/2 + corner_radius, length/2 - corner_radius])\n      for (y = [-width/2 + corner_radius, width/2 - corner_radius])\n        translate([x, y, 0]) ${column};\n  }\n}\n\ndifference() {\n  rounded_plate();\n${holes(a.holes)}\n}\n`,
     };
-  if (p.type === "spacer_block")
+  }
+  if (p.type === "spacer_block") {
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    const body =
+      ch != null
+        ? `chamfer = ${ch[0]};\n\n${chamferedBoxBody(ch[1])}\n\ndifference() {\n  chamfered_box();\n${holes(a.holes)}\n}\n`
+        : fi != null
+          ? `fillet = ${fi[0]};\n\n${filletedBoxBody(fi[1])}\n\ndifference() {\n  filleted_box();\n${holes(a.holes)}\n}\n`
+          : `\ndifference() {\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n${holes(a.holes)}\n}\n`;
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.height};\n\ndifference() {\n  translate([-length/2, -width/2, 0]) cube([length, width, height]);\n${holes(a.holes)}\n}\n`,
+      warnings: warnings(a, { chamfer: ch == null, fillet: fi == null }),
+      code: `${header}length = ${a.length};\nwidth = ${a.width};\nheight = ${a.height};\n${body}`,
     };
+  }
   if (p.type === "round_spacer") {
-    const w = warnings(a);
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
     const inner =
       a.innerDiameter != null
         ? `\n  translate([0, 0, -0.1]) cylinder(h = height + 0.2, d = inner_diameter, $fn = 64);`
         : "";
+    const outerSolid =
+      ch != null
+        ? chamferSolid(64, "outer_diameter/2", ch[1])
+        : fi != null
+          ? filletSolid(64, "outer_diameter/2", fi[1])
+          : `cylinder(h = height, d = outer_diameter, $fn = 64)`;
     return {
       supported: true,
-      warnings: w,
-      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};${a.innerDiameter != null ? `\ninner_diameter = ${a.innerDiameter};` : ""}\n\ndifference() {\n  cylinder(h = height, d = outer_diameter, $fn = 64);${inner}\n}\n`,
+      warnings: warnings(a, { chamfer: ch == null, fillet: fi == null }),
+      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};${ch != null ? `\nchamfer = ${ch[0]};` : ""}${fi != null ? `\nfillet = ${fi[0]};` : ""}${a.innerDiameter != null ? `\ninner_diameter = ${a.innerDiameter};` : ""}\n\ndifference() {\n  ${outerSolid};${inner}\n}\n`,
     };
   }
   if (p.type === "electronics_standoff") {
     const hasBase = a.baseDiameter != null && a.baseHeight != null;
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    const finish = ch != null ? ch : fi;
+    const solid = ch != null ? chamferSolid : filletSolid;
+    const edges = finish != null ? finish[1] : null;
+    let body;
+    if (!hasBase) {
+      // Plain cylinder + hole: finish the outer top/bottom edges directly.
+      body =
+        finish != null
+          ? `${solid(64, "outer_diameter/2", finish[1])};`
+          : `cylinder(h = height, d = outer_diameter, $fn = 64);`;
+    } else {
+      // Stepped standoff: the exposed edges are the shaft top and the base
+      // bottom, so whole-part finishes both; the internal base/shaft joint
+      // stays square.
+      const shaft =
+        edges === "both" || edges === "top"
+          ? solid(64, "outer_diameter/2", "top")
+          : `cylinder(h = height, d = outer_diameter, $fn = 64)`;
+      const base =
+        edges === "both" || edges === "bottom"
+          ? solid(64, "base_diameter/2", "bottom", "base_height")
+          : `cylinder(h = base_height, d = base_diameter, $fn = 64)`;
+      body = `union() {\n    ${base};\n    translate([0, 0, base_height]) ${shaft};\n  }`;
+    }
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};\nhole_diameter = ${a.holeDiameter};${hasBase ? `\nbase_diameter = ${a.baseDiameter};\nbase_height = ${a.baseHeight};` : ""}\n\ndifference() {\n  ${hasBase ? `union() {\n    cylinder(h = base_height, d = base_diameter, $fn = 64);\n    translate([0, 0, base_height]) cylinder(h = height, d = outer_diameter, $fn = 64);\n  }` : `cylinder(h = height, d = outer_diameter, $fn = 64);`}\n  translate([0, 0, -0.1]) cylinder(h = ${hasBase ? "base_height + height" : "height"} + 0.2, d = hole_diameter, $fn = 64);\n}\n`,
+      warnings: warnings(a, { chamfer: ch == null, fillet: fi == null }),
+      code: `${header}outer_diameter = ${a.outerDiameter};\nheight = ${a.height};\nhole_diameter = ${a.holeDiameter};${hasBase ? `\nbase_diameter = ${a.baseDiameter};\nbase_height = ${a.baseHeight};` : ""}${ch != null ? `\nchamfer = ${ch[0]};` : ""}${fi != null ? `\nfillet = ${fi[0]};` : ""}\n\ndifference() {\n  ${body}\n  translate([0, 0, -0.1]) cylinder(h = ${hasBase ? "base_height + height" : "height"} + 0.2, d = hole_diameter, $fn = 64);\n}\n`,
     };
   }
 
@@ -194,12 +365,33 @@ export function generateOpenScadWithValidator(
       code: `${header}// Part family: l_bracket\n// Parameters: ${JSON.stringify(a)}\n\nleg_a = ${a.legLengthA}; leg_b = ${a.legLengthB}; width = ${a.width}; thickness = ${a.thickness};\ndifference() {\n  union() {\n    translate([0, -width/2, 0]) cube([leg_a, width, thickness]);\n    translate([0, -width/2, 0]) cube([thickness, width, leg_b]);\n  }\n${cuts.code}\n}\n`,
     };
   }
-  if (p.type === "drawer_divider")
+  if (p.type === "drawer_divider") {
+    // A divider is a thin box (length x thickness x height) with notches cut
+    // from the top, so its top/bottom perimeter edges can be finished by
+    // reusing the box-body helpers (with thickness as the cross-section width)
+    // and subtracting the notches from the finished box.
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    const moduleBlock =
+      ch != null
+        ? `chamfer = ${ch[0]};\n\n${chamferedBoxBody(ch[1], "length", "thickness")}\n\n`
+        : fi != null
+          ? `fillet = ${fi[0]};\n\n${filletedBoxBody(fi[1], "length", "thickness")}\n\n`
+          : "";
+    const panel =
+      ch != null
+        ? "  chamfered_box();"
+        : fi != null
+          ? "  filleted_box();"
+          : "  translate([-length/2, -thickness/2, 0]) cube([length, thickness, height]);";
+    const varsLine = `length = ${a.length}; height = ${a.height}; thickness = ${a.thickness}; notch_count = ${a.notchCount ?? 0}; notch_width = ${a.notchWidth}; notch_depth = ${a.notchDepth};`;
+    const notches = `  for (i = [1:notch_count]) translate([-length/2 + i * length / (notch_count + 1) - notch_width/2, -thickness/2 - 0.1, height - notch_depth]) cube([notch_width, thickness + 0.2, notch_depth + 0.1]);`;
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header}// Part family: drawer_divider\n// Parameters: ${JSON.stringify(a)}\n\nlength = ${a.length}; height = ${a.height}; thickness = ${a.thickness}; notch_count = ${a.notchCount ?? 0}; notch_width = ${a.notchWidth}; notch_depth = ${a.notchDepth};\ndifference() {\n  translate([-length/2, -thickness/2, 0]) cube([length, thickness, height]);\n  for (i = [1:notch_count]) translate([-length/2 + i * length / (notch_count + 1) - notch_width/2, -thickness/2 - 0.1, height - notch_depth]) cube([notch_width, thickness + 0.2, notch_depth + 0.1]);\n}\n`,
+      warnings: warnings(a, { chamfer: ch == null, fillet: fi == null }),
+      code: `${header}// Part family: drawer_divider\n// Parameters: ${JSON.stringify(a)}\n\n${varsLine}\n${moduleBlock}difference() {\n${panel}\n${notches}\n}\n`,
     };
+  }
   if (p.type === "project_enclosure_tray")
     return {
       supported: true,
