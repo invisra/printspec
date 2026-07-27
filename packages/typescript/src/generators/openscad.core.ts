@@ -58,29 +58,41 @@ function filletInfo(a: any): Finish {
   return finish(a.fillet, "radius");
 }
 
-// A chamfered solid of revolution: outer radius r over height, with the
-// requested top/bottom outer edge(s) beveled by chamfer.
-function chamferSolid(fn: number, r: string, edges: string): string {
+// A chamfered solid of revolution: outer radius r over height h, with the
+// requested top/bottom outer edge(s) beveled by chamfer. h lets a stepped part
+// reuse this for a sub-cylinder of a different height (e.g. a standoff base).
+function chamferSolid(
+  fn: number,
+  r: string,
+  edges: string,
+  h = "height",
+): string {
   const pts =
     edges === "top"
-      ? `[[0, 0], [${r}, 0], [${r}, height - chamfer], [${r} - chamfer, height], [0, height]]`
+      ? `[[0, 0], [${r}, 0], [${r}, ${h} - chamfer], [${r} - chamfer, ${h}], [0, ${h}]]`
       : edges === "bottom"
-        ? `[[0, 0], [${r} - chamfer, 0], [${r}, chamfer], [${r}, height], [0, height]]`
-        : `[[0, 0], [${r} - chamfer, 0], [${r}, chamfer], [${r}, height - chamfer], [${r} - chamfer, height], [0, height]]`;
+        ? `[[0, 0], [${r} - chamfer, 0], [${r}, chamfer], [${r}, ${h}], [0, ${h}]]`
+        : `[[0, 0], [${r} - chamfer, 0], [${r}, chamfer], [${r}, ${h} - chamfer], [${r} - chamfer, ${h}], [0, ${h}]]`;
   return `rotate_extrude($fn = ${fn}) polygon(${pts})`;
 }
 
 // A filleted solid of revolution. Arc points are emitted as symbolic OpenSCAD
-// (sin/cos at render time) so the TS and Python output stay identical.
-function filletSolid(fn: number, r: string, edges: string): string {
+// (sin/cos at render time) so the TS and Python output stay identical. h is the
+// extrusion height expression (see chamferSolid).
+function filletSolid(
+  fn: number,
+  r: string,
+  edges: string,
+  h = "height",
+): string {
   const bottomArc = `[for (i = [0:8]) [${r} - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]]`;
-  const topArc = `[for (i = [0:8]) [${r} - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]]`;
+  const topArc = `[for (i = [0:8]) [${r} - fillet + fillet*cos(i*90/8), ${h} - fillet + fillet*sin(i*90/8)]]`;
   const pts =
     edges === "top"
-      ? `concat([[0, 0], [${r}, 0]], ${topArc}, [[0, height]])`
+      ? `concat([[0, 0], [${r}, 0]], ${topArc}, [[0, ${h}]])`
       : edges === "bottom"
-        ? `concat([[0, 0]], ${bottomArc}, [[${r}, height], [0, height]])`
-        : `concat([[0, 0]], ${bottomArc}, ${topArc}, [[0, height]])`;
+        ? `concat([[0, 0]], ${bottomArc}, [[${r}, ${h}], [0, ${h}]])`
+        : `concat([[0, 0]], ${bottomArc}, ${topArc}, [[0, ${h}]])`;
   return `rotate_extrude($fn = ${fn}) polygon(${pts})`;
 }
 
@@ -253,19 +265,32 @@ export function generateOpenScadWithValidator(
   }
   if (p.type === "electronics_standoff") {
     const hasBase = a.baseDiameter != null && a.baseHeight != null;
-    // A base-less standoff is a plain cylinder + hole, so its outer top/bottom
-    // edges finish exactly like round_spacer. A based standoff is stepped, so a
-    // whole-part finish is ambiguous and stays a warning for now.
-    const ch = hasBase ? null : chamferInfo(a);
-    const fi = !hasBase && ch == null ? filletInfo(a) : null;
-    const body =
-      ch != null
-        ? `${chamferSolid(64, "outer_diameter/2", ch[1])};`
-        : fi != null
-          ? `${filletSolid(64, "outer_diameter/2", fi[1])};`
-          : hasBase
-            ? `union() {\n    cylinder(h = base_height, d = base_diameter, $fn = 64);\n    translate([0, 0, base_height]) cylinder(h = height, d = outer_diameter, $fn = 64);\n  }`
-            : `cylinder(h = height, d = outer_diameter, $fn = 64);`;
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    const finish = ch != null ? ch : fi;
+    const solid = ch != null ? chamferSolid : filletSolid;
+    const edges = finish != null ? finish[1] : null;
+    let body;
+    if (!hasBase) {
+      // Plain cylinder + hole: finish the outer top/bottom edges directly.
+      body =
+        finish != null
+          ? `${solid(64, "outer_diameter/2", finish[1])};`
+          : `cylinder(h = height, d = outer_diameter, $fn = 64);`;
+    } else {
+      // Stepped standoff: the exposed edges are the shaft top and the base
+      // bottom, so whole-part finishes both; the internal base/shaft joint
+      // stays square.
+      const shaft =
+        edges === "both" || edges === "top"
+          ? solid(64, "outer_diameter/2", "top")
+          : `cylinder(h = height, d = outer_diameter, $fn = 64)`;
+      const base =
+        edges === "both" || edges === "bottom"
+          ? solid(64, "base_diameter/2", "bottom", "base_height")
+          : `cylinder(h = base_height, d = base_diameter, $fn = 64)`;
+      body = `union() {\n    ${base};\n    translate([0, 0, base_height]) ${shaft};\n  }`;
+    }
     return {
       supported: true,
       warnings: warnings(a, { chamfer: ch == null, fillet: fi == null }),

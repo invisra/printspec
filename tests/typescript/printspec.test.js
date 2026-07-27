@@ -276,22 +276,45 @@ test("spacer_block fillet builds a hulled filleted box in OpenSCAD", () => {
     /linear_extrude\(0.001\) square\(\[length, width\], center = true\);/,
   );
 });
-test("base-less electronics_standoff finishes; based standoff defers", () => {
-  const s = read("examples/part-families/electronics-standoff.m3.json");
+test("electronics_standoff finishes base-less and based (per-edge)", () => {
+  const standoff = (finish) => {
+    const s = read("examples/part-families/electronics-standoff.m3.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+  const count = (str, sub) => str.split(sub).length - 1;
+
+  // Base-less standoff finishes like a plain cylinder.
+  const s = standoff({ chamfer: { distance: 0.5, target: "top" } });
   delete s.part.parameters.baseDiameter;
   delete s.part.parameters.baseHeight;
-  s.part.parameters.chamfer = { distance: 0.5, target: "top" };
   const r = generateOpenScad(s);
   assert.deepEqual(r.warnings, []);
-  assert.match(r.code, /chamfer = 0.5;/);
   assert.match(r.code, /rotate_extrude\(\$fn = 64\) polygon\(/);
 
-  const b = read("examples/part-families/electronics-standoff.m3.json");
-  b.part.parameters.fillet = { radius: 0.5 };
-  const rb = generateOpenScad(b);
-  assert.match(rb.warnings.join(" "), /fillet requested but not implemented/);
-  assert.match(rb.code, /union\(\) \{/);
-  assert.doesNotMatch(rb.code, /rotate_extrude/);
+  // Based, whole-part: finishes the shaft top and the base bottom.
+  const both = generateOpenScad(standoff({ fillet: { radius: 0.5 } }));
+  assert.deepEqual(both.warnings, []);
+  assert.equal(count(both.code, "rotate_extrude"), 2);
+  assert.match(both.code, /base_diameter\/2/);
+
+  // Based, top target: only the shaft is finished; base stays plain.
+  const top = generateOpenScad(
+    standoff({ chamfer: { distance: 0.5, target: "top" } }),
+  );
+  assert.deepEqual(top.warnings, []);
+  assert.equal(count(top.code, "rotate_extrude"), 1);
+  assert.match(
+    top.code,
+    /cylinder\(h = base_height, d = base_diameter, \$fn = 64\)/,
+  );
+
+  // Unrecognized target still warns (geometry unchanged).
+  const u = generateOpenScad(
+    standoff({ chamfer: { distance: 0.5, target: "middle" } }),
+  );
+  assert.match(u.warnings.join(" "), /chamfer requested but not implemented/);
+  assert.doesNotMatch(u.code, /rotate_extrude/);
 });
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
@@ -3980,6 +4003,7 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
     "spacer_block",
     "round_spacer",
     "rounded_rectangular_plate",
+    "electronics_standoff",
   ]);
   for (const [file, schemaFile] of families) {
     const props = read("schemas/" + schemaFile).properties.parameters

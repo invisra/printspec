@@ -1579,7 +1579,12 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
     ]
     # The OpenSCAD generator builds a whole-part chamfer for these families, so
     # it no longer warns for a (targetless) chamfer on them; CadQuery still does.
-    openscad_chamfer_families = {"spacer_block", "round_spacer", "rounded_rectangular_plate"}
+    openscad_chamfer_families = {
+        "spacer_block",
+        "round_spacer",
+        "rounded_rectangular_plate",
+        "electronics_standoff",
+    }
     for file, schema_file in families:
         props = read(Path("schemas") / schema_file)["properties"]["parameters"]["properties"]
         s = read(Path("examples/part-families") / file)
@@ -1736,24 +1741,43 @@ def test_openscad_builds_fillet_for_spacer_block():
     assert "fillet requested but not implemented" in generate_cadquery(s)["warnings"]
 
 
-def test_openscad_finishes_baseless_standoff_defers_based():
-    # A base-less standoff finishes like a plain cylinder.
-    s = read(Path("examples/part-families/electronics-standoff.m3.json"))
+def test_openscad_finishes_electronics_standoff():
+    def standoff(**finish):
+        s = read(Path("examples/part-families/electronics-standoff.m3.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # Base-less standoff finishes like a plain cylinder.
+    s = standoff(chamfer={"distance": 0.5, "target": "top"})
     del s["part"]["parameters"]["baseDiameter"]
     del s["part"]["parameters"]["baseHeight"]
-    s["part"]["parameters"]["chamfer"] = {"distance": 0.5, "target": "top"}
     r = generate_openscad(s)
     assert r["supported"], r.get("message")
     assert "chamfer requested but not implemented" not in r["warnings"]
-    assert "chamfer = 0.5;" in r["code"]
     assert "rotate_extrude($fn = 64) polygon(" in r["code"]
 
-    # A based standoff defers finishing, so it still warns and keeps its geometry.
-    b = read(Path("examples/part-families/electronics-standoff.m3.json"))
-    b["part"]["parameters"]["fillet"] = {"radius": 0.5}
-    rb = generate_openscad(b)
-    assert "fillet requested but not implemented" in rb["warnings"]
-    assert "union() {" in rb["code"] and "rotate_extrude" not in rb["code"]
+    # Based standoff, whole-part: finish both the shaft top and the base bottom.
+    both = generate_openscad(standoff(fillet={"radius": 0.5}))
+    assert "fillet requested but not implemented" not in both["warnings"]
+    assert both["code"].count("rotate_extrude") == 2
+    assert "base_diameter/2" in both["code"]
+
+    # Based standoff, top target: only the shaft is finished; base stays plain.
+    top = generate_openscad(standoff(chamfer={"distance": 0.5, "target": "top"}))
+    assert "chamfer requested but not implemented" not in top["warnings"]
+    assert top["code"].count("rotate_extrude") == 1
+    assert "cylinder(h = base_height, d = base_diameter, $fn = 64)" in top["code"]
+
+    # Based standoff, bottom target: only the base is finished; shaft stays plain.
+    bottom = generate_openscad(standoff(chamfer={"distance": 0.5, "target": "bottom"}))
+    assert "chamfer requested but not implemented" not in bottom["warnings"]
+    assert "base_diameter/2" in bottom["code"]
+    assert "cylinder(h = height, d = outer_diameter, $fn = 64)" in bottom["code"]
+
+    # Unrecognized target isn't built, so it still warns (geometry unchanged).
+    u = generate_openscad(standoff(chamfer={"distance": 0.5, "target": "middle"}))
+    assert "chamfer requested but not implemented" in u["warnings"]
+    assert "rotate_extrude" not in u["code"]
 
 
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():

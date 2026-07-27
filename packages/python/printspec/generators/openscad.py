@@ -57,29 +57,32 @@ def _fillet(a):
     return _finish(a.get("fillet"), "radius")
 
 
-def _chamfer_solid(fn, r, edges):
-    """A chamfered solid of revolution: outer radius ``r`` over ``height``, with
-    the requested top/bottom outer edge(s) beveled by ``chamfer``."""
+def _chamfer_solid(fn, r, edges, h="height"):
+    """A chamfered solid of revolution: outer radius ``r`` over height ``h``, with
+    the requested top/bottom outer edge(s) beveled by ``chamfer``. ``h`` lets a
+    stepped part reuse this for a sub-cylinder of a different height (e.g. a
+    standoff base of ``base_height``)."""
     if edges == "top":
-        pts = f"[[0, 0], [{r}, 0], [{r}, height - chamfer], [{r} - chamfer, height], [0, height]]"
+        pts = f"[[0, 0], [{r}, 0], [{r}, {h} - chamfer], [{r} - chamfer, {h}], [0, {h}]]"
     elif edges == "bottom":
-        pts = f"[[0, 0], [{r} - chamfer, 0], [{r}, chamfer], [{r}, height], [0, height]]"
+        pts = f"[[0, 0], [{r} - chamfer, 0], [{r}, chamfer], [{r}, {h}], [0, {h}]]"
     else:
-        pts = f"[[0, 0], [{r} - chamfer, 0], [{r}, chamfer], [{r}, height - chamfer], [{r} - chamfer, height], [0, height]]"
+        pts = f"[[0, 0], [{r} - chamfer, 0], [{r}, chamfer], [{r}, {h} - chamfer], [{r} - chamfer, {h}], [0, {h}]]"
     return f"rotate_extrude($fn = {fn}) polygon({pts})"
 
 
-def _fillet_solid(fn, r, edges):
+def _fillet_solid(fn, r, edges, h="height"):
     """A filleted solid of revolution. The arc points are emitted as symbolic
-    OpenSCAD (sin/cos at render time) so the Python and TS output stay identical."""
+    OpenSCAD (sin/cos at render time) so the Python and TS output stay identical.
+    ``h`` is the extrusion height expression (see :func:`_chamfer_solid`)."""
     bottom_arc = f"[for (i = [0:8]) [{r} - fillet + fillet*sin(i*90/8), fillet - fillet*cos(i*90/8)]]"
-    top_arc = f"[for (i = [0:8]) [{r} - fillet + fillet*cos(i*90/8), height - fillet + fillet*sin(i*90/8)]]"
+    top_arc = f"[for (i = [0:8]) [{r} - fillet + fillet*cos(i*90/8), {h} - fillet + fillet*sin(i*90/8)]]"
     if edges == "top":
-        pts = f"concat([[0, 0], [{r}, 0]], {top_arc}, [[0, height]])"
+        pts = f"concat([[0, 0], [{r}, 0]], {top_arc}, [[0, {h}]])"
     elif edges == "bottom":
-        pts = f"concat([[0, 0]], {bottom_arc}, [[{r}, height], [0, height]])"
+        pts = f"concat([[0, 0]], {bottom_arc}, [[{r}, {h}], [0, {h}]])"
     else:
-        pts = f"concat([[0, 0]], {bottom_arc}, {top_arc}, [[0, height]])"
+        pts = f"concat([[0, 0]], {bottom_arc}, {top_arc}, [[0, {h}]])"
     return f"rotate_extrude($fn = {fn}) polygon({pts})"
 
 
@@ -264,19 +267,32 @@ def generate_openscad(spec):
         }
     if p["type"] == "electronics_standoff":
         has_base = a.get("baseDiameter") is not None and a.get("baseHeight") is not None
-        # A base-less standoff is a plain cylinder + hole, so its outer top/bottom
-        # edges finish exactly like round_spacer. A based standoff is stepped, so
-        # a whole-part finish is ambiguous and stays a warning for now.
-        ch = _chamfer(a) if not has_base else None
-        fi = _fillet(a) if (not has_base and ch is None) else None
-        if ch is not None:
-            body = f"{_chamfer_solid(64, 'outer_diameter/2', ch[1])};"
-        elif fi is not None:
-            body = f"{_fillet_solid(64, 'outer_diameter/2', fi[1])};"
-        elif has_base:
-            body = "union() {\n    cylinder(h = base_height, d = base_diameter, $fn = 64);\n    translate([0, 0, base_height]) cylinder(h = height, d = outer_diameter, $fn = 64);\n  }"
+        ch = _chamfer(a)
+        fi = _fillet(a) if ch is None else None
+        finish = ch if ch is not None else fi
+        solid = _chamfer_solid if ch is not None else _fillet_solid
+        edges = finish[1] if finish is not None else None
+        if not has_base:
+            # Plain cylinder + hole: finish the outer top/bottom edges directly.
+            if finish is not None:
+                body = f"{solid(64, 'outer_diameter/2', edges)};"
+            else:
+                body = "cylinder(h = height, d = outer_diameter, $fn = 64);"
         else:
-            body = "cylinder(h = height, d = outer_diameter, $fn = 64);"
+            # Stepped standoff: the exposed edges are the shaft top and the base
+            # bottom, so whole-part finishes both; the internal base/shaft joint
+            # stays square.
+            shaft = (
+                solid(64, "outer_diameter/2", "top")
+                if edges in ("both", "top")
+                else "cylinder(h = height, d = outer_diameter, $fn = 64)"
+            )
+            base = (
+                solid(64, "base_diameter/2", "bottom", "base_height")
+                if edges in ("both", "bottom")
+                else "cylinder(h = base_height, d = base_diameter, $fn = 64)"
+            )
+            body = f"union() {{\n    {base};\n    translate([0, 0, base_height]) {shaft};\n  }}"
         return {
             "supported": True,
             "warnings": _warnings(a, chamfer=ch is None, fillet=fi is None),
