@@ -358,6 +358,60 @@ test("drawer_divider finishes its top/bottom edges via the box-body helpers", ()
   assert.match(u.warnings.join(" "), /chamfer requested but not implemented/);
   assert.doesNotMatch(u.code, /module chamfered_box\(\)/);
 });
+test("cable_comb finishes its flat-plate top/bottom edges via the box-body helpers", () => {
+  const comb = (finish) => {
+    const s = read("examples/part-families/cable-comb.usb.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  // The usb example carries a cornerRadius, which still warns; the chamfer/
+  // fillet must not.
+  const ch = generateOpenScad(comb({ chamfer: { distance: 0.5 } }));
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(ch.code, /chamfer = 0\.5;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(ch.code, /chamfered_box\(\);/);
+  // The slots are still cut from the finished plate.
+  assert.match(ch.code, /cube\(\[5, 12\.2, 4\.2\]\);/);
+
+  const fi = generateOpenScad(comb({ fillet: { radius: 0.5 } }));
+  assert.doesNotMatch(
+    fi.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(fi.code, /module filleted_box\(\)/);
+
+  const top = generateOpenScad(
+    comb({ chamfer: { distance: 0.5, target: "top" } }),
+  );
+  assert.doesNotMatch(
+    top.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(
+    top.code,
+    /linear_extrude\(height - chamfer\) square\(\[length, width\]/,
+  );
+
+  const u = generateOpenScad(
+    comb({ chamfer: { distance: 0.5, target: "edge" } }),
+  );
+  assert.match(u.warnings.join(" "), /chamfer requested but not implemented/);
+  assert.doesNotMatch(u.code, /module chamfered_box\(\)/);
+});
+test("cable_comb inlines dimensions like JS numbers (no trailing .0)", () => {
+  // Byte-identity with the Python OpenSCAD generator depends on both inlining
+  // dimensions the same way; JS Number formatting is the shared target.
+  const code = generateOpenScad(
+    read("examples/part-families/cable-comb.usb.json"),
+  ).code;
+  assert.match(code, /cube\(\[70, 18, 4\]\);/);
+  assert.doesNotMatch(code, /70\.0|18\.0/);
+});
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });
@@ -4151,6 +4205,7 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
     "rounded_rectangular_plate",
     "electronics_standoff",
     "drawer_divider",
+    "cable_comb",
   ]);
   for (const [file, schemaFile] of families) {
     const props = read("schemas/" + schemaFile).properties.parameters

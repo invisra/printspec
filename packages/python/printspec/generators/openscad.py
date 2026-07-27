@@ -9,6 +9,16 @@ def _or(v, d):
     return d if v is None else v
 
 
+def _num(x):
+    """Format a number the way JavaScript's ``Number.toString()`` does, so
+    inlined dimensions stay byte-identical with the TypeScript generator. Both
+    languages use IEEE-754 shortest round-trip for non-integers (Python's
+    ``repr`` and JS's ``toString`` agree there); the only systematic difference
+    is that Python's ``float()`` prints ``70.0`` where JS prints ``70``."""
+    n = float(x)
+    return str(int(n)) if n == int(n) else repr(n)
+
+
 def _warnings(a, corner_radius=True, chamfer=True, fillet=True):
     """Several part families' schemas include chamfer/fillet/cornerRadius
     (and, for l_bracket, rib) as optional finishing requests that most
@@ -323,15 +333,30 @@ def generate_openscad(spec):
         width = float(_or(a.get("width"), sd + tw))
         cuts = ""
         for i in range(int(count)):
-            cuts += f"  translate([{-length / 2 + tw + i * (sw + tw)}, {width / 2 - sd}, -0.1]) cube([{sw}, {sd + 0.2}, {th + 0.2}]);\n"
+            cuts += f"  translate([{_num(-length / 2 + tw + i * (sw + tw))}, {_num(width / 2 - sd)}, -0.1]) cube([{_num(sw)}, {_num(sd + 0.2)}, {_num(th + 0.2)}]);\n"
         hd = float(_or(a.get("mountHoleDiameter"), 0))
         if hd > 0:
             sp = float(_or(a.get("mountHoleSpacing"), 40))
-            cuts += f"  translate([{-sp / 2}, 0, -0.1]) cylinder(h = {th + 0.2}, d = {hd}, $fn = 32);\n  translate([{sp / 2}, 0, -0.1]) cylinder(h = {th + 0.2}, d = {hd}, $fn = 32);\n"
+            cuts += f"  translate([{_num(-sp / 2)}, 0, -0.1]) cylinder(h = {_num(th + 0.2)}, d = {_num(hd)}, $fn = 32);\n  translate([{_num(sp / 2)}, 0, -0.1]) cylinder(h = {_num(th + 0.2)}, d = {_num(hd)}, $fn = 32);\n"
+        # A comb is a flat plate (length x width x thickness) with slots cut into
+        # one long edge, so its top/bottom flat-face perimeter finishes via the
+        # box-body helpers with the slots subtracted from the finished plate.
+        ch = _chamfer(a)
+        fi = _fillet(a) if ch is None else None
+        box_vars = f"length = {_num(length)}; width = {_num(width)}; height = {_num(th)};\n"
+        if ch is not None:
+            prelude = f"{box_vars}chamfer = {_num(ch[0])};\n\n{_chamfered_box_body(ch[1])}\n\n"
+            panel = "  chamfered_box();"
+        elif fi is not None:
+            prelude = f"{box_vars}fillet = {_num(fi[0])};\n\n{_filleted_box_body(fi[1])}\n\n"
+            panel = "  filleted_box();"
+        else:
+            prelude = ""
+            panel = f"  translate([{_num(-length / 2)}, {_num(-width / 2)}, 0]) cube([{_num(length)}, {_num(width)}, {_num(th)}]);"
         return {
             "supported": True,
-            "warnings": _warnings(a),
-            "code": f"{HEADER}// Part family: cable_comb\n// Parameters: {json.dumps(a)}\n\ndifference() {{\n  translate([{-length / 2}, {-width / 2}, 0]) cube([{length}, {width}, {th}]);\n{cuts}}}\n",
+            "warnings": _warnings(a, chamfer=ch is None, fillet=fi is None),
+            "code": f"{HEADER}// Part family: cable_comb\n// Parameters: {json.dumps(a)}\n\n{prelude}difference() {{\n{panel}\n{cuts}}}\n",
         }
     if p["type"] == "cable_clip":
         base_length = _or(a.get("baseLength"), 28)

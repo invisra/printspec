@@ -323,10 +323,28 @@ export function generateOpenScadWithValidator(
       const sp = Number(a.mountHoleSpacing ?? 40);
       cuts += `  translate([${-sp / 2}, 0, -0.1]) cylinder(h = ${th + 0.2}, d = ${hd}, $fn = 32);\n  translate([${sp / 2}, 0, -0.1]) cylinder(h = ${th + 0.2}, d = ${hd}, $fn = 32);\n`;
     }
+    // A comb is a flat plate (length x width x thickness) with slots cut into
+    // one long edge, so its top/bottom flat-face perimeter finishes via the
+    // box-body helpers with the slots subtracted from the finished plate.
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    const boxVars = `length = ${len}; width = ${wid}; height = ${th};\n`;
+    const prelude =
+      ch != null
+        ? `${boxVars}chamfer = ${ch[0]};\n\n${chamferedBoxBody(ch[1])}\n\n`
+        : fi != null
+          ? `${boxVars}fillet = ${fi[0]};\n\n${filletedBoxBody(fi[1])}\n\n`
+          : "";
+    const panel =
+      ch != null
+        ? "  chamfered_box();"
+        : fi != null
+          ? "  filleted_box();"
+          : `  translate([${-len / 2}, ${-wid / 2}, 0]) cube([${len}, ${wid}, ${th}]);`;
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header}// Part family: cable_comb\n// Parameters: ${JSON.stringify(a)}\n\ndifference() {\n  translate([${-len / 2}, ${-wid / 2}, 0]) cube([${len}, ${wid}, ${th}]);\n${cuts}}\n`,
+      warnings: warnings(a, { chamfer: ch == null, fillet: fi == null }),
+      code: `${header}// Part family: cable_comb\n// Parameters: ${JSON.stringify(a)}\n\n${prelude}difference() {\n${panel}\n${cuts}}\n`,
     };
   }
   if (p.type === "cable_clip") {

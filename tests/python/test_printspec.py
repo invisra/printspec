@@ -1672,6 +1672,7 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
         "rounded_rectangular_plate",
         "electronics_standoff",
         "drawer_divider",
+        "cable_comb",
     }
     for file, schema_file in families:
         props = read(Path("schemas") / schema_file)["properties"]["parameters"]["properties"]
@@ -1908,6 +1909,46 @@ def test_openscad_finishes_drawer_divider():
     u = generate_openscad(divider(chamfer={"distance": 0.5, "target": "middle"}))
     assert "chamfer requested but not implemented" in u["warnings"]
     assert "module chamfered_box()" not in u["code"]
+
+
+def test_openscad_finishes_cable_comb():
+    def comb(**finish):
+        s = read(Path("examples/part-families/cable-comb.usb.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # A comb is a flat plate with slots, so it finishes via the box-body helpers
+    # with the slots subtracted from the finished plate.
+    ch = generate_openscad(comb(chamfer={"distance": 0.5}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 0.5;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"] and "hull()" in ch["code"]
+    assert "chamfered_box();" in ch["code"]
+    # The slots are still cut from the finished plate.
+    assert "cube([5, 12.2, 4.2]);" in ch["code"]
+
+    fi = generate_openscad(comb(fillet={"radius": 0.5}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+
+    top = generate_openscad(comb(chamfer={"distance": 0.5, "target": "top"}))
+    assert "chamfer requested but not implemented" not in top["warnings"]
+    assert "linear_extrude(height - chamfer) square([length, width]" in top["code"]
+
+    # Unrecognized target isn't built, so it still warns (geometry unchanged).
+    u = generate_openscad(comb(chamfer={"distance": 0.5, "target": "edge"}))
+    assert "chamfer requested but not implemented" in u["warnings"]
+    assert "module chamfered_box()" not in u["code"]
+
+
+def test_openscad_cable_comb_dims_match_typescript_number_formatting():
+    # The comb inlines computed dimensions; they must print like JS Number
+    # (no trailing .0) so the Python and TypeScript OpenSCAD output stay
+    # byte-identical, which the generator parity check assumes.
+    code = generate_openscad(read(Path("examples/part-families/cable-comb.usb.json")))["code"]
+    assert "cube([70, 18, 4]);" in code
+    assert "70.0" not in code and "18.0" not in code
 
 
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():
