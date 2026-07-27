@@ -650,28 +650,39 @@ def test_composable_part_text_feature_font_url_and_engrave_depth_validation():
     assert "feature t (text) fontUrl is not a valid URL: not-a-url" in " ".join(
         validate_printspec(spec(font_url="not-a-url"))["errors"]
     )
-    # file:// is syntactically valid but real-kernel-verified to never work
-    # (Node's fetch() throws on it outright).
+    # file:// is syntactically valid but rejected: fontUrl must be a data: URI
+    # or https on an allowlisted host (the kernel-runtime SSRF control).
     assert (
-        'feature t (text) fontUrl must be an http(s):// URL or a data: URI (got "file:")'
+        "feature t (text) fontUrl must be a data: URI or an https:// URL on an allowlisted font host "
+        '(got "file:")'
         in " ".join(
             validate_printspec(spec(font_url="file:///home/user/fonts/Custom.ttf"))["errors"]
         )
     )
-    # an allowed-but-irrelevant scheme (e.g. ftp:) is rejected the same way.
+    # a non-fetchable scheme (e.g. ftp:) is rejected the same way.
     assert (
-        'feature t (text) fontUrl must be an http(s):// URL or a data: URI (got "ftp:")'
-        in " ".join(validate_printspec(spec(font_url="ftp://example.com/font.ttf"))["errors"])
+        "feature t (text) fontUrl must be a data: URI or an https:// URL on an allowlisted font host "
+        '(got "ftp:")'
+        in " ".join(validate_printspec(spec(font_url="ftp://fonts.gstatic.com/font.ttf"))["errors"])
     )
-    # an empty-host http(s):// URL (e.g. "http://") is rejected too, for
-    # parity with JS's new URL() throwing outright on it -- Python's
-    # urlparse() alone doesn't catch this (it happily returns scheme="http"
-    # with an empty netloc).
-    assert "feature t (text) fontUrl is not a valid URL: http://" in " ".join(
-        validate_printspec(spec(font_url="http://"))["errors"]
+    # http:// is rejected: fontUrl is fetched at kernel runtime, so cleartext
+    # and arbitrary hosts are an SSRF risk even on an otherwise-allowed host.
+    assert (
+        'fontUrl must be a data: URI or an https:// URL on an allowlisted font host (got "http:")'
+        in " ".join(validate_printspec(spec(font_url="http://fonts.gstatic.com/f.ttf"))["errors"])
     )
-    # http(s):// and data: URIs are both fine.
-    assert validate_printspec(spec(font_url="https://example.com/font.ttf")) == {
+    # an empty-host https:// URL (e.g. "https://") is rejected as malformed, for
+    # parity with JS's new URL() throwing outright on it -- Python's urlparse()
+    # alone doesn't catch this (it happily returns an empty netloc).
+    assert "feature t (text) fontUrl is not a valid URL: https://" in " ".join(
+        validate_printspec(spec(font_url="https://"))["errors"]
+    )
+    # https:// on a non-allowlisted host is rejected (the SSRF surface).
+    assert 'feature t (text) fontUrl host "attacker.invalid" is not on the allowlist' in " ".join(
+        validate_printspec(spec(font_url="https://attacker.invalid/f.ttf"))["errors"]
+    )
+    # https:// on an allowlisted host and inert data: URIs are both fine.
+    assert validate_printspec(spec(font_url="https://fonts.gstatic.com/font.ttf")) == {
         "valid": True,
         "errors": [],
     }
@@ -681,14 +692,89 @@ def test_composable_part_text_feature_font_url_and_engrave_depth_validation():
     }
     # engrave depth exceeding the target's own depth dimension is rejected.
     assert "feature t engrave depth must be less than target a height (8 >= 6)" in " ".join(
-        validate_printspec(spec(font_url="https://example.com/font.ttf", depth=8, mode="engrave"))[
-            "errors"
-        ]
+        validate_printspec(
+            spec(font_url="https://fonts.gstatic.com/font.ttf", depth=8, mode="engrave")
+        )["errors"]
     )
     # emboss has no depth ceiling -- the same depth is fine in emboss mode.
     assert validate_printspec(
-        spec(font_url="https://example.com/font.ttf", depth=8, mode="emboss")
+        spec(font_url="https://fonts.gstatic.com/font.ttf", depth=8, mode="emboss")
     ) == {"valid": True, "errors": []}
+
+
+def test_composable_part_rejects_text_content_over_length_limit():
+    def spec(content):
+        return {
+            "printspecVersion": "0.2.0",
+            "units": "mm",
+            "part": {
+                "type": "composable_part",
+                "label": "content length test",
+                "components": [
+                    {
+                        "id": "a",
+                        "kind": "box",
+                        "operation": "add",
+                        "dimensions": {"length": 20, "width": 20, "height": 6},
+                    }
+                ],
+                "features": [
+                    {
+                        "id": "t",
+                        "kind": "text",
+                        "target": "a",
+                        "parameters": {
+                            "content": content,
+                            "depth": 0.6,
+                            "fontUrl": "data:font/ttf;base64,AAAA",
+                            "mode": "emboss",
+                        },
+                    }
+                ],
+            },
+        }
+
+    assert validate_printspec(spec("A" * 256))["valid"] is True
+    assert validate_printspec(spec("A" * 257))["valid"] is False
+
+
+def test_composable_part_rejects_pattern_instance_explosion():
+    def component(id_, count_x=None, count_y=None):
+        c = {
+            "id": id_,
+            "kind": "box",
+            "operation": "add",
+            "dimensions": {"length": 2, "width": 2, "height": 2},
+        }
+        if count_x is not None:
+            c["pattern"] = {
+                "type": "rectangular",
+                "countX": count_x,
+                "countY": count_y,
+                "spacingX": 5,
+                "spacingY": 5,
+            }
+        return c
+
+    def spec(components):
+        return {
+            "printspecVersion": "0.2.0",
+            "units": "mm",
+            "part": {
+                "type": "composable_part",
+                "label": "instance explosion test",
+                "components": components,
+            },
+        }
+
+    # 100x100 = 10,000 instances is within the 20,000 ceiling.
+    assert validate_printspec(spec([component("a", 100, 100)]))["valid"] is True
+    # Two 100x100 patterns (20,000) plus one more instance tips it over.
+    over = validate_printspec(
+        spec([component("a", 100, 100), component("b", 100, 100), component("c")])
+    )
+    assert over["valid"] is False
+    assert "exceeding the 20000 limit" in " ".join(over["errors"])
 
 
 def test_composable_part_relations_reject_ambiguous_targets_and_group_transform_conflicts():

@@ -1947,6 +1947,7 @@ export const bundledSchemas = {
           "content": {
             "type": "string",
             "minLength": 1,
+            "maxLength": 256,
             "description": "Text content to emboss or engrave."
           },
           "depth": {
@@ -2223,6 +2224,7 @@ export const bundledSchemas = {
       "components": {
         "type": "array",
         "minItems": 1,
+        "maxItems": 200,
         "items": {
           "type": "object",
           "required": [
@@ -2570,6 +2572,7 @@ export const bundledSchemas = {
       },
       "features": {
         "type": "array",
+        "maxItems": 400,
         "items": {
           "type": "object",
           "required": [
@@ -2770,6 +2773,7 @@ export const bundledSchemas = {
       },
       "groups": {
         "type": "array",
+        "maxItems": 100,
         "items": {
           "$ref": "#/$defs/Group"
         },

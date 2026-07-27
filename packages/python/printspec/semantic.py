@@ -53,6 +53,40 @@ def _pattern_instance_count(pattern):
     return pattern["count"]
 
 
+# Ceiling on total composable-part geometric complexity. The schema's maxItems
+# caps the raw component/feature/group counts, but a single 100x100 rectangular
+# pattern already expands to 10,000 solid instances, and a spec could multiply
+# that across many entities into a kernel-exhausting (DoS) workload. This bounds
+# the number of instances the kernel must actually build once patterns are
+# expanded. Kept in parity with semantic.ts.
+_MAX_TOTAL_INSTANCES = 20000
+
+
+def _entity_instances(entity):
+    n = _pattern_instance_count((entity or {}).get("pattern"))
+    return n if isinstance(n, int) and n > 0 else 1
+
+
+def _complexity_errors(part):
+    entity_total = sum(_entity_instances(c) for c in part.get("components") or []) + sum(
+        _entity_instances(f) for f in part.get("features") or []
+    )
+    # A group pattern repeats all of its members, so multiply by the largest
+    # group pattern. Assuming every entity falls under it is a deliberate
+    # over-estimate -- the safe direction for a resource ceiling.
+    max_group_pattern = max(
+        (_entity_instances(g) for g in part.get("groups") or []),
+        default=1,
+    )
+    total = entity_total * max_group_pattern
+    if total > _MAX_TOTAL_INSTANCES:
+        return [
+            f"composable_part expands to ~{total} pattern instances, exceeding the "
+            f"{_MAX_TOTAL_INSTANCES} limit -- reduce component/feature counts or pattern repetition"
+        ]
+    return []
+
+
 def _relation_cycles(edges):
     """Find cycles in a directed graph where a node may have more than one
     outgoing edge -- a component/feature/group has at most one `relation`
@@ -292,7 +326,15 @@ def _component_dimension_errors(component):
     return e
 
 
-_ALLOWED_FONT_URL_SCHEMES = {"http", "https", "data"}
+# fontUrl is fetched at brepjs kernel runtime by loadFont() -> fetch() when the
+# generated module loads. An unrestricted http(s) URL there is a server-side
+# request forgery (SSRF) vector: an authored spec could point it at a cloud
+# metadata endpoint or an internal host. So the URL is restricted to an inert
+# data: URI (no network) or https on a small allowlist of trusted public font
+# hosts. Plain http is rejected too (no cleartext, smaller surface). Extend
+# _ALLOWED_FONT_URL_HOSTS deliberately -- each host becomes reachable from
+# inside the kernel run. Kept in parity with semantic.ts.
+_ALLOWED_FONT_URL_HOSTS = {"fonts.gstatic.com"}
 
 
 def _text_font_url_errors(feature):
@@ -303,10 +345,9 @@ def _text_font_url_errors(feature):
     depend on -- confirmed, not assumed), the same pre-existing gap
     supplierReference.url already works around with its own manual check
     elsewhere in this file. So this function is fully self-contained: it
-    rejects a malformed URL itself, and additionally rejects a URL with a
-    scheme that's syntactically fine but real-kernel-verified to never work
-    at runtime -- file:// is valid URI syntax, but Node's built-in fetch()
-    (which brepjs's loadFont() calls directly) throws outright on it."""
+    rejects a malformed URL itself, and additionally enforces the fontUrl
+    allowlist (data: URI or https on an allowlisted host) that closes the
+    kernel-runtime SSRF vector -- see the _ALLOWED_FONT_URL_HOSTS note."""
     if feature.get("kind") != "text":
         return []
     font_url = (feature.get("parameters") or {}).get("fontUrl")
@@ -325,12 +366,21 @@ def _text_font_url_errors(feature):
     # host and are unaffected by this check.
     if not scheme or (scheme in ("http", "https") and not parsed.netloc):
         return [f"feature {fid} (text) fontUrl is not a valid URL: {font_url}"]
-    if scheme not in _ALLOWED_FONT_URL_SCHEMES:
-        return [
-            f'feature {fid} (text) fontUrl must be an http(s):// URL or a data: URI (got "{scheme}:") '
-            f"-- brepjs's loadFont() (via fetch()) can't resolve other schemes in Node, most notably file://"
-        ]
-    return []
+    if scheme == "data":
+        return []
+    if scheme == "https":
+        if parsed.netloc not in _ALLOWED_FONT_URL_HOSTS:
+            allowed = ", ".join(sorted(_ALLOWED_FONT_URL_HOSTS))
+            return [
+                f'feature {fid} (text) fontUrl host "{parsed.netloc}" is not on the allowlist '
+                f"-- fontUrl is fetched at kernel runtime, so it must be a data: URI or https "
+                f"on an allowlisted font host ({allowed})"
+            ]
+        return []
+    return [
+        f'feature {fid} (text) fontUrl must be a data: URI or an https:// URL on an allowlisted font host (got "{scheme}:") '
+        f"-- http:// and other schemes are not permitted because loadFont() fetches this URL at runtime"
+    ]
 
 
 # Component kinds a `thread` feature may target for each mode: "external"
@@ -585,6 +635,7 @@ def validate_semantic(spec):
     part = spec.get("part")
     if part:
         if part.get("type") == "composable_part":
+            e.extend(_complexity_errors(part))
             components = part.get("components") or []
             groups = part.get("groups") or []
             component_ids = [c.get("id") for c in components]
