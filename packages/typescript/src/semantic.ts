@@ -19,6 +19,39 @@ function patternInstanceCount(pattern: any): number {
   return pattern.count;
 }
 
+// Ceiling on total composable-part geometric complexity. The schema's maxItems
+// caps the raw component/feature/group counts, but a single 100x100 rectangular
+// pattern already expands to 10,000 solid instances, and a spec could multiply
+// that across many entities into a kernel-exhausting (DoS) workload. This bounds
+// the number of instances the kernel must actually build once patterns are
+// expanded.
+const MAX_TOTAL_INSTANCES = 20000;
+
+function entityInstances(entity: any): number {
+  const n = patternInstanceCount(entity?.pattern);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
+function complexityErrors(part: any): string[] {
+  const sumInstances = (items: any[] | undefined) =>
+    (items ?? []).reduce((n: number, x: any) => n + entityInstances(x), 0);
+  const entityInstanceTotal =
+    sumInstances(part.components) + sumInstances(part.features);
+  // A group pattern repeats all of its members, so multiply by the largest
+  // group pattern. Assuming every entity falls under it is a deliberate
+  // over-estimate -- the safe direction for a resource ceiling.
+  const maxGroupPattern = (part.groups ?? []).reduce(
+    (m: number, g: any) => Math.max(m, entityInstances(g)),
+    1,
+  );
+  const total = entityInstanceTotal * maxGroupPattern;
+  if (total > MAX_TOTAL_INSTANCES)
+    return [
+      `composable_part expands to ~${total} pattern instances, exceeding the ${MAX_TOTAL_INSTANCES} limit -- reduce component/feature counts or pattern repetition`,
+    ];
+  return [];
+}
+
 // Finds cycles in a directed graph where a node may have more than one
 // outgoing edge -- a component/feature/group has at most one `relation`
 // edge, but a component may *also* have an implicit edge to its
@@ -258,23 +291,37 @@ function componentDimensionErrors(component: any): string[] {
 // it. Catching either at validation time saves a much more confusing
 // failure later, deep inside a `loadFont()` rejection when the generated
 // module actually runs.
-const ALLOWED_FONT_URL_SCHEMES = new Set(["http:", "https:", "data:"]);
+// fontUrl is fetched at brepjs kernel runtime by loadFont() -> fetch() when the
+// generated module loads. An unrestricted http(s) URL there is a server-side
+// request forgery (SSRF) vector: an authored spec could point it at a cloud
+// metadata endpoint or an internal host. So the URL is restricted to an inert
+// `data:` URI (no network) or `https:` on a small allowlist of trusted public
+// font hosts. Plain `http:` is rejected too (no cleartext, smaller surface).
+// Extend ALLOWED_FONT_URL_HOSTS deliberately -- each host becomes reachable
+// from inside the kernel run.
+const ALLOWED_FONT_URL_HOSTS = new Set(["fonts.gstatic.com"]);
 function textFontUrlErrors(feature: any): string[] {
   if (feature.kind !== "text") return [];
   const fontUrl = (feature.parameters ?? {}).fontUrl;
   if (!fontUrl) return [];
   const fid = feature.id ?? "";
-  let scheme: string;
+  let url: URL;
   try {
-    scheme = new URL(fontUrl).protocol;
+    url = new URL(fontUrl);
   } catch {
     return [`feature ${fid} (text) fontUrl is not a valid URL: ${fontUrl}`];
   }
-  if (!ALLOWED_FONT_URL_SCHEMES.has(scheme))
-    return [
-      `feature ${fid} (text) fontUrl must be an http(s):// URL or a data: URI (got "${scheme}") -- brepjs's loadFont() (via fetch()) can't resolve other schemes in Node, most notably file://`,
-    ];
-  return [];
+  if (url.protocol === "data:") return [];
+  if (url.protocol === "https:") {
+    if (!ALLOWED_FONT_URL_HOSTS.has(url.host))
+      return [
+        `feature ${fid} (text) fontUrl host "${url.host}" is not on the allowlist -- fontUrl is fetched at kernel runtime, so it must be a data: URI or https on an allowlisted font host (${[...ALLOWED_FONT_URL_HOSTS].join(", ")})`,
+      ];
+    return [];
+  }
+  return [
+    `feature ${fid} (text) fontUrl must be a data: URI or an https:// URL on an allowlisted font host (got "${url.protocol}") -- http:// and other schemes are not permitted because loadFont() fetches this URL at runtime`,
+  ];
 }
 
 // Component kinds a `thread` feature may target for each mode: "external"
@@ -562,6 +609,7 @@ export function validateSemantic(spec: any): string[] {
   checkHw(spec?.hardware, "top-level");
   if (spec?.part) {
     if (spec.part.type === "composable_part") {
+      e.push(...complexityErrors(spec.part));
       const components = spec.part.components ?? [];
       const groups = spec.part.groups ?? [];
       const componentIds = components.map((c: any) => c.id);

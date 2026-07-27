@@ -2,7 +2,7 @@
 
 **Practical JSON Schemas and offline tooling for parametric 3D-printable parts.**
 
-**Status: npm package v0.3.1 / schema and Python v0.2.0 experimental**
+**Status: npm package v0.4.0 / schema and Python v0.2.0 experimental**
 
 printspec is an open-source specification and toolkit from Invisra for describing practical, parameterized 3D-printable parts as JSON. The v0.2.0 schema release focuses on stable schemas, offline TypeScript/Python validation, bundled schema distribution, static hosted schema references, BOM/form helpers, starter source generators, CLI workflows, and deterministic source bundle export—not runtime CAD execution in the published packages or production manufacturing automation.
 
