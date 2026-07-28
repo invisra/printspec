@@ -100,44 +100,45 @@ def _fillet_solid(fn, r, edges, h="height"):
     return f"rotate_extrude($fn = {fn}) polygon({pts})"
 
 
-def _chamfered_box_body(edges, length="length", width="width"):
+def _chamfered_box_body(edges, length="length", width="width", h="height"):
     """A ``chamfered_box()`` module: a hull() of inset/full cross-sections that
     bevels the requested top/bottom perimeter edge(s) of a centered box.
     ``length``/``width`` name the cross-section dimensions (as OpenSCAD variable
     expressions) so a thin box family can reuse this with, e.g., ``thickness``
-    for its second dimension."""
+    for its second dimension. ``h`` is the extrusion-height expression, letting a
+    sub-box of a larger part reuse this (e.g. a tray floor of ``floor_thickness``)."""
     inset = f"square([{length} - 2*chamfer, {width} - 2*chamfer], center = true)"
     full = f"square([{length}, {width}], center = true)"
     if edges == "top":
         parts = [
-            f"    linear_extrude(height - chamfer) {full};",
-            f"    translate([0, 0, height - 0.01]) linear_extrude(0.01) {inset};",
+            f"    linear_extrude({h} - chamfer) {full};",
+            f"    translate([0, 0, {h} - 0.01]) linear_extrude(0.01) {inset};",
         ]
     elif edges == "bottom":
         parts = [
             f"    linear_extrude(0.01) {inset};",
-            f"    translate([0, 0, chamfer]) linear_extrude(height - chamfer) {full};",
+            f"    translate([0, 0, chamfer]) linear_extrude({h} - chamfer) {full};",
         ]
     else:
         parts = [
             f"    linear_extrude(0.01) {inset};",
-            f"    translate([0, 0, chamfer]) linear_extrude(height - 2*chamfer) {full};",
-            f"    translate([0, 0, height - 0.01]) linear_extrude(0.01) {inset};",
+            f"    translate([0, 0, chamfer]) linear_extrude({h} - 2*chamfer) {full};",
+            f"    translate([0, 0, {h} - 0.01]) linear_extrude(0.01) {inset};",
         ]
     body = "\n".join(parts)
     return f"module chamfered_box() {{\n  hull() {{\n{body}\n  }}\n}}"
 
 
-def _filleted_box_body(edges, length="length", width="width"):
+def _filleted_box_body(edges, length="length", width="width", h="height"):
     """A ``filleted_box()`` module: a hull() of thin cross-section slices whose
     inset follows the fillet arc, rounding the requested top/bottom perimeter
     edge(s). The arc is sampled symbolically (sin/cos at render time).
-    ``length``/``width`` name the cross-section dimensions (see
-    :func:`_chamfered_box_body`)."""
+    ``length``/``width`` name the cross-section dimensions and ``h`` the
+    extrusion-height expression (see :func:`_chamfered_box_body`)."""
     bottom_arc = f"    for (i = [0:8]) translate([0, 0, fillet - fillet*cos(i*90/8)]) linear_extrude(0.001) square([{length} - 2*fillet + 2*fillet*sin(i*90/8), {width} - 2*fillet + 2*fillet*sin(i*90/8)], center = true);"
-    top_arc = f"    for (i = [0:8]) translate([0, 0, height - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([{length} - 2*fillet + 2*fillet*cos(i*90/8), {width} - 2*fillet + 2*fillet*cos(i*90/8)], center = true);"
+    top_arc = f"    for (i = [0:8]) translate([0, 0, {h} - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([{length} - 2*fillet + 2*fillet*cos(i*90/8), {width} - 2*fillet + 2*fillet*cos(i*90/8)], center = true);"
     full_bottom = f"    linear_extrude(0.001) square([{length}, {width}], center = true);"
-    full_top = f"    translate([0, 0, height - 0.001]) linear_extrude(0.001) square([{length}, {width}], center = true);"
+    full_top = f"    translate([0, 0, {h} - 0.001]) linear_extrude(0.001) square([{length}, {width}], center = true);"
     if edges == "top":
         parts = [full_bottom, top_arc]
     elif edges == "bottom":
@@ -422,10 +423,28 @@ def generate_openscad(spec):
     if p["type"] == "project_enclosure_tray":
         mount_hole_diameter = _or(a.get("mountHoleDiameter"), 3)
         mount_hole_inset = _or(a.get("mountHoleInset"), 8)
+        # Only the floor's bottom outer edge is a solid, closed perimeter on a
+        # tray (the top is an open wall rim, not a face), so only a `bottom`
+        # target is built: the floor cube is swapped for a box-body finished on
+        # its bottom edge (height = floor_thickness), leaving the walls and
+        # mount holes unchanged. Whole-part and `top` requests still warn.
+        ch = _chamfer(a)
+        fi = _fillet(a) if ch is None else None
+        ch_b = ch if ch is not None and ch[1] == "bottom" else None
+        fi_b = fi if fi is not None and fi[1] == "bottom" else None
+        if ch_b is not None:
+            prelude = f"chamfer = {ch_b[0]};\n\n{_chamfered_box_body('bottom', length='outer_width', width='outer_depth', h='floor_thickness')}\n\n"
+            floor = "    chamfered_box();"
+        elif fi_b is not None:
+            prelude = f"fillet = {fi_b[0]};\n\n{_filleted_box_body('bottom', length='outer_width', width='outer_depth', h='floor_thickness')}\n\n"
+            floor = "    filleted_box();"
+        else:
+            prelude = ""
+            floor = "    translate([-outer_width/2, -outer_depth/2, 0]) cube([outer_width, outer_depth, floor_thickness]);"
         return {
             "supported": True,
-            "warnings": _warnings(a),
-            "code": f"{HEADER}// Part family: project_enclosure_tray\n// Parameters: {json.dumps(a)}\n\nouter_width = {a['outerWidth']}; outer_depth = {a['outerDepth']}; wall_height = {a['wallHeight']}; wall_thickness = {a['wallThickness']}; floor_thickness = {a['floorThickness']}; mount_hole_diameter = {mount_hole_diameter}; mount_hole_inset = {mount_hole_inset};\ndifference() {{\n  union() {{\n    translate([-outer_width/2, -outer_depth/2, 0]) cube([outer_width, outer_depth, floor_thickness]);\n    translate([-outer_width/2, -outer_depth/2, floor_thickness]) cube([outer_width, wall_thickness, wall_height]);\n    translate([-outer_width/2, outer_depth/2 - wall_thickness, floor_thickness]) cube([outer_width, wall_thickness, wall_height]);\n    translate([-outer_width/2, -outer_depth/2, floor_thickness]) cube([wall_thickness, outer_depth, wall_height]);\n    translate([outer_width/2 - wall_thickness, -outer_depth/2, floor_thickness]) cube([wall_thickness, outer_depth, wall_height]);\n  }}\n  for (x = [-outer_width/2 + mount_hole_inset, outer_width/2 - mount_hole_inset]) for (y = [-outer_depth/2 + mount_hole_inset, outer_depth/2 - mount_hole_inset]) translate([x,y,-0.1]) cylinder(h = floor_thickness + 0.2, d = mount_hole_diameter, $fn = 32);\n}}\n",
+            "warnings": _warnings(a, chamfer=ch_b is None, fillet=fi_b is None),
+            "code": f"{HEADER}// Part family: project_enclosure_tray\n// Parameters: {json.dumps(a)}\n\nouter_width = {a['outerWidth']}; outer_depth = {a['outerDepth']}; wall_height = {a['wallHeight']}; wall_thickness = {a['wallThickness']}; floor_thickness = {a['floorThickness']}; mount_hole_diameter = {mount_hole_diameter}; mount_hole_inset = {mount_hole_inset};\n{prelude}difference() {{\n  union() {{\n{floor}\n    translate([-outer_width/2, -outer_depth/2, floor_thickness]) cube([outer_width, wall_thickness, wall_height]);\n    translate([-outer_width/2, outer_depth/2 - wall_thickness, floor_thickness]) cube([outer_width, wall_thickness, wall_height]);\n    translate([-outer_width/2, -outer_depth/2, floor_thickness]) cube([wall_thickness, outer_depth, wall_height]);\n    translate([outer_width/2 - wall_thickness, -outer_depth/2, floor_thickness]) cube([wall_thickness, outer_depth, wall_height]);\n  }}\n  for (x = [-outer_width/2 + mount_hole_inset, outer_width/2 - mount_hole_inset]) for (y = [-outer_depth/2 + mount_hole_inset, outer_depth/2 - mount_hole_inset]) translate([x,y,-0.1]) cylinder(h = floor_thickness + 0.2, d = mount_hole_diameter, $fn = 32);\n}}\n",
         }
     return {
         "supported": False,

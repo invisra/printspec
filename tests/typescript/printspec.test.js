@@ -412,6 +412,50 @@ test("cable_comb inlines dimensions like JS numbers (no trailing .0)", () => {
   assert.match(code, /cube\(\[70, 18, 4\]\);/);
   assert.doesNotMatch(code, /70\.0|18\.0/);
 });
+test("project_enclosure_tray finishes only its floor bottom edge (bottom target)", () => {
+  const tray = (finish) => {
+    const s = read("examples/part-families/project-enclosure-tray.basic.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  const ch = generateOpenScad(
+    tray({ chamfer: { distance: 1, target: "bottom" } }),
+  );
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(ch.code, /chamfer = 1;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(ch.code, /linear_extrude\(floor_thickness - chamfer\)/);
+  assert.match(ch.code, /    chamfered_box\(\);/);
+  // Walls and mount holes remain.
+  assert.match(ch.code, /cube\(\[outer_width, wall_thickness, wall_height\]\)/);
+  assert.match(ch.code, /d = mount_hole_diameter/);
+
+  const fi = generateOpenScad(
+    tray({ fillet: { radius: 1.5, target: "bottom" } }),
+  );
+  assert.doesNotMatch(
+    fi.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(fi.code, /module filleted_box\(\)/);
+  assert.match(fi.code, /floor_thickness - 0\.001/);
+
+  // Whole-part and top aren't solid perimeters here, so they warn and the floor
+  // stays a plain cube.
+  for (const unbuilt of [{ distance: 1 }, { distance: 1, target: "top" }]) {
+    const w = generateOpenScad(tray({ chamfer: unbuilt }));
+    assert.match(w.warnings.join(" "), /chamfer requested but not implemented/);
+    assert.doesNotMatch(w.code, /module chamfered_box\(\)/);
+    assert.match(
+      w.code,
+      /translate\(\[-outer_width\/2, -outer_depth\/2, 0\]\) cube\(\[outer_width, outer_depth, floor_thickness\]\);/,
+    );
+  }
+});
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });

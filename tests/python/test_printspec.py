@@ -1951,6 +1951,44 @@ def test_openscad_cable_comb_dims_match_typescript_number_formatting():
     assert "70.0" not in code and "18.0" not in code
 
 
+def test_openscad_finishes_project_enclosure_tray_bottom_edge_only():
+    def tray(**finish):
+        s = read(Path("examples/part-families/project-enclosure-tray.basic.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # Only the floor's bottom outer edge is a closed, solid perimeter, so only a
+    # bottom target builds; the floor cube becomes a bottom-finished box body of
+    # height floor_thickness, and the walls/holes are unchanged.
+    ch = generate_openscad(tray(chamfer={"distance": 1, "target": "bottom"}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 1;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"]
+    assert "linear_extrude(floor_thickness - chamfer)" in ch["code"]
+    assert "square([outer_width, outer_depth], center = true)" in ch["code"]
+    assert "    chamfered_box();" in ch["code"]
+    # Walls and mount holes are still present.
+    assert "cube([outer_width, wall_thickness, wall_height])" in ch["code"]
+    assert "d = mount_hole_diameter" in ch["code"]
+
+    fi = generate_openscad(tray(fillet={"radius": 1.5, "target": "bottom"}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+    assert "floor_thickness - 0.001" in fi["code"]
+
+    # Whole-part (no target) and top aren't solid perimeters here, so they warn
+    # and the floor stays a plain cube.
+    for unbuilt in ({"distance": 1}, {"distance": 1, "target": "top"}):
+        w = generate_openscad(tray(chamfer=unbuilt))
+        assert "chamfer requested but not implemented" in w["warnings"]
+        assert "module chamfered_box()" not in w["code"]
+        assert (
+            "translate([-outer_width/2, -outer_depth/2, 0]) cube([outer_width, outer_depth, floor_thickness]);"
+            in w["code"]
+        )
+
+
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():
     # part.type is a valid composable_part discriminator, but this
     # component's position is missing y/z (both required on Point3D).

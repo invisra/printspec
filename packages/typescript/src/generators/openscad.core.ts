@@ -100,28 +100,31 @@ function filletSolid(
 // the requested top/bottom perimeter edge(s) of a centered box.
 // `l`/`w` name the cross-section dimensions (default length/width) so a thin
 // box family can reuse this with, e.g., `thickness` for its second dimension.
+// `h` is the extrusion-height expression, letting a sub-box of a larger part
+// reuse this (e.g. a tray floor of `floor_thickness`).
 function chamferedBoxBody(
   edges: string,
   l: string = "length",
   w: string = "width",
+  h: string = "height",
 ): string {
   const inset = `square([${l} - 2*chamfer, ${w} - 2*chamfer], center = true)`;
   const full = `square([${l}, ${w}], center = true)`;
   const parts =
     edges === "top"
       ? [
-          `    linear_extrude(height - chamfer) ${full};`,
-          `    translate([0, 0, height - 0.01]) linear_extrude(0.01) ${inset};`,
+          `    linear_extrude(${h} - chamfer) ${full};`,
+          `    translate([0, 0, ${h} - 0.01]) linear_extrude(0.01) ${inset};`,
         ]
       : edges === "bottom"
         ? [
             `    linear_extrude(0.01) ${inset};`,
-            `    translate([0, 0, chamfer]) linear_extrude(height - chamfer) ${full};`,
+            `    translate([0, 0, chamfer]) linear_extrude(${h} - chamfer) ${full};`,
           ]
         : [
             `    linear_extrude(0.01) ${inset};`,
-            `    translate([0, 0, chamfer]) linear_extrude(height - 2*chamfer) ${full};`,
-            `    translate([0, 0, height - 0.01]) linear_extrude(0.01) ${inset};`,
+            `    translate([0, 0, chamfer]) linear_extrude(${h} - 2*chamfer) ${full};`,
+            `    translate([0, 0, ${h} - 0.01]) linear_extrude(0.01) ${inset};`,
           ];
   return `module chamfered_box() {\n  hull() {\n${parts.join("\n")}\n  }\n}`;
 }
@@ -132,11 +135,12 @@ function filletedBoxBody(
   edges: string,
   l: string = "length",
   w: string = "width",
+  h: string = "height",
 ): string {
   const bottomArc = `    for (i = [0:8]) translate([0, 0, fillet - fillet*cos(i*90/8)]) linear_extrude(0.001) square([${l} - 2*fillet + 2*fillet*sin(i*90/8), ${w} - 2*fillet + 2*fillet*sin(i*90/8)], center = true);`;
-  const topArc = `    for (i = [0:8]) translate([0, 0, height - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([${l} - 2*fillet + 2*fillet*cos(i*90/8), ${w} - 2*fillet + 2*fillet*cos(i*90/8)], center = true);`;
+  const topArc = `    for (i = [0:8]) translate([0, 0, ${h} - fillet + fillet*sin(i*90/8)]) linear_extrude(0.001) square([${l} - 2*fillet + 2*fillet*cos(i*90/8), ${w} - 2*fillet + 2*fillet*cos(i*90/8)], center = true);`;
   const fullBottom = `    linear_extrude(0.001) square([${l}, ${w}], center = true);`;
-  const fullTop = `    translate([0, 0, height - 0.001]) linear_extrude(0.001) square([${l}, ${w}], center = true);`;
+  const fullTop = `    translate([0, 0, ${h} - 0.001]) linear_extrude(0.001) square([${l}, ${w}], center = true);`;
   const parts =
     edges === "top"
       ? [fullBottom, topArc]
@@ -410,12 +414,34 @@ export function generateOpenScadWithValidator(
       code: `${header}// Part family: drawer_divider\n// Parameters: ${JSON.stringify(a)}\n\n${varsLine}\n${moduleBlock}difference() {\n${panel}\n${notches}\n}\n`,
     };
   }
-  if (p.type === "project_enclosure_tray")
+  if (p.type === "project_enclosure_tray") {
+    // Only the floor's bottom outer edge is a solid, closed perimeter on a tray
+    // (the top is an open wall rim, not a face), so only a `bottom` target is
+    // built: the floor cube is swapped for a box-body finished on its bottom
+    // edge (height = floor_thickness), leaving the walls and mount holes
+    // unchanged. Whole-part and `top` requests still warn.
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    const chB = ch != null && ch[1] === "bottom" ? ch : null;
+    const fiB = fi != null && fi[1] === "bottom" ? fi : null;
+    const prelude =
+      chB != null
+        ? `chamfer = ${chB[0]};\n\n${chamferedBoxBody("bottom", "outer_width", "outer_depth", "floor_thickness")}\n\n`
+        : fiB != null
+          ? `fillet = ${fiB[0]};\n\n${filletedBoxBody("bottom", "outer_width", "outer_depth", "floor_thickness")}\n\n`
+          : "";
+    const floor =
+      chB != null
+        ? "    chamfered_box();"
+        : fiB != null
+          ? "    filleted_box();"
+          : "    translate([-outer_width/2, -outer_depth/2, 0]) cube([outer_width, outer_depth, floor_thickness]);";
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header}// Part family: project_enclosure_tray\n// Parameters: ${JSON.stringify(a)}\n\nouter_width = ${a.outerWidth}; outer_depth = ${a.outerDepth}; wall_height = ${a.wallHeight}; wall_thickness = ${a.wallThickness}; floor_thickness = ${a.floorThickness}; mount_hole_diameter = ${a.mountHoleDiameter ?? 3}; mount_hole_inset = ${a.mountHoleInset ?? 8};\ndifference() {\n  union() {\n    translate([-outer_width/2, -outer_depth/2, 0]) cube([outer_width, outer_depth, floor_thickness]);\n    translate([-outer_width/2, -outer_depth/2, floor_thickness]) cube([outer_width, wall_thickness, wall_height]);\n    translate([-outer_width/2, outer_depth/2 - wall_thickness, floor_thickness]) cube([outer_width, wall_thickness, wall_height]);\n    translate([-outer_width/2, -outer_depth/2, floor_thickness]) cube([wall_thickness, outer_depth, wall_height]);\n    translate([outer_width/2 - wall_thickness, -outer_depth/2, floor_thickness]) cube([wall_thickness, outer_depth, wall_height]);\n  }\n  for (x = [-outer_width/2 + mount_hole_inset, outer_width/2 - mount_hole_inset]) for (y = [-outer_depth/2 + mount_hole_inset, outer_depth/2 - mount_hole_inset]) translate([x,y,-0.1]) cylinder(h = floor_thickness + 0.2, d = mount_hole_diameter, $fn = 32);\n}\n`,
+      warnings: warnings(a, { chamfer: chB == null, fillet: fiB == null }),
+      code: `${header}// Part family: project_enclosure_tray\n// Parameters: ${JSON.stringify(a)}\n\nouter_width = ${a.outerWidth}; outer_depth = ${a.outerDepth}; wall_height = ${a.wallHeight}; wall_thickness = ${a.wallThickness}; floor_thickness = ${a.floorThickness}; mount_hole_diameter = ${a.mountHoleDiameter ?? 3}; mount_hole_inset = ${a.mountHoleInset ?? 8};\n${prelude}difference() {\n  union() {\n${floor}\n    translate([-outer_width/2, -outer_depth/2, floor_thickness]) cube([outer_width, wall_thickness, wall_height]);\n    translate([-outer_width/2, outer_depth/2 - wall_thickness, floor_thickness]) cube([outer_width, wall_thickness, wall_height]);\n    translate([-outer_width/2, -outer_depth/2, floor_thickness]) cube([wall_thickness, outer_depth, wall_height]);\n    translate([outer_width/2 - wall_thickness, -outer_depth/2, floor_thickness]) cube([wall_thickness, outer_depth, wall_height]);\n  }\n  for (x = [-outer_width/2 + mount_hole_inset, outer_width/2 - mount_hole_inset]) for (y = [-outer_depth/2 + mount_hole_inset, outer_depth/2 - mount_hole_inset]) translate([x,y,-0.1]) cylinder(h = floor_thickness + 0.2, d = mount_hole_diameter, $fn = 32);\n}\n`,
     };
+  }
   return {
     supported: false,
     code: "",
