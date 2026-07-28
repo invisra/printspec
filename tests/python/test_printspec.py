@@ -1989,6 +1989,41 @@ def test_openscad_finishes_project_enclosure_tray_bottom_edge_only():
         )
 
 
+def test_openscad_finishes_wall_mount_bracket_top_edge_only():
+    def bracket(**finish):
+        s = read(Path("examples/part-families/wall-mount-bracket.basic.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # The plate's top edge is its one closed, solid perimeter away from the foot
+    # tab, so only a top target builds; the plate cube becomes a top-finished
+    # box body, and the tab/screw holes are unchanged.
+    ch = generate_openscad(bracket(chamfer={"distance": 1, "target": "top"}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 1;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"]
+    assert "linear_extrude(height - chamfer) square([width, thickness]" in ch["code"]
+    assert "    chamfered_box();" in ch["code"]
+    # Tab and screw holes remain.
+    assert "cube([width, tab_depth, thickness])" in ch["code"]
+    assert "d = screw_hole_diameter" in ch["code"]
+
+    fi = generate_openscad(bracket(fillet={"radius": 1.5, "target": "top"}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+
+    # Whole-part (no target) and bottom aren't clean here, so they warn and the
+    # plate stays a plain cube.
+    for unbuilt in ({"distance": 1}, {"distance": 1, "target": "bottom"}):
+        w = generate_openscad(bracket(chamfer=unbuilt))
+        assert "chamfer requested but not implemented" in w["warnings"]
+        assert "module chamfered_box()" not in w["code"]
+        assert (
+            "translate([-width/2, -thickness/2, 0]) cube([width, thickness, height]);" in w["code"]
+        )
+
+
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():
     # part.type is a valid composable_part discriminator, but this
     # component's position is missing y/z (both required on Point3D).

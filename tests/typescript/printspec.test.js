@@ -456,6 +456,52 @@ test("project_enclosure_tray finishes only its floor bottom edge (bottom target)
     );
   }
 });
+test("wall_mount_bracket finishes only its back-plate top edge (top target)", () => {
+  const bracket = (finish) => {
+    const s = read("examples/part-families/wall-mount-bracket.basic.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  const ch = generateOpenScad(
+    bracket({ chamfer: { distance: 1, target: "top" } }),
+  );
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(ch.code, /chamfer = 1;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(
+    ch.code,
+    /linear_extrude\(height - chamfer\) square\(\[width, thickness\]/,
+  );
+  assert.match(ch.code, /    chamfered_box\(\);/);
+  // Tab and screw holes remain.
+  assert.match(ch.code, /cube\(\[width, tab_depth, thickness\]\)/);
+  assert.match(ch.code, /d = screw_hole_diameter/);
+
+  const fi = generateOpenScad(
+    bracket({ fillet: { radius: 1.5, target: "top" } }),
+  );
+  assert.doesNotMatch(
+    fi.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(fi.code, /module filleted_box\(\)/);
+
+  // Whole-part and bottom aren't clean here, so they warn and the plate stays a
+  // plain cube.
+  for (const unbuilt of [{ distance: 1 }, { distance: 1, target: "bottom" }]) {
+    const w = generateOpenScad(bracket({ chamfer: unbuilt }));
+    assert.match(w.warnings.join(" "), /chamfer requested but not implemented/);
+    assert.doesNotMatch(w.code, /module chamfered_box\(\)/);
+    assert.match(
+      w.code,
+      /translate\(\[-width\/2, -thickness\/2, 0\]\) cube\(\[width, thickness, height\]\);/,
+    );
+  }
+});
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });

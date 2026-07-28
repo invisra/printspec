@@ -375,10 +375,29 @@ def generate_openscad(spec):
             "code": f"{HEADER}// Part family: cable_clip\n// Parameters: {json.dumps(a)}\n\nbase_length = {base_length};\nwidth = {width};\nthickness = {thickness};\ncable_diameter = {cable_diameter};\ndifference() {{\n  union() {{\n    translate([-base_length/2, -width/2, 0]) cube([base_length, width, thickness]);\n    translate([-base_length*0.325, -width/2, thickness + cable_diameter/2]) cube([base_length*0.65, width, thickness]);\n  }}\n  translate([0, -width/2 - 0.1, thickness + cable_diameter/2]) rotate([-90,0,0]) cylinder(h = width + 0.2, d = cable_diameter + {clearance}, $fn = 48);\n{mount_holes}\n}}\n",
         }
     if p["type"] == "wall_mount_bracket":
+        # The bracket is a vertical back plate (width x thickness x height) with
+        # a horizontal foot tab at its base, so the plate's top edge is its one
+        # closed, solid perimeter away from the tab. Only a `top` target builds:
+        # the plate cube becomes a top-finished box body (cross-section
+        # width x thickness), leaving the tab and screw holes unchanged.
+        # Whole-part and `bottom` requests still warn.
+        ch = _chamfer(a)
+        fi = _fillet(a) if ch is None else None
+        ch_t = ch if ch is not None and ch[1] == "top" else None
+        fi_t = fi if fi is not None and fi[1] == "top" else None
+        if ch_t is not None:
+            prelude = f"chamfer = {ch_t[0]};\n\n{_chamfered_box_body('top', length='width', width='thickness')}\n\n"
+            plate = "    chamfered_box();"
+        elif fi_t is not None:
+            prelude = f"fillet = {fi_t[0]};\n\n{_filleted_box_body('top', length='width', width='thickness')}\n\n"
+            plate = "    filleted_box();"
+        else:
+            prelude = ""
+            plate = "    translate([-width/2, -thickness/2, 0]) cube([width, thickness, height]);"
         return {
             "supported": True,
-            "warnings": _warnings(a),
-            "code": f"{HEADER}// Part family: wall_mount_bracket\n// Parameters: {json.dumps(a)}\n\nwidth = {a['width']}; height = {a['height']}; thickness = {a['thickness']}; tab_depth = {a['tabDepth']}; screw_hole_diameter = {a['screwHoleDiameter']}; screw_hole_spacing = {a['screwHoleSpacing']};\ndifference() {{\n  union() {{\n    translate([-width/2, -thickness/2, 0]) cube([width, thickness, height]);\n    translate([-width/2, 0, 0]) cube([width, tab_depth, thickness]);\n  }}\n  for (z = [height/2 - screw_hole_spacing/2, height/2 + screw_hole_spacing/2]) translate([0, -thickness/2 - 0.1, z]) rotate([-90,0,0]) cylinder(h = thickness + 0.2, d = screw_hole_diameter, $fn = 32);\n}}\n",
+            "warnings": _warnings(a, chamfer=ch_t is None, fillet=fi_t is None),
+            "code": f"{HEADER}// Part family: wall_mount_bracket\n// Parameters: {json.dumps(a)}\n\nwidth = {a['width']}; height = {a['height']}; thickness = {a['thickness']}; tab_depth = {a['tabDepth']}; screw_hole_diameter = {a['screwHoleDiameter']}; screw_hole_spacing = {a['screwHoleSpacing']};\n{prelude}difference() {{\n  union() {{\n{plate}\n    translate([-width/2, 0, 0]) cube([width, tab_depth, thickness]);\n  }}\n  for (z = [height/2 - screw_hole_spacing/2, height/2 + screw_hole_spacing/2]) translate([0, -thickness/2 - 0.1, z]) rotate([-90,0,0]) cylinder(h = thickness + 0.2, d = screw_hole_diameter, $fn = 32);\n}}\n",
         }
     if p["type"] == "l_bracket":
         cuts, unsupported_axis = _l_bracket_cuts(

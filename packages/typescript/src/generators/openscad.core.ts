@@ -367,12 +367,35 @@ export function generateOpenScadWithValidator(
       code: `${header}// Part family: cable_clip\n// Parameters: ${JSON.stringify(a)}\n\nbase_length = ${a.baseLength ?? 28};\nwidth = ${a.width ?? a.baseWidth ?? 12};\nthickness = ${a.thickness ?? a.baseThickness ?? 3};\ncable_diameter = ${a.cableDiameter ?? a.clipInnerDiameter ?? 6};\ndifference() {\n  union() {\n    translate([-base_length/2, -width/2, 0]) cube([base_length, width, thickness]);\n    translate([-base_length*0.325, -width/2, thickness + cable_diameter/2]) cube([base_length*0.65, width, thickness]);\n  }\n  translate([0, -width/2 - 0.1, thickness + cable_diameter/2]) rotate([-90,0,0]) cylinder(h = width + 0.2, d = cable_diameter + ${a.clearance ?? 0.5}, $fn = 48);\n${mountHoles}\n}\n`,
     };
   }
-  if (p.type === "wall_mount_bracket")
+  if (p.type === "wall_mount_bracket") {
+    // The bracket is a vertical back plate (width x thickness x height) with a
+    // horizontal foot tab at its base, so the plate's top edge is its one
+    // closed, solid perimeter away from the tab. Only a `top` target builds:
+    // the plate cube becomes a top-finished box body (cross-section
+    // width x thickness), leaving the tab and screw holes unchanged.
+    // Whole-part and `bottom` requests still warn.
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    const chT = ch != null && ch[1] === "top" ? ch : null;
+    const fiT = fi != null && fi[1] === "top" ? fi : null;
+    const prelude =
+      chT != null
+        ? `chamfer = ${chT[0]};\n\n${chamferedBoxBody("top", "width", "thickness")}\n\n`
+        : fiT != null
+          ? `fillet = ${fiT[0]};\n\n${filletedBoxBody("top", "width", "thickness")}\n\n`
+          : "";
+    const plate =
+      chT != null
+        ? "    chamfered_box();"
+        : fiT != null
+          ? "    filleted_box();"
+          : "    translate([-width/2, -thickness/2, 0]) cube([width, thickness, height]);";
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header}// Part family: wall_mount_bracket\n// Parameters: ${JSON.stringify(a)}\n\nwidth = ${a.width}; height = ${a.height}; thickness = ${a.thickness}; tab_depth = ${a.tabDepth}; screw_hole_diameter = ${a.screwHoleDiameter}; screw_hole_spacing = ${a.screwHoleSpacing};\ndifference() {\n  union() {\n    translate([-width/2, -thickness/2, 0]) cube([width, thickness, height]);\n    translate([-width/2, 0, 0]) cube([width, tab_depth, thickness]);\n  }\n  for (z = [height/2 - screw_hole_spacing/2, height/2 + screw_hole_spacing/2]) translate([0, -thickness/2 - 0.1, z]) rotate([-90,0,0]) cylinder(h = thickness + 0.2, d = screw_hole_diameter, $fn = 32);\n}\n`,
+      warnings: warnings(a, { chamfer: chT == null, fillet: fiT == null }),
+      code: `${header}// Part family: wall_mount_bracket\n// Parameters: ${JSON.stringify(a)}\n\nwidth = ${a.width}; height = ${a.height}; thickness = ${a.thickness}; tab_depth = ${a.tabDepth}; screw_hole_diameter = ${a.screwHoleDiameter}; screw_hole_spacing = ${a.screwHoleSpacing};\n${prelude}difference() {\n  union() {\n${plate}\n    translate([-width/2, 0, 0]) cube([width, tab_depth, thickness]);\n  }\n  for (z = [height/2 - screw_hole_spacing/2, height/2 + screw_hole_spacing/2]) translate([0, -thickness/2 - 0.1, z]) rotate([-90,0,0]) cylinder(h = thickness + 0.2, d = screw_hole_diameter, $fn = 32);\n}\n`,
     };
+  }
   if (p.type === "l_bracket") {
     const cuts = lBracketCuts(a.holes, a.slots, a.thickness, a.width);
     const w = [
