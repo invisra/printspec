@@ -358,13 +358,35 @@ export function generateOpenScadWithValidator(
           `  translate([${h.x}, ${h.y}, -0.1]) cylinder(h = thickness + 0.2, d = ${h.diameter}, $fn = 32);`,
       )
       .join("\n");
+    // The clip is a base plate (base_length x width x thickness) with a cable
+    // arch bridged over it, so the base plate's bottom outer edge is its one
+    // closed, solid perimeter clear of the arch. Only a `bottom` target builds:
+    // the base cube becomes a bottom-finished box body (height = thickness),
+    // leaving the bridge, cable channel and mount holes unchanged. Whole-part
+    // and `top` requests still warn.
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    const chB = ch != null && ch[1] === "bottom" ? ch : null;
+    const fiB = fi != null && fi[1] === "bottom" ? fi : null;
+    const prelude =
+      chB != null
+        ? `chamfer = ${chB[0]};\n\n${chamferedBoxBody("bottom", "base_length", "width", "thickness")}\n\n`
+        : fiB != null
+          ? `fillet = ${fiB[0]};\n\n${filletedBoxBody("bottom", "base_length", "width", "thickness")}\n\n`
+          : "";
+    const base =
+      chB != null
+        ? "    chamfered_box();"
+        : fiB != null
+          ? "    filleted_box();"
+          : "    translate([-base_length/2, -width/2, 0]) cube([base_length, width, thickness]);";
     return {
       supported: true,
       warnings: [
         "Cable arch is approximated as a rectangular bridge.",
-        ...warnings(a),
+        ...warnings(a, { chamfer: chB == null, fillet: fiB == null }),
       ],
-      code: `${header}// Part family: cable_clip\n// Parameters: ${JSON.stringify(a)}\n\nbase_length = ${a.baseLength ?? 28};\nwidth = ${a.width ?? a.baseWidth ?? 12};\nthickness = ${a.thickness ?? a.baseThickness ?? 3};\ncable_diameter = ${a.cableDiameter ?? a.clipInnerDiameter ?? 6};\ndifference() {\n  union() {\n    translate([-base_length/2, -width/2, 0]) cube([base_length, width, thickness]);\n    translate([-base_length*0.325, -width/2, thickness + cable_diameter/2]) cube([base_length*0.65, width, thickness]);\n  }\n  translate([0, -width/2 - 0.1, thickness + cable_diameter/2]) rotate([-90,0,0]) cylinder(h = width + 0.2, d = cable_diameter + ${a.clearance ?? 0.5}, $fn = 48);\n${mountHoles}\n}\n`,
+      code: `${header}// Part family: cable_clip\n// Parameters: ${JSON.stringify(a)}\n\nbase_length = ${a.baseLength ?? 28};\nwidth = ${a.width ?? a.baseWidth ?? 12};\nthickness = ${a.thickness ?? a.baseThickness ?? 3};\ncable_diameter = ${a.cableDiameter ?? a.clipInnerDiameter ?? 6};\n${prelude}difference() {\n  union() {\n${base}\n    translate([-base_length*0.325, -width/2, thickness + cable_diameter/2]) cube([base_length*0.65, width, thickness]);\n  }\n  translate([0, -width/2 - 0.1, thickness + cable_diameter/2]) rotate([-90,0,0]) cylinder(h = width + 0.2, d = cable_diameter + ${a.clearance ?? 0.5}, $fn = 48);\n${mountHoles}\n}\n`,
     };
   }
   if (p.type === "wall_mount_bracket") {

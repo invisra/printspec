@@ -2024,6 +2024,44 @@ def test_openscad_finishes_wall_mount_bracket_top_edge_only():
         )
 
 
+def test_openscad_finishes_cable_clip_base_bottom_edge_only():
+    def clip(**finish):
+        s = read(Path("examples/part-families/cable-clip.basic.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # The base plate's bottom outer edge is its one closed, solid perimeter clear
+    # of the cable arch, so only a bottom target builds; the base cube becomes a
+    # bottom-finished box body, and the bridge/channel/holes are unchanged.
+    ch = generate_openscad(clip(chamfer={"distance": 0.8, "target": "bottom"}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 0.8;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"]
+    assert "linear_extrude(thickness - chamfer) square([base_length, width]" in ch["code"]
+    assert "    chamfered_box();" in ch["code"]
+    # The cable arch bridge and channel remain.
+    assert "cube([base_length*0.65, width, thickness])" in ch["code"]
+    assert "d = cable_diameter + 0.5" in ch["code"]
+    # The existing approximation warning is preserved.
+    assert "Cable arch is approximated as a rectangular bridge." in ch["warnings"]
+
+    fi = generate_openscad(clip(fillet={"radius": 1, "target": "bottom"}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+
+    # Whole-part (no target) and top aren't clean here, so they warn and the base
+    # stays a plain cube.
+    for unbuilt in ({"distance": 0.8}, {"distance": 0.8, "target": "top"}):
+        w = generate_openscad(clip(chamfer=unbuilt))
+        assert "chamfer requested but not implemented" in w["warnings"]
+        assert "module chamfered_box()" not in w["code"]
+        assert (
+            "translate([-base_length/2, -width/2, 0]) cube([base_length, width, thickness]);"
+            in w["code"]
+        )
+
+
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():
     # part.type is a valid composable_part discriminator, but this
     # component's position is missing y/z (both required on Point3D).

@@ -502,6 +502,56 @@ test("wall_mount_bracket finishes only its back-plate top edge (top target)", ()
     );
   }
 });
+test("cable_clip finishes only its base-plate bottom edge (bottom target)", () => {
+  const clip = (finish) => {
+    const s = read("examples/part-families/cable-clip.basic.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  const ch = generateOpenScad(
+    clip({ chamfer: { distance: 0.8, target: "bottom" } }),
+  );
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(ch.code, /chamfer = 0\.8;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(
+    ch.code,
+    /linear_extrude\(thickness - chamfer\) square\(\[base_length, width\]/,
+  );
+  assert.match(ch.code, /    chamfered_box\(\);/);
+  // The cable arch bridge and channel remain.
+  assert.match(ch.code, /cube\(\[base_length\*0\.65, width, thickness\]\)/);
+  assert.match(ch.code, /d = cable_diameter \+ 0\.5/);
+  // The existing approximation warning is preserved.
+  assert.ok(
+    ch.warnings.includes("Cable arch is approximated as a rectangular bridge."),
+  );
+
+  const fi = generateOpenScad(
+    clip({ fillet: { radius: 1, target: "bottom" } }),
+  );
+  assert.doesNotMatch(
+    fi.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(fi.code, /module filleted_box\(\)/);
+
+  // Whole-part and top aren't clean here, so they warn and the base stays a
+  // plain cube.
+  for (const unbuilt of [{ distance: 0.8 }, { distance: 0.8, target: "top" }]) {
+    const w = generateOpenScad(clip({ chamfer: unbuilt }));
+    assert.match(w.warnings.join(" "), /chamfer requested but not implemented/);
+    assert.doesNotMatch(w.code, /module chamfered_box\(\)/);
+    assert.match(
+      w.code,
+      /translate\(\[-base_length\/2, -width\/2, 0\]\) cube\(\[base_length, width, thickness\]\);/,
+    );
+  }
+});
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });

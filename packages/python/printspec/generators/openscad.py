@@ -369,10 +369,32 @@ def generate_openscad(spec):
             f"  translate([{h['x']}, {h['y']}, -0.1]) cylinder(h = thickness + 0.2, d = {h['diameter']}, $fn = 32);"
             for h in a.get("mountingHoles") or []
         )
+        # The clip is a base plate (base_length x width x thickness) with a cable
+        # arch bridged over it, so the base plate's bottom outer edge is its one
+        # closed, solid perimeter clear of the arch. Only a `bottom` target
+        # builds: the base cube becomes a bottom-finished box body (height =
+        # thickness), leaving the bridge, cable channel and mount holes
+        # unchanged. Whole-part and `top` requests still warn.
+        ch = _chamfer(a)
+        fi = _fillet(a) if ch is None else None
+        ch_b = ch if ch is not None and ch[1] == "bottom" else None
+        fi_b = fi if fi is not None and fi[1] == "bottom" else None
+        if ch_b is not None:
+            prelude = f"chamfer = {ch_b[0]};\n\n{_chamfered_box_body('bottom', length='base_length', h='thickness')}\n\n"
+            base = "    chamfered_box();"
+        elif fi_b is not None:
+            prelude = f"fillet = {fi_b[0]};\n\n{_filleted_box_body('bottom', length='base_length', h='thickness')}\n\n"
+            base = "    filleted_box();"
+        else:
+            prelude = ""
+            base = "    translate([-base_length/2, -width/2, 0]) cube([base_length, width, thickness]);"
         return {
             "supported": True,
-            "warnings": ["Cable arch is approximated as a rectangular bridge.", *_warnings(a)],
-            "code": f"{HEADER}// Part family: cable_clip\n// Parameters: {json.dumps(a)}\n\nbase_length = {base_length};\nwidth = {width};\nthickness = {thickness};\ncable_diameter = {cable_diameter};\ndifference() {{\n  union() {{\n    translate([-base_length/2, -width/2, 0]) cube([base_length, width, thickness]);\n    translate([-base_length*0.325, -width/2, thickness + cable_diameter/2]) cube([base_length*0.65, width, thickness]);\n  }}\n  translate([0, -width/2 - 0.1, thickness + cable_diameter/2]) rotate([-90,0,0]) cylinder(h = width + 0.2, d = cable_diameter + {clearance}, $fn = 48);\n{mount_holes}\n}}\n",
+            "warnings": [
+                "Cable arch is approximated as a rectangular bridge.",
+                *_warnings(a, chamfer=ch_b is None, fillet=fi_b is None),
+            ],
+            "code": f"{HEADER}// Part family: cable_clip\n// Parameters: {json.dumps(a)}\n\nbase_length = {base_length};\nwidth = {width};\nthickness = {thickness};\ncable_diameter = {cable_diameter};\n{prelude}difference() {{\n  union() {{\n{base}\n    translate([-base_length*0.325, -width/2, thickness + cable_diameter/2]) cube([base_length*0.65, width, thickness]);\n  }}\n  translate([0, -width/2 - 0.1, thickness + cable_diameter/2]) rotate([-90,0,0]) cylinder(h = width + 0.2, d = cable_diameter + {clearance}, $fn = 48);\n{mount_holes}\n}}\n",
         }
     if p["type"] == "wall_mount_bracket":
         # The bracket is a vertical back plate (width x thickness x height) with
