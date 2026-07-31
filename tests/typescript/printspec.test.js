@@ -149,10 +149,9 @@ test("round spacer chamfer is built in OpenSCAD; standoff semantic validation", 
   assert.deepEqual(scad.warnings, []);
   assert.match(scad.code, /rotate_extrude\(\$fn = 64\) polygon/);
   assert.match(scad.code, /chamfer = 0.5;/);
-  // CadQuery does not implement chamfer yet, so it still warns.
-  assert.deepEqual(generateCadQuery(s).warnings, [
-    "chamfer requested but not implemented",
-  ]);
+  // CadQuery now builds the same whole-part chamfer (real OCCT), so it no
+  // longer warns for the targetless request.
+  assert.deepEqual(generateCadQuery(s).warnings, []);
   // An unrecognized chamfer target is not built and still warns in OpenSCAD.
   const targeted = read("examples/part-families/round-spacer.basic.json");
   targeted.part.parameters.chamfer = { distance: 0.5, target: "inner_edge" };
@@ -190,8 +189,9 @@ test("round spacer fillet is built in OpenSCAD via a rotate_extrude arc", () => 
   const rb = generateOpenScad(both);
   assert.deepEqual(rb.warnings, ["fillet requested but not implemented"]);
   assert.doesNotMatch(rb.code, /fillet =/);
-  // CadQuery does not implement fillet yet, so it still warns.
-  assert.match(
+  // CadQuery now builds the same whole-part fillet (real OCCT), so it no
+  // longer warns.
+  assert.doesNotMatch(
     generateCadQuery(s).warnings.join(" "),
     /fillet requested but not implemented/,
   );
@@ -609,6 +609,95 @@ test("l_bracket finishes only the standing leg's top edge (top target)", () => {
       /translate\(\[0, -width\/2, 0\]\) cube\(\[thickness, width, leg_b\]\);/,
     );
   }
+});
+test("cadquery builds chamfer/fillet with the same targets, byte-identical to python", () => {
+  const part = (type, params) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: { type, label: "x", parameters: params },
+  });
+  const sb = generateCadQuery(
+    part("spacer_block", {
+      length: 20,
+      width: 16,
+      height: 10,
+      chamfer: { distance: 1 },
+    }),
+  );
+  assert.doesNotMatch(
+    sb.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(sb.code, /part = part\.faces\(">Z"\)\.edges\(\)\.chamfer\(1\)/);
+  assert.match(sb.code, /part = part\.faces\("<Z"\)\.edges\(\)\.chamfer\(1\)/);
+
+  // round_spacer finishes before the inner bore.
+  const rs = generateCadQuery(
+    part("round_spacer", {
+      outerDiameter: 10,
+      height: 8,
+      innerDiameter: 5,
+      fillet: { radius: 1, target: "top" },
+    }),
+  );
+  assert.ok(
+    rs.code.indexOf(".edges().fillet(1)") <
+      rs.code.indexOf(".hole(inner_diameter)"),
+  );
+
+  // Plate: box+vertical-fillet form only when finishing.
+  const pl = generateCadQuery(
+    part("rounded_rectangular_plate", {
+      length: 40,
+      width: 30,
+      thickness: 4,
+      cornerRadius: 5,
+      chamfer: { distance: 1 },
+    }),
+  );
+  assert.match(pl.code, /\.edges\("\|Z"\)\.fillet\(radius\)/);
+  const plPlain = generateCadQuery(
+    part("rounded_rectangular_plate", {
+      length: 40,
+      width: 30,
+      thickness: 4,
+      cornerRadius: 5,
+    }),
+  );
+  assert.doesNotMatch(plPlain.code, /\.edges\("\|Z"\)\.fillet\(radius\)/);
+
+  // Single-edge bespoke family: only its one target builds.
+  const wall = generateCadQuery(
+    part("wall_mount_bracket", {
+      width: 40,
+      height: 60,
+      thickness: 4,
+      tabDepth: 20,
+      screwHoleDiameter: 4,
+      screwHoleSpacing: 36,
+      chamfer: { distance: 1, target: "top" },
+    }),
+  );
+  assert.match(
+    wall.code,
+    /part = part\.faces\(">Z"\)\.edges\(\)\.chamfer\(1\)/,
+  );
+  const wallWarn = generateCadQuery(
+    part("wall_mount_bracket", {
+      width: 40,
+      height: 60,
+      thickness: 4,
+      tabDepth: 20,
+      screwHoleDiameter: 4,
+      screwHoleSpacing: 36,
+      chamfer: { distance: 1 },
+    }),
+  );
+  assert.match(
+    wallWarn.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.doesNotMatch(wallWarn.code, /\.edges\(\)\.chamfer/);
 });
 test("brepjs finishes the bespoke families on their one clean edge only", () => {
   const spec = (type, params) => ({
@@ -4709,6 +4798,9 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
     "drawer_divider",
     "cable_comb",
   ]);
+  // The CadQuery generator builds the same whole-part set via the real OCCT
+  // kernel (identical volumes to brepjs).
+  const cadqueryChamferFamilies = brepjsChamferFamilies;
   for (const [file, schemaFile] of families) {
     const props = read("schemas/" + schemaFile).properties.parameters
       .properties;
@@ -4732,7 +4824,9 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
       const chamferBuilt =
         (generate === generateOpenScad &&
           openscadChamferFamilies.has(partType)) ||
-        (generate === generateBrepJs && brepjsChamferFamilies.has(partType));
+        (generate === generateBrepJs && brepjsChamferFamilies.has(partType)) ||
+        (generate === generateCadQuery &&
+          cadqueryChamferFamilies.has(partType));
       if (expectChamferWarning && !chamferBuilt)
         assert.match(
           w,

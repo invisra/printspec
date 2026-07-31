@@ -186,6 +186,10 @@ def test_generator_supported_metadata_matches_actual_support():
 def test_warning_behavior():
     s = read(Path("examples/part-families/round-spacer.basic.json"))
     s["part"]["parameters"]["fillet"] = {"radius": 0.25}
+    # CadQuery now builds a whole-part fillet for round_spacer (real OCCT), so it
+    # no longer warns; an unrecognized target would still warn.
+    assert generate_cadquery(s)["warnings"] == []
+    s["part"]["parameters"]["fillet"] = {"radius": 0.25, "target": "middle"}
     assert generate_cadquery(s)["warnings"] == ["fillet requested but not implemented"]
 
 
@@ -1665,7 +1669,8 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
         ("drawer-divider.basic.json", "drawer-divider.schema.json"),
     ]
     # The OpenSCAD generator builds a whole-part chamfer for these families, so
-    # it no longer warns for a (targetless) chamfer on them; CadQuery still does.
+    # it no longer warns for a (targetless) chamfer on them. The CadQuery
+    # generator builds the same whole-part set (via the real OCCT kernel).
     openscad_chamfer_families = {
         "spacer_block",
         "round_spacer",
@@ -1674,6 +1679,7 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
         "drawer_divider",
         "cable_comb",
     }
+    cadquery_chamfer_families = openscad_chamfer_families
     for file, schema_file in families:
         props = read(Path("schemas") / schema_file)["properties"]["parameters"]["properties"]
         s = read(Path("examples/part-families") / file)
@@ -1695,7 +1701,9 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
             (generate_cadquery, "cadquery"),
         ):
             w = " ".join(generate(s)["warnings"])
-            chamfer_built = gen_name == "openscad" and part_type in openscad_chamfer_families
+            chamfer_built = (gen_name == "openscad" and part_type in openscad_chamfer_families) or (
+                gen_name == "cadquery" and part_type in cadquery_chamfer_families
+            )
             if expect_chamfer_warning and not chamfer_built:
                 assert "chamfer requested but not implemented" in w, f"{file} {gen_name} chamfer"
             if chamfer_built:
@@ -1727,8 +1735,9 @@ def test_openscad_builds_whole_part_chamfer_for_spacer_and_round_spacer():
     targeted["part"]["parameters"]["chamfer"] = {"distance": 0.5, "target": "inner_edge"}
     assert "chamfer requested but not implemented" in generate_openscad(targeted)["warnings"]
 
-    # CadQuery does not implement chamfer yet, so it still warns.
-    assert "chamfer requested but not implemented" in generate_cadquery(block)["warnings"]
+    # CadQuery now builds the same whole-part chamfer (real OCCT), so it no
+    # longer warns for the targetless request on block.
+    assert "chamfer requested but not implemented" not in generate_cadquery(block)["warnings"]
 
 
 def test_openscad_builds_whole_part_fillet_for_round_spacer():
@@ -1755,8 +1764,9 @@ def test_openscad_builds_whole_part_fillet_for_round_spacer():
     targeted["part"]["parameters"]["fillet"] = {"radius": 0.5, "target": "some_edge"}
     assert "fillet requested but not implemented" in generate_openscad(targeted)["warnings"]
 
-    # CadQuery does not implement fillet yet, so it still warns.
-    assert "fillet requested but not implemented" in generate_cadquery(spacer)["warnings"]
+    # CadQuery now builds the same whole-part fillet (real OCCT), so it no
+    # longer warns for the targetless request.
+    assert "fillet requested but not implemented" not in generate_cadquery(spacer)["warnings"]
 
 
 def test_openscad_builds_chamfer_and_fillet_for_rounded_rectangular_plate():
@@ -1830,8 +1840,9 @@ def test_openscad_builds_fillet_for_spacer_block():
     assert "filleted_box()" in rt["code"]
     assert "linear_extrude(0.001) square([length, width], center = true);" in rt["code"]
 
-    # CadQuery does not implement fillet yet, so it still warns.
-    assert "fillet requested but not implemented" in generate_cadquery(s)["warnings"]
+    # CadQuery now builds the same whole-part fillet (real OCCT), so it no
+    # longer warns.
+    assert "fillet requested but not implemented" not in generate_cadquery(s)["warnings"]
 
 
 def test_openscad_finishes_electronics_standoff():
@@ -2133,6 +2144,84 @@ def test_openscad_builds_l_bracket_rib_gusset():
 
     # No rib key at all: unchanged, no rib geometry.
     assert "rib_size" not in generate_openscad(bracket())["code"]
+
+
+def test_cadquery_builds_chamfer_and_fillet():
+    def part(t, **p):
+        return {
+            "printspecVersion": "0.2.0",
+            "units": "mm",
+            "part": {"type": t, "label": "x", "parameters": p},
+        }
+
+    # Box family: both top and bottom faces for a targetless request.
+    sb = generate_cadquery(
+        part("spacer_block", length=20, width=16, height=10, chamfer={"distance": 1})
+    )
+    assert "chamfer requested but not implemented" not in sb["warnings"]
+    assert 'part = part.faces(">Z").edges().chamfer(1)' in sb["code"]
+    assert 'part = part.faces("<Z").edges().chamfer(1)' in sb["code"]
+
+    # round_spacer finishes the outer rim before the inner bore (order matters).
+    rs = generate_cadquery(
+        part(
+            "round_spacer",
+            outerDiameter=10,
+            height=8,
+            innerDiameter=5,
+            fillet={"radius": 1, "target": "top"},
+        )
+    )
+    assert 'part = part.faces(">Z").edges().fillet(1)' in rs["code"]
+    assert rs["code"].index(".edges().fillet(1)") < rs["code"].index(".hole(inner_diameter)")
+
+    # The plate uses the box+vertical-fillet construction only when finishing.
+    pl = generate_cadquery(
+        part(
+            "rounded_rectangular_plate",
+            length=40,
+            width=30,
+            thickness=4,
+            cornerRadius=5,
+            chamfer={"distance": 1},
+        )
+    )
+    assert '.edges("|Z").fillet(radius)' in pl["code"]
+    assert "chamfer requested but not implemented" not in pl["warnings"]
+    pl_plain = generate_cadquery(
+        part("rounded_rectangular_plate", length=40, width=30, thickness=4, cornerRadius=5)
+    )
+    assert '.edges("|Z").fillet(radius)' not in pl_plain["code"]  # profile-extrude form
+    assert ".circle(radius)" in pl_plain["code"]
+
+    # Single-edge bespoke families: only their one target builds.
+    wall = generate_cadquery(
+        part(
+            "wall_mount_bracket",
+            width=40,
+            height=60,
+            thickness=4,
+            tabDepth=20,
+            screwHoleDiameter=4,
+            screwHoleSpacing=36,
+            chamfer={"distance": 1, "target": "top"},
+        )
+    )
+    assert 'part = part.faces(">Z").edges().chamfer(1)' in wall["code"]
+    wall_warn = generate_cadquery(
+        part(
+            "wall_mount_bracket",
+            width=40,
+            height=60,
+            thickness=4,
+            tabDepth=20,
+            screwHoleDiameter=4,
+            screwHoleSpacing=36,
+            chamfer={"distance": 1},
+        )
+    )
+    assert "chamfer requested but not implemented" in wall_warn["warnings"]
+    assert ".edges().chamfer" not in wall_warn["code"]
 
 
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():

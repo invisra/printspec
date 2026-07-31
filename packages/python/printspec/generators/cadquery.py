@@ -23,6 +23,16 @@ def cadquery_rounded_rect_prism(length, width, thickness, radius):
     return f'length = {cadquery_number(length)}\nwidth = {cadquery_number(width)}\nthickness = {cadquery_number(thickness)}\nradius = {cadquery_number(radius)}\n\nradius = max(0.0, min(radius, length / 2.0, width / 2.0))\n\nif radius <= 0:\n    part = cq.Workplane("XY").box(length, width, thickness, centered=(True, True, False))\nelse:\n    profile = (\n        cq.Workplane("XY")\n        .rect(length - 2 * radius, width)\n        .rect(length, width - 2 * radius)\n        .vertices()\n        .circle(radius)\n    )\n    part = profile.extrude(thickness)\n'
 
 
+def cadquery_rounded_rect_prism_filletable(length, width, thickness, radius):
+    """Same rounded plate as :func:`cadquery_rounded_rect_prism`, but built as a
+    box with its vertical edges filleted rather than a rounded-rectangle profile
+    extrude. The two are geometrically identical, but only this form leaves the
+    top/bottom faces with edges the OCCT chamfer/fillet operators accept (a
+    profile-extrude's tangent arc+line top edges make `.chamfer()` fail); used
+    only when a top/bottom finish is requested."""
+    return f'length = {cadquery_number(length)}\nwidth = {cadquery_number(width)}\nthickness = {cadquery_number(thickness)}\nradius = {cadquery_number(radius)}\n\nradius = max(0.0, min(radius, length / 2.0, width / 2.0))\n\nif radius <= 0:\n    part = cq.Workplane("XY").box(length, width, thickness, centered=(True, True, False))\nelse:\n    part = cq.Workplane("XY").box(length, width, thickness, centered=(True, True, False)).edges("|Z").fillet(radius)\n'
+
+
 def cadquery_apply_z_holes(holes=None):
     return "\n".join(
         f'part = part.faces(">Z").workplane().pushPoints([({cadquery_number(h["x"])}, {cadquery_number(h["y"])})]).hole({cadquery_number(h["diameter"])})'
@@ -33,24 +43,59 @@ def cadquery_apply_z_holes(holes=None):
 HEADER = cadquery_header()
 
 
-def _warnings(a, corner_radius=True):
+def _warnings(a, corner_radius=True, chamfer=True, fillet=True):
     """Several part families' schemas include chamfer/fillet/cornerRadius
     (and, for l_bracket, rib) as optional finishing requests that most
     generators don't implement. Rather than silently drop them, report a
     warning so callers know the request was ignored. Pass corner_radius=False
     for the one family (rounded_rectangular_plate) that actually implements
-    cornerRadius.
+    cornerRadius, and chamfer=False / fillet=False for a family/case that
+    actually builds the requested chamfer / fillet.
     """
     w = []
-    if a.get("chamfer") is not None:
+    if chamfer and a.get("chamfer") is not None:
         w.append("chamfer requested but not implemented")
-    if a.get("fillet") is not None:
+    if fillet and a.get("fillet") is not None:
         w.append("fillet requested but not implemented")
     if (a.get("rib") or {}).get("enabled"):
         w.append("rib requested but not implemented")
     if corner_radius and a.get("cornerRadius") is not None:
         w.append("cornerRadius requested but not implemented")
     return w
+
+
+def _finish(feature, size_key):
+    """Parse a chamfer/fillet request into ``(size, edges)`` or ``None``, using
+    the same target vocabulary as the OpenSCAD generator: ``both`` (no target),
+    ``top``/``bottom``, or ``None`` (unrecognized target, not built)."""
+    if feature is None:
+        return None
+    t = feature.get("target")
+    if t is None:
+        return (feature.get(size_key), "both")
+    if t in ("top", "bottom"):
+        return (feature.get(size_key), t)
+    return None
+
+
+def _cq_finish(a, top_sel='">Z"', bottom_sel='"<Z"', allowed=("both", "top", "bottom")):
+    """Emit CadQuery `.faces(sel).edges().chamfer/fillet(amount)` line(s) for the
+    requested finish, using the OCCT edge-finishing operators (the same kernel
+    brepjs uses). Real top/bottom faces are picked with the `>Z`/`<Z` selectors.
+    `allowed` limits which targets a family builds (bespoke families expose one
+    clean edge). Returns (lines, chamfer_built, fillet_built)."""
+    ch = _finish(a.get("chamfer"), "distance")
+    fi = _finish(a.get("fillet"), "radius") if ch is None else None
+    fin = ch if ch is not None else fi
+    op = "chamfer" if ch is not None else "fillet"
+    lines = ""
+    built = fin is not None and fin[1] in allowed
+    if built:
+        if fin[1] in ("both", "top"):
+            lines += f"part = part.faces({top_sel}).edges().{op}({cadquery_number(fin[0])})\n"
+        if fin[1] in ("both", "bottom"):
+            lines += f"part = part.faces({bottom_sel}).edges().{op}({cadquery_number(fin[0])})\n"
+    return lines, not (ch is not None and built), not (fi is not None and built)
 
 
 def _cadquery_l_bracket_cuts(holes, slots, thickness, width):
@@ -130,34 +175,48 @@ def generate_cadquery(spec):
         }
     a = p["parameters"]
     if p["type"] == "rounded_rectangular_plate":
+        # Finish the top/bottom perimeter before holes. A finish needs the
+        # box+vertical-fillet construction (see the helper); the no-finish plate
+        # keeps the profile-extrude form unchanged.
+        fin, cf, ff = _cq_finish(a)
+        prism = (
+            cadquery_rounded_rect_prism_filletable(
+                a["length"], a["width"], a["thickness"], a["cornerRadius"]
+            )
+            if fin
+            else cadquery_rounded_rect_prism(
+                a["length"], a["width"], a["thickness"], a["cornerRadius"]
+            )
+        )
         return {
             "supported": True,
-            "warnings": _warnings(a, corner_radius=False),
-            "code": f"{HEADER}{cadquery_rounded_rect_prism(a['length'], a['width'], a['thickness'], a['cornerRadius'])}{_holes(a.get('holes'))}\n",
+            "warnings": _warnings(a, corner_radius=False, chamfer=cf, fillet=ff),
+            "code": f"{HEADER}{prism}{fin}{_holes(a.get('holes'))}\n",
         }
     if p["type"] == "spacer_block":
+        # Finish the top/bottom perimeter before boring holes (a hole splits the
+        # face the >Z/<Z selector needs).
+        fin, cf, ff = _cq_finish(a)
         return {
             "supported": True,
-            "warnings": _warnings(a),
-            "code": f'{HEADER}length = {a["length"]}\nwidth = {a["width"]}\nheight = {a["height"]}\n\npart = cq.Workplane("XY").box(length, width, height, centered=(True, True, False))\n{_holes(a.get("holes"))}\n',
+            "warnings": _warnings(a, chamfer=cf, fillet=ff),
+            "code": f'{HEADER}length = {a["length"]}\nwidth = {a["width"]}\nheight = {a["height"]}\n\npart = cq.Workplane("XY").box(length, width, height, centered=(True, True, False))\n{fin}{_holes(a.get("holes"))}\n',
         }
     if p["type"] == "round_spacer":
+        # Finish the outer top/bottom rim(s) before the inner bore is cut, so the
+        # bore rim stays sharp (matching OpenSCAD/brepjs).
+        inner = a.get("innerDiameter") is not None
+        fin, cf, ff = _cq_finish(a)
+        body = 'part = cq.Workplane("XY").circle(outer_diameter / 2).extrude(height)\n' + fin
+        if inner:
+            body += 'part = part.faces(">Z").workplane().hole(inner_diameter)\n'
         return {
             "supported": True,
-            "warnings": _warnings(a),
+            "warnings": _warnings(a, chamfer=cf, fillet=ff),
             "code": f"{HEADER}outer_diameter = {a['outerDiameter']}\nheight = {a['height']}"
-            + (
-                f"\ninner_diameter = {a['innerDiameter']}"
-                if a.get("innerDiameter") is not None
-                else ""
-            )
-            + '\n\npart = cq.Workplane("XY").circle(outer_diameter / 2).extrude(height)'
-            + (
-                '\npart = part.faces(">Z").workplane().hole(inner_diameter)'
-                if a.get("innerDiameter") is not None
-                else ""
-            )
-            + "\n",
+            + (f"\ninner_diameter = {a['innerDiameter']}" if inner else "")
+            + "\n\n"
+            + body,
         }
     if p["type"] == "electronics_standoff":
         has_base = a.get("baseDiameter") is not None and a.get("baseHeight") is not None
@@ -166,16 +225,20 @@ def generate_cadquery(spec):
             if has_base
             else 'part = cq.Workplane("XY").circle(outer_diameter / 2).extrude(height)'
         )
+        # Finish exposed rim(s) before boring the hole. >Z picks the shaft top
+        # (or the baseless top); <Z picks the base bottom (or baseless bottom),
+        # matching OpenSCAD/brepjs top/bottom semantics.
+        fin, cf, ff = _cq_finish(a)
         return {
             "supported": True,
-            "warnings": _warnings(a),
+            "warnings": _warnings(a, chamfer=cf, fillet=ff),
             "code": f"{HEADER}outer_diameter = {a['outerDiameter']}\nheight = {a['height']}\nhole_diameter = {a['holeDiameter']}"
             + (
                 f"\nbase_diameter = {a['baseDiameter']}\nbase_height = {a['baseHeight']}"
                 if has_base
                 else ""
             )
-            + f'\n\n{body}\npart = part.faces(">Z").workplane().hole(hole_diameter)\n',
+            + f'\n\n{body}\n{fin}part = part.faces(">Z").workplane().hole(hole_diameter)\n',
         }
     if p["type"] == "cable_comb":
         count = float(_or(a.get("slotCount"), 6))
@@ -185,14 +248,17 @@ def generate_cadquery(spec):
         th = float(_or(a.get("baseThickness"), _or(a.get("thickness"), 3)))
         length = float(_or(a.get("length"), count * sw + (count + 1) * tw))
         width = float(_or(a.get("width"), sd + tw))
-        code = f'{HEADER}{cadquery_comment("Part family: cable_comb")}{cadquery_comment("Parameters: " + json.dumps(a))}part = cq.Workplane("XY").box({cadquery_number(length)}, {cadquery_number(width)}, {cadquery_number(th)}, centered=(True, True, False))\n'
+        # Finish the flat-plate top/bottom perimeter before the slots split the
+        # top edge.
+        fin, cf, ff = _cq_finish(a)
+        code = f'{HEADER}{cadquery_comment("Part family: cable_comb")}{cadquery_comment("Parameters: " + json.dumps(a))}part = cq.Workplane("XY").box({cadquery_number(length)}, {cadquery_number(width)}, {cadquery_number(th)}, centered=(True, True, False))\n{fin}'
         for i in range(int(count)):
             code += f'part = part.cut(cq.Workplane("XY").center({cadquery_number(-length / 2 + tw + sw / 2 + i * (sw + tw))}, {cadquery_number(width / 2 - sd / 2)}).box({cadquery_number(sw)}, {cadquery_number(sd + 0.2)}, {cadquery_number(th + 0.2)}, centered=(True, True, False)))\n'
         hd = float(_or(a.get("mountHoleDiameter"), 0))
         if hd > 0:
             sp = float(_or(a.get("mountHoleSpacing"), 40))
             code += f'part = part.faces(">Z").workplane().pushPoints([({cadquery_number(-sp / 2)}, 0), ({cadquery_number(sp / 2)}, 0)]).hole({cadquery_number(hd)})\n'
-        return {"supported": True, "warnings": _warnings(a), "code": code}
+        return {"supported": True, "warnings": _warnings(a, chamfer=cf, fillet=ff), "code": code}
     if p["type"] == "cable_clip":
         base_length = _or(a.get("baseLength"), 28)
         width = _or(a.get("width"), _or(a.get("baseWidth"), 12))
@@ -203,27 +269,45 @@ def generate_cadquery(spec):
             f'part = part.cut(cq.Workplane("XY").center({cadquery_number(h["x"])}, {cadquery_number(h["y"])}).circle({cadquery_number(h["diameter"])} / 2).extrude({cadquery_number(thickness)} + 0.2))'
             for h in a.get("mountingHoles") or []
         )
-        code = f'{HEADER}{cadquery_comment("Part family: cable_clip")}{cadquery_comment("Parameters: " + json.dumps(a))}base = cq.Workplane("XY").box({cadquery_number(base_length)}, {cadquery_number(width)}, {cadquery_number(thickness)}, centered=(True, True, False))\nbridge = cq.Workplane("XY").workplane(offset={cadquery_number(thickness)}+({cadquery_number(cable_diameter)}+{cadquery_number(clearance)})/2).box({cadquery_number(float(base_length) * 0.65)}, {cadquery_number(width)}, {cadquery_number(thickness)}, centered=(True, True, False))\npart = base.union(bridge)\n{mount_holes}\n'
+        # Only the base plate's bottom edge is a closed perimeter clear of the
+        # arch, so only a `bottom` target builds; before mount holes.
+        fin, cf, ff = _cq_finish(a, allowed=("bottom",))
+        code = f'{HEADER}{cadquery_comment("Part family: cable_clip")}{cadquery_comment("Parameters: " + json.dumps(a))}base = cq.Workplane("XY").box({cadquery_number(base_length)}, {cadquery_number(width)}, {cadquery_number(thickness)}, centered=(True, True, False))\nbridge = cq.Workplane("XY").workplane(offset={cadquery_number(thickness)}+({cadquery_number(cable_diameter)}+{cadquery_number(clearance)})/2).box({cadquery_number(float(base_length) * 0.65)}, {cadquery_number(width)}, {cadquery_number(thickness)}, centered=(True, True, False))\npart = base.union(bridge)\n{fin}{mount_holes}\n'
         return {
             "supported": True,
-            "warnings": ["Cable arch is approximated as a rectangular bridge.", *_warnings(a)],
+            "warnings": [
+                "Cable arch is approximated as a rectangular bridge.",
+                *_warnings(a, chamfer=cf, fillet=ff),
+            ],
             "code": code,
         }
     if p["type"] == "wall_mount_bracket":
-        code = f'{HEADER}{cadquery_comment("Part family: wall_mount_bracket")}{cadquery_comment("Parameters: " + json.dumps(a))}plate = cq.Workplane("XY").box({cadquery_number(a["width"])}, {cadquery_number(a["thickness"])}, {cadquery_number(a["height"])}, centered=(True, True, False))\ntab = cq.Workplane("XY").center(0, {cadquery_number(a["tabDepth"] / 2)}).box({cadquery_number(a["width"])}, {cadquery_number(a["tabDepth"])}, {cadquery_number(a["thickness"])}, centered=(True, True, False))\npart = plate.union(tab)\npart = part.faces("<Y").workplane().pushPoints([(0, {cadquery_number(a["height"] / 2 - a["screwHoleSpacing"] / 2)}), (0, {cadquery_number(a["height"] / 2 + a["screwHoleSpacing"] / 2)})]).hole({cadquery_number(a["screwHoleDiameter"])})\n'
-        return {"supported": True, "warnings": _warnings(a), "code": code}
+        # Only the back plate's top edge is a closed perimeter away from the foot
+        # tab, so only a `top` target builds (the plate top is the part's >Z face).
+        fin, cf, ff = _cq_finish(a, allowed=("top",))
+        code = f'{HEADER}{cadquery_comment("Part family: wall_mount_bracket")}{cadquery_comment("Parameters: " + json.dumps(a))}plate = cq.Workplane("XY").box({cadquery_number(a["width"])}, {cadquery_number(a["thickness"])}, {cadquery_number(a["height"])}, centered=(True, True, False))\ntab = cq.Workplane("XY").center(0, {cadquery_number(a["tabDepth"] / 2)}).box({cadquery_number(a["width"])}, {cadquery_number(a["tabDepth"])}, {cadquery_number(a["thickness"])}, centered=(True, True, False))\npart = plate.union(tab)\n{fin}part = part.faces("<Y").workplane().pushPoints([(0, {cadquery_number(a["height"] / 2 - a["screwHoleSpacing"] / 2)}), (0, {cadquery_number(a["height"] / 2 + a["screwHoleSpacing"] / 2)})]).hole({cadquery_number(a["screwHoleDiameter"])})\n'
+        return {"supported": True, "warnings": _warnings(a, chamfer=cf, fillet=ff), "code": code}
     if p["type"] == "l_bracket":
         cuts, unsupported_axis = _cadquery_l_bracket_cuts(
             a.get("holes"), a.get("slots"), a["thickness"], a["width"]
         )
+        # Only the standing leg's top face (leg B, the part's >Z face since
+        # legLengthB > thickness) is a clean perimeter clear of the shared
+        # corner, so only a `top` target builds; before the cuts. (The rib
+        # gusset is not implemented in CadQuery and still warns.)
+        fin, cf, ff = _cq_finish(a, allowed=("top",))
         code = (
             f"{HEADER}{cadquery_comment('Part family: l_bracket')}{cadquery_comment('Parameters: ' + json.dumps(a))}"
             f'leg_a = cq.Workplane("XY").box({cadquery_number(a["legLengthA"])}, {cadquery_number(a["width"])}, {cadquery_number(a["thickness"])}, centered=(False, True, False))\n'
             f'leg_b = cq.Workplane("XY").box({cadquery_number(a["thickness"])}, {cadquery_number(a["width"])}, {cadquery_number(a["legLengthB"])}, centered=(False, True, False))\n'
             f"part = leg_a.union(leg_b)\n"
+            f"{fin}"
             f"{cuts}\n"
         )
-        w = ["Light-duty/non-structural bracket; review before use.", *_warnings(a)]
+        w = [
+            "Light-duty/non-structural bracket; review before use.",
+            *_warnings(a, chamfer=cf, fillet=ff),
+        ]
         if unsupported_axis:
             w.append("hole/slot with axis 'y' is not implemented for l_bracket")
         return {
@@ -233,15 +317,19 @@ def generate_cadquery(spec):
         }
     if p["type"] == "drawer_divider":
         notch_count = _or(a.get("notchCount"), 0)
+        # Finish the thin box's top/bottom perimeter before the notches split
+        # the top edge.
+        fin, cf, ff = _cq_finish(a)
         code = (
             f"{HEADER}{cadquery_comment('Part family: drawer_divider')}{cadquery_comment('Parameters: ' + json.dumps(a))}"
             f'part = cq.Workplane("XY").box({cadquery_number(a["length"])}, {cadquery_number(a["thickness"])}, {cadquery_number(a["height"])}, centered=(True, True, False))\n'
+            f"{fin}"
             f"for i in range(1, int({cadquery_number(notch_count)}) + 1):\n"
             f"    x = -{cadquery_number(a['length'])}/2 + i * {cadquery_number(a['length'])} / (int({cadquery_number(notch_count)}) + 1)\n"
             f'    notch = cq.Workplane("XY").center(x, 0).box({cadquery_number(a.get("notchWidth"))}, {cadquery_number(float(a["thickness"]) + 0.2)}, {cadquery_number(a.get("notchDepth"))}, centered=(True, True, False)).translate((0, 0, {cadquery_number(float(a["height"]) - float(_or(a.get("notchDepth"), 0)))}))\n'
             f"    part = part.cut(notch)\n"
         )
-        return {"supported": True, "warnings": _warnings(a), "code": code}
+        return {"supported": True, "warnings": _warnings(a, chamfer=cf, fillet=ff), "code": code}
     if p["type"] == "project_enclosure_tray":
         ow, od, wh, wt, ft = (
             a["outerWidth"],
@@ -259,7 +347,12 @@ def generate_cadquery(spec):
             f'right = cq.Workplane("XY").center({cadquery_number(ow / 2 - wt / 2)}, 0).box({cadquery_number(wt)}, {cadquery_number(od)}, {cadquery_number(wh)}, centered=(True, True, False)).translate((0, 0, {cadquery_number(ft)}))\n'
             f"part = floor.union(front).union(back).union(left).union(right)\n"
         )
-        return {"supported": True, "warnings": _warnings(a), "code": code}
+        # Only the floor's outer bottom edge is a closed solid perimeter (the top
+        # is an open wall rim), so only a `bottom` target builds (the floor
+        # bottom is the part's <Z face).
+        fin, cf, ff = _cq_finish(a, allowed=("bottom",))
+        code += fin
+        return {"supported": True, "warnings": _warnings(a, chamfer=cf, fillet=ff), "code": code}
     return {
         "supported": False,
         "code": "",
