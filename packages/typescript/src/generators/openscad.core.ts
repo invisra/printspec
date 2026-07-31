@@ -420,16 +420,40 @@ export function generateOpenScadWithValidator(
   }
   if (p.type === "l_bracket") {
     const cuts = lBracketCuts(a.holes, a.slots, a.thickness, a.width);
+    // The two legs meet at a shared corner, so the one clean, closed perimeter
+    // that a convex edge finish can reuse is the standing leg's top face (leg
+    // B's top, at leg_b). Only a `top` target builds it: leg B becomes a
+    // top-finished box body (cross-section thickness x width, height leg_b),
+    // centered then shifted to leg B's corner-origin footprint with the flat
+    // leg and cuts unchanged. This is distinct from the `rib` gusset feature.
+    // Whole-part and `bottom` requests still warn (the flat leg's bottom is the
+    // mount face and shares the corner region).
+    const ch = chamferInfo(a);
+    const fi = ch == null ? filletInfo(a) : null;
+    const chT = ch != null && ch[1] === "top" ? ch : null;
+    const fiT = fi != null && fi[1] === "top" ? fi : null;
+    const prelude =
+      chT != null
+        ? `chamfer = ${chT[0]};\n\n${chamferedBoxBody("top", "thickness", "width", "leg_b")}\n\n`
+        : fiT != null
+          ? `fillet = ${fiT[0]};\n\n${filletedBoxBody("top", "thickness", "width", "leg_b")}\n\n`
+          : "";
+    const legB =
+      chT != null
+        ? "    translate([thickness/2, 0, 0]) chamfered_box();"
+        : fiT != null
+          ? "    translate([thickness/2, 0, 0]) filleted_box();"
+          : "    translate([0, -width/2, 0]) cube([thickness, width, leg_b]);";
     const w = [
       "Light-duty/non-structural bracket; review before use.",
-      ...warnings(a),
+      ...warnings(a, { chamfer: chT == null, fillet: fiT == null }),
     ];
     if (cuts.unsupportedAxis)
       w.push("hole/slot with axis 'y' is not implemented for l_bracket");
     return {
       supported: true,
       warnings: w,
-      code: `${header}// Part family: l_bracket\n// Parameters: ${JSON.stringify(a)}\n\nleg_a = ${a.legLengthA}; leg_b = ${a.legLengthB}; width = ${a.width}; thickness = ${a.thickness};\ndifference() {\n  union() {\n    translate([0, -width/2, 0]) cube([leg_a, width, thickness]);\n    translate([0, -width/2, 0]) cube([thickness, width, leg_b]);\n  }\n${cuts.code}\n}\n`,
+      code: `${header}// Part family: l_bracket\n// Parameters: ${JSON.stringify(a)}\n\nleg_a = ${a.legLengthA}; leg_b = ${a.legLengthB}; width = ${a.width}; thickness = ${a.thickness};\n${prelude}difference() {\n  union() {\n    translate([0, -width/2, 0]) cube([leg_a, width, thickness]);\n${legB}\n  }\n${cuts.code}\n}\n`,
     };
   }
   if (p.type === "drawer_divider") {

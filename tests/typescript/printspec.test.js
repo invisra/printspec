@@ -552,6 +552,59 @@ test("cable_clip finishes only its base-plate bottom edge (bottom target)", () =
     );
   }
 });
+test("l_bracket finishes only the standing leg's top edge (top target)", () => {
+  const bracket = (finish) => {
+    const s = read("examples/part-families/l-bracket.basic.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  const ch = generateOpenScad(
+    bracket({ chamfer: { distance: 1.5, target: "top" } }),
+  );
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(ch.code, /chamfer = 1\.5;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(
+    ch.code,
+    /linear_extrude\(leg_b - chamfer\) square\(\[thickness, width\]/,
+  );
+  assert.match(
+    ch.code,
+    /translate\(\[thickness\/2, 0, 0\]\) chamfered_box\(\);/,
+  );
+  // The flat leg remains.
+  assert.match(ch.code, /cube\(\[leg_a, width, thickness\]\)/);
+  // rib is a distinct feature and still warns for the example (rib enabled).
+  assert.match(ch.warnings.join(" "), /rib requested but not implemented/);
+
+  const fi = generateOpenScad(
+    bracket({ fillet: { radius: 2, target: "top" } }),
+  );
+  assert.doesNotMatch(
+    fi.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(fi.code, /module filleted_box\(\)/);
+
+  // Whole-part and bottom share the corner / mount face, so they warn and leg B
+  // stays a plain cube.
+  for (const unbuilt of [
+    { distance: 1.5 },
+    { distance: 1.5, target: "bottom" },
+  ]) {
+    const w = generateOpenScad(bracket({ chamfer: unbuilt }));
+    assert.match(w.warnings.join(" "), /chamfer requested but not implemented/);
+    assert.doesNotMatch(w.code, /module chamfered_box\(\)/);
+    assert.match(
+      w.code,
+      /translate\(\[0, -width\/2, 0\]\) cube\(\[thickness, width, leg_b\]\);/,
+    );
+  }
+});
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
   assert.deepEqual(validatePrintSpec(s), { valid: true, errors: [] });

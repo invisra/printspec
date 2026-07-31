@@ -2062,6 +2062,41 @@ def test_openscad_finishes_cable_clip_base_bottom_edge_only():
         )
 
 
+def test_openscad_finishes_l_bracket_standing_leg_top_only():
+    def bracket(**finish):
+        s = read(Path("examples/part-families/l-bracket.basic.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # The standing leg's top face (leg B, at leg_b) is the one clean, closed
+    # perimeter a convex finish can reuse, so only a top target builds; leg B
+    # becomes a top-finished box body shifted to its corner-origin footprint,
+    # and the flat leg / cuts are unchanged. rib stays a separate feature.
+    ch = generate_openscad(bracket(chamfer={"distance": 1.5, "target": "top"}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 1.5;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"]
+    assert "linear_extrude(leg_b - chamfer) square([thickness, width]" in ch["code"]
+    assert "translate([thickness/2, 0, 0]) chamfered_box();" in ch["code"]
+    # The flat leg remains.
+    assert "cube([leg_a, width, thickness])" in ch["code"]
+    # rib is a distinct feature and still warns for the example (rib enabled).
+    assert "rib requested but not implemented" in ch["warnings"]
+
+    fi = generate_openscad(bracket(fillet={"radius": 2, "target": "top"}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+
+    # Whole-part (no target) and bottom share the corner / mount face, so they
+    # warn and leg B stays a plain cube.
+    for unbuilt in ({"distance": 1.5}, {"distance": 1.5, "target": "bottom"}):
+        w = generate_openscad(bracket(chamfer=unbuilt))
+        assert "chamfer requested but not implemented" in w["warnings"]
+        assert "module chamfered_box()" not in w["code"]
+        assert "translate([0, -width/2, 0]) cube([thickness, width, leg_b]);" in w["code"]
+
+
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():
     # part.type is a valid composable_part discriminator, but this
     # component's position is missing y/z (both required on Point3D).

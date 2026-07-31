@@ -425,13 +425,37 @@ def generate_openscad(spec):
         cuts, unsupported_axis = _l_bracket_cuts(
             a.get("holes"), a.get("slots"), a["thickness"], a["width"]
         )
-        w = ["Light-duty/non-structural bracket; review before use.", *_warnings(a)]
+        # The two legs meet at a shared corner, so the one clean, closed
+        # perimeter that a convex edge finish can reuse is the standing leg's
+        # top face (leg B's top, at leg_b). Only a `top` target builds it: leg B
+        # becomes a top-finished box body (cross-section thickness x width,
+        # height leg_b), centered then shifted to leg B's corner-origin footprint
+        # with the flat leg and cuts unchanged. This is distinct from the `rib`
+        # gusset feature. Whole-part and `bottom` requests still warn (the flat
+        # leg's bottom is the mount face and shares the corner region).
+        ch = _chamfer(a)
+        fi = _fillet(a) if ch is None else None
+        ch_t = ch if ch is not None and ch[1] == "top" else None
+        fi_t = fi if fi is not None and fi[1] == "top" else None
+        if ch_t is not None:
+            prelude = f"chamfer = {ch_t[0]};\n\n{_chamfered_box_body('top', length='thickness', h='leg_b')}\n\n"
+            leg_b_solid = "    translate([thickness/2, 0, 0]) chamfered_box();"
+        elif fi_t is not None:
+            prelude = f"fillet = {fi_t[0]};\n\n{_filleted_box_body('top', length='thickness', h='leg_b')}\n\n"
+            leg_b_solid = "    translate([thickness/2, 0, 0]) filleted_box();"
+        else:
+            prelude = ""
+            leg_b_solid = "    translate([0, -width/2, 0]) cube([thickness, width, leg_b]);"
+        w = [
+            "Light-duty/non-structural bracket; review before use.",
+            *_warnings(a, chamfer=ch_t is None, fillet=fi_t is None),
+        ]
         if unsupported_axis:
             w.append("hole/slot with axis 'y' is not implemented for l_bracket")
         return {
             "supported": True,
             "warnings": w,
-            "code": f"{HEADER}// Part family: l_bracket\n// Parameters: {json.dumps(a)}\n\nleg_a = {a['legLengthA']}; leg_b = {a['legLengthB']}; width = {a['width']}; thickness = {a['thickness']};\ndifference() {{\n  union() {{\n    translate([0, -width/2, 0]) cube([leg_a, width, thickness]);\n    translate([0, -width/2, 0]) cube([thickness, width, leg_b]);\n  }}\n{cuts}\n}}\n",
+            "code": f"{HEADER}// Part family: l_bracket\n// Parameters: {json.dumps(a)}\n\nleg_a = {a['legLengthA']}; leg_b = {a['legLengthB']}; width = {a['width']}; thickness = {a['thickness']};\n{prelude}difference() {{\n  union() {{\n    translate([0, -width/2, 0]) cube([leg_a, width, thickness]);\n{leg_b_solid}\n  }}\n{cuts}\n}}\n",
         }
     if p["type"] == "drawer_divider":
         notch_count = _or(a.get("notchCount"), 0)
