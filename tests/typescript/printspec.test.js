@@ -610,6 +610,87 @@ test("l_bracket finishes only the standing leg's top edge (top target)", () => {
     );
   }
 });
+test("brepjs builds chamfer/fillet for round_spacer and electronics_standoff", () => {
+  const rs = (extra) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: {
+      type: "round_spacer",
+      label: "x",
+      parameters: { outerDiameter: 10, height: 8, ...extra },
+    },
+  });
+  // round_spacer: finish the outer rim(s) before the inner bore is cut, so the
+  // bore rim stays sharp. Uses the real-kernel face-finder edge technique.
+  const rsCh = generateBrepJs(rs({ chamfer: { distance: 0.8 } }));
+  assert.doesNotMatch(
+    rsCh.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(rsCh.code, /faceFinder, edgesOfFace, unwrap/);
+  assert.match(rsCh.code, /\.chamfer\(edgesOfFace\(/);
+  assert.match(rsCh.code, /atDistance\(0, \[0, 0, height\]\)/);
+  assert.match(rsCh.code, /atDistance\(0, \[0, 0, 0\]\)/);
+  // top-only omits the bottom-face finish.
+  const rsTop = generateBrepJs(
+    rs({ chamfer: { distance: 0.8, target: "top" } }),
+  );
+  assert.match(rsTop.code, /atDistance\(0, \[0, 0, height\]\)/);
+  assert.doesNotMatch(rsTop.code, /atDistance\(0, \[0, 0, 0\]\)/);
+  // fillet uses .fillet; an unrecognized target still warns and is not built.
+  assert.match(
+    generateBrepJs(rs({ fillet: { radius: 1 } })).code,
+    /\.fillet\(edgesOfFace\(/,
+  );
+  assert.match(
+    generateBrepJs(
+      rs({ chamfer: { distance: 0.8, target: "side" } }),
+    ).warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  // A plain spacer keeps the minimal import (no finishing symbols).
+  assert.doesNotMatch(generateBrepJs(rs({})).code, /faceFinder/);
+
+  const so = (extra) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: {
+      type: "electronics_standoff",
+      label: "x",
+      parameters: { outerDiameter: 6, height: 10, holeDiameter: 3, ...extra },
+    },
+  });
+  // Based standoff: top → shaft top rim, bottom → base bottom rim.
+  const soTop = generateBrepJs(
+    so({
+      baseDiameter: 10,
+      baseHeight: 2,
+      chamfer: { distance: 0.5, target: "top" },
+    }),
+  );
+  assert.doesNotMatch(
+    soTop.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(soTop.code, /atDistance\(0, \[0, 0, baseHeight \+ height\]\)/);
+  assert.doesNotMatch(soTop.code, /atDistance\(0, \[0, 0, 0\]\)/);
+  const soBottom = generateBrepJs(
+    so({
+      baseDiameter: 10,
+      baseHeight: 2,
+      chamfer: { distance: 0.5, target: "bottom" },
+    }),
+  );
+  assert.match(soBottom.code, /atDistance\(0, \[0, 0, 0\]\)/);
+  assert.doesNotMatch(soBottom.code, /baseHeight \+ height\]/);
+  // Base-less standoff finishes its own top/bottom rims.
+  const soBaseless = generateBrepJs(so({ fillet: { radius: 0.5 } }));
+  assert.doesNotMatch(
+    soBaseless.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(soBaseless.code, /atDistance\(0, \[0, 0, height\]\)/);
+});
 test("l_bracket builds the rib gusset when enabled", () => {
   const bracket = (params) => {
     const s = read("examples/part-families/l-bracket.basic.json");
@@ -4452,6 +4533,12 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
     "drawer_divider",
     "cable_comb",
   ]);
+  // The BRepJS generator builds a whole-part chamfer for these families (real
+  // OCCT kernel), so it no longer warns for a (targetless) chamfer on them.
+  const brepjsChamferFamilies = new Set([
+    "round_spacer",
+    "electronics_standoff",
+  ]);
   for (const [file, schemaFile] of families) {
     const props = read("schemas/" + schemaFile).properties.parameters
       .properties;
@@ -4473,7 +4560,9 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
     ]) {
       const w = generate(s).warnings.join(" ");
       const chamferBuilt =
-        generate === generateOpenScad && openscadChamferFamilies.has(partType);
+        (generate === generateOpenScad &&
+          openscadChamferFamilies.has(partType)) ||
+        (generate === generateBrepJs && brepjsChamferFamilies.has(partType));
       if (expectChamferWarning && !chamferBuilt)
         assert.match(
           w,
