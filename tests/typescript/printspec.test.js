@@ -610,6 +610,96 @@ test("l_bracket finishes only the standing leg's top edge (top target)", () => {
     );
   }
 });
+test("brepjs finishes the bespoke families on their one clean edge only", () => {
+  const spec = (type, params) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: { type, label: "x", parameters: params },
+  });
+  const cases = [
+    {
+      type: "cable_clip",
+      base: {
+        baseLength: 30,
+        baseWidth: 14,
+        baseThickness: 3,
+        clipInnerDiameter: 8,
+        clipWallThickness: 2,
+      },
+      allowed: "bottom",
+      other: "top",
+      point: "[0, 0, 0]",
+    },
+    {
+      type: "wall_mount_bracket",
+      base: {
+        width: 40,
+        height: 60,
+        thickness: 4,
+        tabDepth: 20,
+        screwHoleDiameter: 4,
+        screwHoleSpacing: 36,
+      },
+      allowed: "top",
+      other: "bottom",
+      point: "[0, 0, height]",
+    },
+    {
+      type: "l_bracket",
+      base: { legLengthA: 40, legLengthB: 30, width: 20, thickness: 4 },
+      allowed: "top",
+      other: "bottom",
+      point: "[thickness / 2, 0, legLengthB]",
+    },
+    {
+      type: "project_enclosure_tray",
+      base: {
+        outerWidth: 80,
+        outerDepth: 50,
+        wallHeight: 15,
+        wallThickness: 3,
+        floorThickness: 3,
+      },
+      allowed: "bottom",
+      other: "top",
+      point: "[0, 0, 0]",
+    },
+  ];
+  for (const c of cases) {
+    // The allowed target builds (no warning) and finishes the named face.
+    const built = generateBrepJs(
+      spec(c.type, {
+        ...c.base,
+        chamfer: { distance: 0.8, target: c.allowed },
+      }),
+    );
+    assert.doesNotMatch(
+      built.warnings.join(" "),
+      /chamfer requested but not implemented/,
+      `${c.type} ${c.allowed}`,
+    );
+    assert.ok(
+      built.code.includes(
+        `.chamfer(edgesOfFace(unwrap(faceFinder().atDistance(0, ${c.point})`,
+      ),
+      `${c.type} finishes ${c.point}`,
+    );
+    // The other target, and a whole-part (targetless) request, still warn.
+    for (const bad of [{ distance: 0.8, target: c.other }, { distance: 0.8 }]) {
+      const w = generateBrepJs(spec(c.type, { ...c.base, chamfer: bad }));
+      assert.match(
+        w.warnings.join(" "),
+        /chamfer requested but not implemented/,
+        `${c.type} ${JSON.stringify(bad)}`,
+      );
+      assert.doesNotMatch(
+        w.code,
+        /faceFinder/,
+        `${c.type} unbuilt has no finish`,
+      );
+    }
+  }
+});
 test("brepjs builds chamfer/fillet for the box families before their cuts", () => {
   const spec = (type, params) => ({
     printspecVersion: "0.2.0",

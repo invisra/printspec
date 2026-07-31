@@ -138,6 +138,31 @@ function brepjsTopBottomFinish(
   };
 }
 
+// A finish restricted to a single face (the one clean, closed perimeter a
+// bespoke family exposes): builds only when the request targets `allowed`
+// ("top" or "bottom"); a whole-part or other-target request is not built and
+// still warns. `pointExpr` is the center of that face on the fused part.
+function brepjsSingleEdgeFinish(
+  a: any,
+  allowed: "top" | "bottom",
+  pointExpr: string,
+) {
+  const ch = bChamfer(a);
+  const fi = ch == null ? bFillet(a) : null;
+  const chB = ch != null && ch[1] === allowed ? ch : null;
+  const fiB = fi != null && fi[1] === allowed ? fi : null;
+  const fin = chB ?? fiB;
+  const kind: "chamfer" | "fillet" = chB != null ? "chamfer" : "fillet";
+  const finish =
+    fin != null ? brepjsFinishFace("part", pointExpr, kind, fin[0]) : "";
+  return {
+    finish,
+    built: fin != null,
+    chamferNull: chB == null,
+    filletNull: fiB == null,
+  };
+}
+
 // l_bracket has two legs on different axes (leg A flat, thin along Z; leg B
 // standing up, thin along X), so unlike the single-axis families above, its
 // holes/slots must be cut along whichever axis the Hole/Slot specifies.
@@ -361,29 +386,44 @@ export function generateBrepJsWithValidator(
     const mountHoles = mountingHoles.length
       ? `part = cutZHoles(part, ${holesLiteral(mountingHoles)}, thickness);\n`
       : "";
+    // Only the base plate's bottom edge is a closed perimeter clear of the arch,
+    // so only a `bottom` target builds; done before mount holes split the face.
+    const f = brepjsSingleEdgeFinish(a, "bottom", "[0, 0, 0]");
     return {
       supported: true,
       warnings: [
         "Cable arch is approximated as a rectangular bridge.",
-        ...warnings(a),
+        ...warnings(a, { chamfer: f.chamferNull, fillet: f.filletNull }),
       ],
-      code: `${brepjsHeader()}${mountingHoles.length ? brepjsZHolesHelper() : ""}${brepjsComment("Part family: cable_clip")}${params(a)}const baseLength = ${n(baseLength)};\nconst width = ${n(width)};\nconst thickness = ${n(thickness)};\nconst cableDiameter = ${n(cableDiameter)};\nconst clearance = ${n(clearance)};\n\nconst base = shape(box(baseLength, width, thickness))\n  .translate([-baseLength / 2, -width / 2, 0]).val;\nconst bridge = shape(box(baseLength * 0.65, width, thickness))\n  .translate([-baseLength * 0.325, -width / 2, thickness + cableDiameter / 2]).val;\nlet part = shape(base).fuse(bridge).val;\npart = shape(part)\n  .cut(\n    shape(cylinder((cableDiameter + clearance) / 2, width + 0.2))\n      .rotate(-90, { axis: [1, 0, 0] })\n      .translate([0, -width / 2 - 0.1, thickness + cableDiameter / 2]).val,\n  ).val;\n${mountHoles}\nexport default () => part;\n`,
+      code: `${f.built ? brepjsFinishHeader() : brepjsHeader()}${mountingHoles.length ? brepjsZHolesHelper() : ""}${brepjsComment("Part family: cable_clip")}${params(a)}const baseLength = ${n(baseLength)};\nconst width = ${n(width)};\nconst thickness = ${n(thickness)};\nconst cableDiameter = ${n(cableDiameter)};\nconst clearance = ${n(clearance)};\n\nconst base = shape(box(baseLength, width, thickness))\n  .translate([-baseLength / 2, -width / 2, 0]).val;\nconst bridge = shape(box(baseLength * 0.65, width, thickness))\n  .translate([-baseLength * 0.325, -width / 2, thickness + cableDiameter / 2]).val;\nlet part = shape(base).fuse(bridge).val;\npart = shape(part)\n  .cut(\n    shape(cylinder((cableDiameter + clearance) / 2, width + 0.2))\n      .rotate(-90, { axis: [1, 0, 0] })\n      .translate([0, -width / 2 - 0.1, thickness + cableDiameter / 2]).val,\n  ).val;\n${f.finish}${mountHoles}\nexport default () => part;\n`,
     };
   }
 
   if (p.type === "wall_mount_bracket") {
+    // Only the back plate's top edge is a closed perimeter away from the foot
+    // tab, so only a `top` target builds; done before the screw holes.
+    const wf = brepjsSingleEdgeFinish(a, "top", "[0, 0, height]");
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${brepjsHeader()}${brepjsComment("Part family: wall_mount_bracket")}${params(a)}const width = ${n(a.width)};\nconst height = ${n(a.height)};\nconst thickness = ${n(a.thickness)};\nconst tabDepth = ${n(a.tabDepth)};\nconst screwHoleDiameter = ${n(a.screwHoleDiameter)};\nconst screwHoleSpacing = ${n(a.screwHoleSpacing)};\n\nconst plate = shape(box(width, thickness, height))\n  .translate([-width / 2, -thickness / 2, 0]).val;\nconst tab = shape(box(width, tabDepth, thickness))\n  .translate([-width / 2, 0, 0]).val;\nlet part = shape(plate).fuse(tab).val;\nconst screwHole = (z) =>\n  shape(cylinder(screwHoleDiameter / 2, thickness + 0.2))\n    .rotate(-90, { axis: [1, 0, 0] })\n    .translate([0, -thickness / 2 - 0.1, z]).val;\npart = shape(part)\n  .cutAll([\n    screwHole(height / 2 - screwHoleSpacing / 2),\n    screwHole(height / 2 + screwHoleSpacing / 2),\n  ]).val;\n\nexport default () => part;\n`,
+      warnings: warnings(a, { chamfer: wf.chamferNull, fillet: wf.filletNull }),
+      code: `${wf.built ? brepjsFinishHeader() : brepjsHeader()}${brepjsComment("Part family: wall_mount_bracket")}${params(a)}const width = ${n(a.width)};\nconst height = ${n(a.height)};\nconst thickness = ${n(a.thickness)};\nconst tabDepth = ${n(a.tabDepth)};\nconst screwHoleDiameter = ${n(a.screwHoleDiameter)};\nconst screwHoleSpacing = ${n(a.screwHoleSpacing)};\n\nconst plate = shape(box(width, thickness, height))\n  .translate([-width / 2, -thickness / 2, 0]).val;\nconst tab = shape(box(width, tabDepth, thickness))\n  .translate([-width / 2, 0, 0]).val;\nlet part = shape(plate).fuse(tab).val;\n${wf.finish}const screwHole = (z) =>\n  shape(cylinder(screwHoleDiameter / 2, thickness + 0.2))\n    .rotate(-90, { axis: [1, 0, 0] })\n    .translate([0, -thickness / 2 - 0.1, z]).val;\npart = shape(part)\n  .cutAll([\n    screwHole(height / 2 - screwHoleSpacing / 2),\n    screwHole(height / 2 + screwHoleSpacing / 2),\n  ]).val;\n\nexport default () => part;\n`,
     };
   }
 
   if (p.type === "l_bracket") {
     const cuts = brepjsLBracketCuts(a.holes, a.slots, a.thickness, a.width);
+    // Only the standing leg's top face (leg B, at legLengthB) is a clean closed
+    // perimeter clear of the shared corner, so only a `top` target builds it,
+    // before the hole/slot cuts. (The rib gusset is not yet implemented in
+    // brepjs and still warns.)
+    const f = brepjsSingleEdgeFinish(
+      a,
+      "top",
+      "[thickness / 2, 0, legLengthB]",
+    );
     const w = [
       "Light-duty/non-structural bracket; review before use.",
-      ...warnings(a),
+      ...warnings(a, { chamfer: f.chamferNull, fillet: f.filletNull }),
     ];
     if (cuts.unsupportedAxis)
       w.push("hole/slot with axis 'y' is not implemented for l_bracket");
@@ -393,7 +433,7 @@ export function generateBrepJsWithValidator(
     return {
       supported: true,
       warnings: w,
-      code: `${brepjsHeader()}${brepjsComment("Part family: l_bracket")}${params(a)}const legLengthA = ${n(a.legLengthA)};\nconst legLengthB = ${n(a.legLengthB)};\nconst width = ${n(a.width)};\nconst thickness = ${n(a.thickness)};\n\nconst legA = shape(box(legLengthA, width, thickness))\n  .translate([0, -width / 2, 0]).val;\nconst legB = shape(box(thickness, width, legLengthB))\n  .translate([0, -width / 2, 0]).val;\nlet part = shape(legA).fuse(legB).val;\n${cutAll}\nexport default () => part;\n`,
+      code: `${f.built ? brepjsFinishHeader() : brepjsHeader()}${brepjsComment("Part family: l_bracket")}${params(a)}const legLengthA = ${n(a.legLengthA)};\nconst legLengthB = ${n(a.legLengthB)};\nconst width = ${n(a.width)};\nconst thickness = ${n(a.thickness)};\n\nconst legA = shape(box(legLengthA, width, thickness))\n  .translate([0, -width / 2, 0]).val;\nconst legB = shape(box(thickness, width, legLengthB))\n  .translate([0, -width / 2, 0]).val;\nlet part = shape(legA).fuse(legB).val;\n${f.finish}${cutAll}\nexport default () => part;\n`,
     };
   }
 
@@ -409,10 +449,13 @@ export function generateBrepJsWithValidator(
   }
 
   if (p.type === "project_enclosure_tray") {
+    // Only the floor's outer bottom edge is a closed solid perimeter (the top is
+    // an open wall rim), so only a `bottom` target builds, before mount holes.
+    const f = brepjsSingleEdgeFinish(a, "bottom", "[0, 0, 0]");
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${brepjsHeader()}${brepjsZHolesHelper()}${brepjsComment("Part family: project_enclosure_tray")}${params(a)}const outerWidth = ${n(a.outerWidth)};\nconst outerDepth = ${n(a.outerDepth)};\nconst wallHeight = ${n(a.wallHeight)};\nconst wallThickness = ${n(a.wallThickness)};\nconst floorThickness = ${n(a.floorThickness)};\nconst mountHoleDiameter = ${n(a.mountHoleDiameter ?? 3)};\nconst mountHoleInset = ${n(a.mountHoleInset ?? 8)};\n\nconst floor = shape(box(outerWidth, outerDepth, floorThickness))\n  .translate([-outerWidth / 2, -outerDepth / 2, 0]).val;\nconst wall = (w, d, x, y) =>\n  shape(box(w, d, wallHeight))\n    .translate([x, y, floorThickness]).val;\nconst front = wall(outerWidth, wallThickness, -outerWidth / 2, -outerDepth / 2);\nconst back = wall(outerWidth, wallThickness, -outerWidth / 2, outerDepth / 2 - wallThickness);\nconst left = wall(wallThickness, outerDepth, -outerWidth / 2, -outerDepth / 2);\nconst right = wall(wallThickness, outerDepth, outerWidth / 2 - wallThickness, -outerDepth / 2);\nlet part = shape(floor).fuse(front).fuse(back).fuse(left).fuse(right).val;\nconst mountHoles = [\n  { x: -outerWidth / 2 + mountHoleInset, y: -outerDepth / 2 + mountHoleInset, diameter: mountHoleDiameter },\n  { x: -outerWidth / 2 + mountHoleInset, y: outerDepth / 2 - mountHoleInset, diameter: mountHoleDiameter },\n  { x: outerWidth / 2 - mountHoleInset, y: -outerDepth / 2 + mountHoleInset, diameter: mountHoleDiameter },\n  { x: outerWidth / 2 - mountHoleInset, y: outerDepth / 2 - mountHoleInset, diameter: mountHoleDiameter },\n];\npart = cutZHoles(part, mountHoles, floorThickness);\n\nexport default () => part;\n`,
+      warnings: warnings(a, { chamfer: f.chamferNull, fillet: f.filletNull }),
+      code: `${f.built ? brepjsFinishHeader() : brepjsHeader()}${brepjsZHolesHelper()}${brepjsComment("Part family: project_enclosure_tray")}${params(a)}const outerWidth = ${n(a.outerWidth)};\nconst outerDepth = ${n(a.outerDepth)};\nconst wallHeight = ${n(a.wallHeight)};\nconst wallThickness = ${n(a.wallThickness)};\nconst floorThickness = ${n(a.floorThickness)};\nconst mountHoleDiameter = ${n(a.mountHoleDiameter ?? 3)};\nconst mountHoleInset = ${n(a.mountHoleInset ?? 8)};\n\nconst floor = shape(box(outerWidth, outerDepth, floorThickness))\n  .translate([-outerWidth / 2, -outerDepth / 2, 0]).val;\nconst wall = (w, d, x, y) =>\n  shape(box(w, d, wallHeight))\n    .translate([x, y, floorThickness]).val;\nconst front = wall(outerWidth, wallThickness, -outerWidth / 2, -outerDepth / 2);\nconst back = wall(outerWidth, wallThickness, -outerWidth / 2, outerDepth / 2 - wallThickness);\nconst left = wall(wallThickness, outerDepth, -outerWidth / 2, -outerDepth / 2);\nconst right = wall(wallThickness, outerDepth, outerWidth / 2 - wallThickness, -outerDepth / 2);\nlet part = shape(floor).fuse(front).fuse(back).fuse(left).fuse(right).val;\n${f.finish}const mountHoles = [\n  { x: -outerWidth / 2 + mountHoleInset, y: -outerDepth / 2 + mountHoleInset, diameter: mountHoleDiameter },\n  { x: -outerWidth / 2 + mountHoleInset, y: outerDepth / 2 - mountHoleInset, diameter: mountHoleDiameter },\n  { x: outerWidth / 2 - mountHoleInset, y: -outerDepth / 2 + mountHoleInset, diameter: mountHoleDiameter },\n  { x: outerWidth / 2 - mountHoleInset, y: outerDepth / 2 - mountHoleInset, diameter: mountHoleDiameter },\n];\npart = cutZHoles(part, mountHoles, floorThickness);\n\nexport default () => part;\n`,
     };
   }
 
