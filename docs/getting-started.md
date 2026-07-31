@@ -34,6 +34,7 @@ Programmatic Python validation:
 
 ```python
 from printspec import validate_printspec
+
 result = validate_printspec(spec)
 ```
 

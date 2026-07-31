@@ -9,7 +9,7 @@ validatePrintSpec(spec, { semantic: true }) // { valid: boolean, errors: string[
 ```
 
 ```py
-validate_printspec(spec, semantic=True) # {"valid": bool, "errors": list[str]}
+validate_printspec(spec, semantic=True)  # {"valid": bool, "errors": list[str]}
 ```
 
 Validation runs in two layers:
