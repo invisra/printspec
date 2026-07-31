@@ -429,7 +429,7 @@ test("project_enclosure_tray finishes only its floor bottom edge (bottom target)
   assert.match(ch.code, /chamfer = 1;/);
   assert.match(ch.code, /module chamfered_box\(\)/);
   assert.match(ch.code, /linear_extrude\(floor_thickness - chamfer\)/);
-  assert.match(ch.code, /    chamfered_box\(\);/);
+  assert.match(ch.code, / {4}chamfered_box\(\);/);
   // Walls and mount holes remain.
   assert.match(ch.code, /cube\(\[outer_width, wall_thickness, wall_height\]\)/);
   assert.match(ch.code, /d = mount_hole_diameter/);
@@ -476,7 +476,7 @@ test("wall_mount_bracket finishes only its back-plate top edge (top target)", ()
     ch.code,
     /linear_extrude\(height - chamfer\) square\(\[width, thickness\]/,
   );
-  assert.match(ch.code, /    chamfered_box\(\);/);
+  assert.match(ch.code, / {4}chamfered_box\(\);/);
   // Tab and screw holes remain.
   assert.match(ch.code, /cube\(\[width, tab_depth, thickness\]\)/);
   assert.match(ch.code, /d = screw_hole_diameter/);
@@ -522,7 +522,7 @@ test("cable_clip finishes only its base-plate bottom edge (bottom target)", () =
     ch.code,
     /linear_extrude\(thickness - chamfer\) square\(\[base_length, width\]/,
   );
-  assert.match(ch.code, /    chamfered_box\(\);/);
+  assert.match(ch.code, / {4}chamfered_box\(\);/);
   // The cable arch bridge and channel remain.
   assert.match(ch.code, /cube\(\[base_length\*0\.65, width, thickness\]\)/);
   assert.match(ch.code, /d = cable_diameter \+ 0\.5/);
