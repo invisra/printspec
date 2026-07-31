@@ -610,6 +610,82 @@ test("l_bracket finishes only the standing leg's top edge (top target)", () => {
     );
   }
 });
+test("brepjs builds chamfer/fillet for the box families before their cuts", () => {
+  const spec = (type, params) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: { type, label: "x", parameters: params },
+  });
+  // spacer_block: top/bottom face finish, both faces for a targetless request.
+  const sb = generateBrepJs(
+    spec("spacer_block", {
+      length: 20,
+      width: 16,
+      height: 10,
+      chamfer: { distance: 1 },
+    }),
+  );
+  assert.doesNotMatch(
+    sb.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(sb.code, /faceFinder, edgesOfFace, unwrap/);
+  assert.match(sb.code, /\.chamfer\(edgesOfFace\(.*\[0, 0, height\]/);
+  assert.match(sb.code, /\.chamfer\(edgesOfFace\(.*\[0, 0, 0\]/);
+
+  // rounded_rectangular_plate: finish stacks after the cornerRadius vertical
+  // fillet (fillet call appears before the top/bottom finish call).
+  const pl = generateBrepJs(
+    spec("rounded_rectangular_plate", {
+      length: 40,
+      width: 30,
+      thickness: 4,
+      cornerRadius: 5,
+      fillet: { radius: 1, target: "top" },
+    }),
+  );
+  assert.doesNotMatch(
+    pl.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.ok(
+    pl.code.indexOf("inDirection('Z')") < pl.code.indexOf("[0, 0, thickness]"),
+    "cornerRadius fillet must precede the top-face finish",
+  );
+
+  // drawer_divider finishes before notches are cut; cable_comb before slots.
+  const dd = generateBrepJs(
+    spec("drawer_divider", {
+      length: 120,
+      height: 40,
+      thickness: 3,
+      notchCount: 2,
+      notchWidth: 3,
+      notchDepth: 10,
+      chamfer: { distance: 0.8 },
+    }),
+  );
+  assert.ok(
+    dd.code.indexOf("[0, 0, height]") < dd.code.indexOf("const notches"),
+    "divider finish must precede notch cuts",
+  );
+  const cc = generateBrepJs(
+    spec("cable_comb", {
+      length: 70,
+      width: 18,
+      thickness: 4,
+      slotCount: 5,
+      slotWidth: 5,
+      slotSpacing: 12,
+      slotDepth: 12,
+      fillet: { radius: 1 },
+    }),
+  );
+  assert.ok(
+    cc.code.indexOf(".fillet(edgesOfFace") < cc.code.indexOf(".cutAll("),
+    "comb finish must precede slot cuts",
+  );
+});
 test("brepjs builds chamfer/fillet for round_spacer and electronics_standoff", () => {
   const rs = (extra) => ({
     printspecVersion: "0.2.0",
@@ -4538,6 +4614,10 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
   const brepjsChamferFamilies = new Set([
     "round_spacer",
     "electronics_standoff",
+    "spacer_block",
+    "rounded_rectangular_plate",
+    "drawer_divider",
+    "cable_comb",
   ]);
   for (const [file, schemaFile] of families) {
     const props = read("schemas/" + schemaFile).properties.parameters

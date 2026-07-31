@@ -110,6 +110,34 @@ function brepjsFinishFace(
   return `${varName} = shape(${varName}).${kind}(edgesOfFace(unwrap(faceFinder().atDistance(0, ${pointExpr}).findUnique(${varName}))), ${n(amount)}).val;\n`;
 }
 
+// A whole-part / top / bottom finish for a Z-extruded part whose top face is at
+// `topPt` and bottom at `bottomPt`. Returns the finishing statement(s) and the
+// warning flags (chamfer/fillet not built when null). Must be emitted before any
+// top/bottom face is broken up by cuts (notches, slots, holes through a face).
+function brepjsTopBottomFinish(
+  a: any,
+  topPt: string,
+  bottomPt: string = "[0, 0, 0]",
+) {
+  const ch = bChamfer(a);
+  const fi = ch == null ? bFillet(a) : null;
+  const fin = ch ?? fi;
+  const kind: "chamfer" | "fillet" = ch != null ? "chamfer" : "fillet";
+  let finish = "";
+  if (fin != null) {
+    if (fin[1] === "both" || fin[1] === "top")
+      finish += brepjsFinishFace("part", topPt, kind, fin[0]);
+    if (fin[1] === "both" || fin[1] === "bottom")
+      finish += brepjsFinishFace("part", bottomPt, kind, fin[0]);
+  }
+  return {
+    finish,
+    built: fin != null,
+    chamferNull: ch == null,
+    filletNull: fi == null,
+  };
+}
+
 // l_bracket has two legs on different axes (leg A flat, thin along Z; leg B
 // standing up, thin along X), so unlike the single-axis families above, its
 // holes/slots must be cut along whichever axis the Hole/Slot specifies.
@@ -204,10 +232,18 @@ export function generateBrepJsWithValidator(
     const cutHoles = holes.length
       ? `part = cutZHoles(part, ${holesLiteral(holes)}, thickness);\n`
       : "";
+    // Finish the top/bottom perimeter after the cornerRadius vertical fillet (so
+    // the finish rounds/bevels the already-rounded top edge) and before holes.
+    // Real-kernel-verified to stack cleanly on the vertical fillet.
+    const f = brepjsTopBottomFinish(a, "[0, 0, thickness]");
     return {
       supported: true,
-      warnings: warnings(a, { cornerRadius: false }),
-      code: `${brepjsHeader()}${holes.length ? brepjsZHolesHelper() : ""}const length = ${n(a.length)};\nconst width = ${n(a.width)};\nconst thickness = ${n(a.thickness)};\nconst cornerRadius = ${n(a.cornerRadius)};\n\nlet part = shape(box(length, width, thickness))\n  .translate([-length / 2, -width / 2, 0]).val;\nif (cornerRadius > 0) part = shape(part).fillet((e) => e.inDirection('Z'), cornerRadius).val;\n${cutHoles}\nexport default () => part;\n`,
+      warnings: warnings(a, {
+        cornerRadius: false,
+        chamfer: f.chamferNull,
+        fillet: f.filletNull,
+      }),
+      code: `${f.built ? brepjsFinishHeader() : brepjsHeader()}${holes.length ? brepjsZHolesHelper() : ""}const length = ${n(a.length)};\nconst width = ${n(a.width)};\nconst thickness = ${n(a.thickness)};\nconst cornerRadius = ${n(a.cornerRadius)};\n\nlet part = shape(box(length, width, thickness))\n  .translate([-length / 2, -width / 2, 0]).val;\nif (cornerRadius > 0) part = shape(part).fillet((e) => e.inDirection('Z'), cornerRadius).val;\n${f.finish}${cutHoles}\nexport default () => part;\n`,
     };
   }
 
@@ -216,10 +252,13 @@ export function generateBrepJsWithValidator(
     const cutHoles = holes.length
       ? `part = cutZHoles(part, ${holesLiteral(holes)}, height);\n`
       : "";
+    // Finish the top/bottom perimeter before boring any Z holes (a hole through
+    // a face would otherwise split it and break the face lookup).
+    const f = brepjsTopBottomFinish(a, "[0, 0, height]");
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${brepjsHeader()}${holes.length ? brepjsZHolesHelper() : ""}const length = ${n(a.length)};\nconst width = ${n(a.width)};\nconst height = ${n(a.height)};\n\nlet part = shape(box(length, width, height))\n  .translate([-length / 2, -width / 2, 0]).val;\n${cutHoles}\nexport default () => part;\n`,
+      warnings: warnings(a, { chamfer: f.chamferNull, fillet: f.filletNull }),
+      code: `${f.built ? brepjsFinishHeader() : brepjsHeader()}${holes.length ? brepjsZHolesHelper() : ""}const length = ${n(a.length)};\nconst width = ${n(a.width)};\nconst height = ${n(a.height)};\n\nlet part = shape(box(length, width, height))\n  .translate([-length / 2, -width / 2, 0]).val;\n${f.finish}${cutHoles}\nexport default () => part;\n`,
     };
   }
 
@@ -302,10 +341,13 @@ export function generateBrepJsWithValidator(
       const sp = Number(a.mountHoleSpacing ?? 40);
       mountHoles = `part = cutZHoles(\n  part,\n  [\n    { x: ${n(-sp / 2)}, y: 0, diameter: ${n(hd)} },\n    { x: ${n(sp / 2)}, y: 0, diameter: ${n(hd)} },\n  ],\n  ${n(th)},\n);\n`;
     }
+    // Finish the flat-plate top/bottom perimeter before the slots are cut into
+    // one edge (which would otherwise split that face).
+    const f = brepjsTopBottomFinish(a, `[0, 0, ${n(th)}]`);
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${brepjsHeader()}${hd > 0 ? brepjsZHolesHelper() : ""}${brepjsComment("Part family: cable_comb")}${params(a)}let part = shape(box(${n(len)}, ${n(wid)}, ${n(th)}))\n  .translate([${n(-len / 2)}, ${n(-wid / 2)}, 0]).val;\npart = shape(part).cutAll([\n  ${slots.join(",\n  ")},\n]).val;\n${mountHoles}\nexport default () => part;\n`,
+      warnings: warnings(a, { chamfer: f.chamferNull, fillet: f.filletNull }),
+      code: `${f.built ? brepjsFinishHeader() : brepjsHeader()}${hd > 0 ? brepjsZHolesHelper() : ""}${brepjsComment("Part family: cable_comb")}${params(a)}let part = shape(box(${n(len)}, ${n(wid)}, ${n(th)}))\n  .translate([${n(-len / 2)}, ${n(-wid / 2)}, 0]).val;\n${f.finish}part = shape(part).cutAll([\n  ${slots.join(",\n  ")},\n]).val;\n${mountHoles}\nexport default () => part;\n`,
     };
   }
 
@@ -356,10 +398,13 @@ export function generateBrepJsWithValidator(
   }
 
   if (p.type === "drawer_divider") {
+    // Finish the thin box's top/bottom perimeter before the notches are cut
+    // from the top edge (which would otherwise split the top face).
+    const f = brepjsTopBottomFinish(a, "[0, 0, height]");
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${brepjsHeader()}${brepjsComment("Part family: drawer_divider")}${params(a)}const length = ${n(a.length)};\nconst height = ${n(a.height)};\nconst thickness = ${n(a.thickness)};\nconst notchCount = ${n(a.notchCount ?? 0)};\nconst notchWidth = ${n(a.notchWidth)};\nconst notchDepth = ${n(a.notchDepth)};\n\nlet part = shape(box(length, thickness, height))\n  .translate([-length / 2, -thickness / 2, 0]).val;\nconst notches = [];\nfor (let i = 1; i <= notchCount; i++) {\n  const x = -length / 2 + (i * length) / (notchCount + 1);\n  notches.push(\n    shape(box(notchWidth, thickness + 0.2, notchDepth + 0.1))\n      .translate([x - notchWidth / 2, -thickness / 2 - 0.1, height - notchDepth]).val,\n  );\n}\nif (notches.length) part = shape(part).cutAll(notches).val;\n\nexport default () => part;\n`,
+      warnings: warnings(a, { chamfer: f.chamferNull, fillet: f.filletNull }),
+      code: `${f.built ? brepjsFinishHeader() : brepjsHeader()}${brepjsComment("Part family: drawer_divider")}${params(a)}const length = ${n(a.length)};\nconst height = ${n(a.height)};\nconst thickness = ${n(a.thickness)};\nconst notchCount = ${n(a.notchCount ?? 0)};\nconst notchWidth = ${n(a.notchWidth)};\nconst notchDepth = ${n(a.notchDepth)};\n\nlet part = shape(box(length, thickness, height))\n  .translate([-length / 2, -thickness / 2, 0]).val;\n${f.finish}const notches = [];\nfor (let i = 1; i <= notchCount; i++) {\n  const x = -length / 2 + (i * length) / (notchCount + 1);\n  notches.push(\n    shape(box(notchWidth, thickness + 0.2, notchDepth + 0.1))\n      .translate([x - notchWidth / 2, -thickness / 2 - 0.1, height - notchDepth]).val,\n  );\n}\nif (notches.length) part = shape(part).cutAll(notches).val;\n\nexport default () => part;\n`,
     };
   }
 
