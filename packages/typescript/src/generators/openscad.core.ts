@@ -25,14 +25,20 @@ function invalid(validatePrintSpec: ValidatePrintSpec, spec: PrintSpec) {
 // and chamfer/fillet: false for a family/case that actually builds them.
 function warnings(
   a: any,
-  opts: { cornerRadius?: boolean; chamfer?: boolean; fillet?: boolean } = {},
+  opts: {
+    cornerRadius?: boolean;
+    chamfer?: boolean;
+    fillet?: boolean;
+    rib?: boolean;
+  } = {},
 ) {
   const w: string[] = [];
   if (opts.chamfer !== false && a.chamfer != null)
     w.push("chamfer requested but not implemented");
   if (opts.fillet !== false && a.fillet != null)
     w.push("fillet requested but not implemented");
-  if (a.rib?.enabled) w.push("rib requested but not implemented");
+  if (opts.rib !== false && a.rib?.enabled)
+    w.push("rib requested but not implemented");
   if (opts.cornerRadius !== false && a.cornerRadius != null)
     w.push("cornerRadius requested but not implemented");
   return w;
@@ -444,16 +450,34 @@ export function generateOpenScadWithValidator(
         : fiT != null
           ? "    translate([thickness/2, 0, 0]) filleted_box();"
           : "    translate([0, -width/2, 0]) cube([thickness, width, leg_b]);";
+    // The optional `rib` is a reinforcing gusset along the bracket's inner
+    // corner: a right-triangular prism (legs = min(leg_a, leg_b) - thickness,
+    // emitted symbolically so OpenSCAD evaluates min() at render time) sitting
+    // in the concave corner at (thickness, thickness), rib_thickness wide and
+    // centered across the width. rib_thickness defaults to the bracket
+    // thickness when omitted.
+    const ribOn = Boolean(a.rib?.enabled);
+    const ribThickness = a.rib?.thickness ?? a.thickness;
+    const ribVars = ribOn
+      ? ` rib_thickness = ${ribThickness}; rib_size = min(leg_a, leg_b) - thickness;`
+      : "";
+    const ribSolid = ribOn
+      ? "\n    translate([thickness, rib_thickness/2, thickness]) rotate([90, 0, 0]) linear_extrude(rib_thickness) polygon([[0, 0], [rib_size, 0], [0, rib_size]]);"
+      : "";
     const w = [
       "Light-duty/non-structural bracket; review before use.",
-      ...warnings(a, { chamfer: chT == null, fillet: fiT == null }),
+      ...warnings(a, {
+        chamfer: chT == null,
+        fillet: fiT == null,
+        rib: !ribOn,
+      }),
     ];
     if (cuts.unsupportedAxis)
       w.push("hole/slot with axis 'y' is not implemented for l_bracket");
     return {
       supported: true,
       warnings: w,
-      code: `${header}// Part family: l_bracket\n// Parameters: ${JSON.stringify(a)}\n\nleg_a = ${a.legLengthA}; leg_b = ${a.legLengthB}; width = ${a.width}; thickness = ${a.thickness};\n${prelude}difference() {\n  union() {\n    translate([0, -width/2, 0]) cube([leg_a, width, thickness]);\n${legB}\n  }\n${cuts.code}\n}\n`,
+      code: `${header}// Part family: l_bracket\n// Parameters: ${JSON.stringify(a)}\n\nleg_a = ${a.legLengthA}; leg_b = ${a.legLengthB}; width = ${a.width}; thickness = ${a.thickness};${ribVars}\n${prelude}difference() {\n  union() {\n    translate([0, -width/2, 0]) cube([leg_a, width, thickness]);\n${legB}${ribSolid}\n  }\n${cuts.code}\n}\n`,
     };
   }
   if (p.type === "drawer_divider") {

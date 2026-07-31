@@ -2081,8 +2081,10 @@ def test_openscad_finishes_l_bracket_standing_leg_top_only():
     assert "translate([thickness/2, 0, 0]) chamfered_box();" in ch["code"]
     # The flat leg remains.
     assert "cube([leg_a, width, thickness])" in ch["code"]
-    # rib is a distinct feature and still warns for the example (rib enabled).
-    assert "rib requested but not implemented" in ch["warnings"]
+    # rib is a distinct feature; the example enables it, so it is built (not
+    # warned) and coexists with the top finish.
+    assert "rib requested but not implemented" not in ch["warnings"]
+    assert "rib_size = min(leg_a, leg_b) - thickness;" in ch["code"]
 
     fi = generate_openscad(bracket(fillet={"radius": 2, "target": "top"}))
     assert "fillet requested but not implemented" not in fi["warnings"]
@@ -2095,6 +2097,42 @@ def test_openscad_finishes_l_bracket_standing_leg_top_only():
         assert "chamfer requested but not implemented" in w["warnings"]
         assert "module chamfered_box()" not in w["code"]
         assert "translate([0, -width/2, 0]) cube([thickness, width, leg_b]);" in w["code"]
+
+
+def test_openscad_builds_l_bracket_rib_gusset():
+    def bracket(**params):
+        s = read(Path("examples/part-families/l-bracket.basic.json"))
+        s["part"]["parameters"] = {
+            "legLengthA": 40,
+            "legLengthB": 30,
+            "width": 20,
+            "thickness": 4,
+            **params,
+        }
+        return s
+
+    # An enabled rib builds a symbolic right-triangular gusset in the inner
+    # corner and no longer warns.
+    r = generate_openscad(bracket(rib={"enabled": True, "thickness": 3}))
+    assert r["supported"]
+    assert "rib requested but not implemented" not in r["warnings"]
+    assert "rib_thickness = 3; rib_size = min(leg_a, leg_b) - thickness;" in r["code"]
+    assert (
+        "translate([thickness, rib_thickness/2, thickness]) rotate([90, 0, 0]) "
+        "linear_extrude(rib_thickness) polygon([[0, 0], [rib_size, 0], [0, rib_size]]);"
+        in r["code"]
+    )
+
+    # rib_thickness defaults to the bracket thickness when omitted.
+    assert "rib_thickness = 4;" in generate_openscad(bracket(rib={"enabled": True}))["code"]
+
+    # A disabled rib neither builds nor warns.
+    off = generate_openscad(bracket(rib={"enabled": False, "thickness": 3}))
+    assert "rib requested but not implemented" not in off["warnings"]
+    assert "rib_size" not in off["code"]
+
+    # No rib key at all: unchanged, no rib geometry.
+    assert "rib_size" not in generate_openscad(bracket())["code"]
 
 
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():

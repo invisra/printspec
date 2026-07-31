@@ -19,21 +19,22 @@ def _num(x):
     return str(int(n)) if n == int(n) else repr(n)
 
 
-def _warnings(a, corner_radius=True, chamfer=True, fillet=True):
+def _warnings(a, corner_radius=True, chamfer=True, fillet=True, rib=True):
     """Several part families' schemas include chamfer/fillet/cornerRadius
     (and, for l_bracket, rib) as optional finishing requests that most
     generators don't implement. Rather than silently drop them, report a
     warning so callers know the request was ignored. Pass corner_radius=False
     for the one family (rounded_rectangular_plate) that actually implements
-    cornerRadius, and chamfer=False / fillet=False for a family/case that
-    actually builds the requested chamfer / fillet.
+    cornerRadius, chamfer=False / fillet=False for a family/case that actually
+    builds the requested chamfer / fillet, and rib=False for l_bracket when it
+    builds the requested rib.
     """
     w = []
     if chamfer and a.get("chamfer") is not None:
         w.append("chamfer requested but not implemented")
     if fillet and a.get("fillet") is not None:
         w.append("fillet requested but not implemented")
-    if (a.get("rib") or {}).get("enabled"):
+    if rib and (a.get("rib") or {}).get("enabled"):
         w.append("rib requested but not implemented")
     if corner_radius and a.get("cornerRadius") is not None:
         w.append("cornerRadius requested but not implemented")
@@ -446,16 +447,33 @@ def generate_openscad(spec):
         else:
             prelude = ""
             leg_b_solid = "    translate([0, -width/2, 0]) cube([thickness, width, leg_b]);"
+        # The optional `rib` is a reinforcing gusset along the bracket's inner
+        # corner: a right-triangular prism (legs = min(leg_a, leg_b) - thickness,
+        # emitted symbolically so OpenSCAD evaluates min() at render time)
+        # sitting in the concave corner at (thickness, thickness), rib_thickness
+        # wide and centered across the width. rib_thickness defaults to the
+        # bracket thickness when omitted.
+        rib = a.get("rib") or {}
+        rib_on = bool(rib.get("enabled"))
+        if rib_on:
+            rib_thickness = _or(rib.get("thickness"), a["thickness"])
+            rib_vars = (
+                f" rib_thickness = {rib_thickness}; rib_size = min(leg_a, leg_b) - thickness;"
+            )
+            rib_solid = "\n    translate([thickness, rib_thickness/2, thickness]) rotate([90, 0, 0]) linear_extrude(rib_thickness) polygon([[0, 0], [rib_size, 0], [0, rib_size]]);"
+        else:
+            rib_vars = ""
+            rib_solid = ""
         w = [
             "Light-duty/non-structural bracket; review before use.",
-            *_warnings(a, chamfer=ch_t is None, fillet=fi_t is None),
+            *_warnings(a, chamfer=ch_t is None, fillet=fi_t is None, rib=not rib_on),
         ]
         if unsupported_axis:
             w.append("hole/slot with axis 'y' is not implemented for l_bracket")
         return {
             "supported": True,
             "warnings": w,
-            "code": f"{HEADER}// Part family: l_bracket\n// Parameters: {json.dumps(a)}\n\nleg_a = {a['legLengthA']}; leg_b = {a['legLengthB']}; width = {a['width']}; thickness = {a['thickness']};\n{prelude}difference() {{\n  union() {{\n    translate([0, -width/2, 0]) cube([leg_a, width, thickness]);\n{leg_b_solid}\n  }}\n{cuts}\n}}\n",
+            "code": f"{HEADER}// Part family: l_bracket\n// Parameters: {json.dumps(a)}\n\nleg_a = {a['legLengthA']}; leg_b = {a['legLengthB']}; width = {a['width']}; thickness = {a['thickness']};{rib_vars}\n{prelude}difference() {{\n  union() {{\n    translate([0, -width/2, 0]) cube([leg_a, width, thickness]);\n{leg_b_solid}{rib_solid}\n  }}\n{cuts}\n}}\n",
         }
     if p["type"] == "drawer_divider":
         notch_count = _or(a.get("notchCount"), 0)

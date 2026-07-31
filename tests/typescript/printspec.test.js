@@ -578,8 +578,13 @@ test("l_bracket finishes only the standing leg's top edge (top target)", () => {
   );
   // The flat leg remains.
   assert.match(ch.code, /cube\(\[leg_a, width, thickness\]\)/);
-  // rib is a distinct feature and still warns for the example (rib enabled).
-  assert.match(ch.warnings.join(" "), /rib requested but not implemented/);
+  // rib is a distinct feature; the example enables it, so it is built (not
+  // warned) and coexists with the top finish.
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /rib requested but not implemented/,
+  );
+  assert.match(ch.code, /rib_size = min\(leg_a, leg_b\) - thickness;/);
 
   const fi = generateOpenScad(
     bracket({ fillet: { radius: 2, target: "top" } }),
@@ -604,6 +609,53 @@ test("l_bracket finishes only the standing leg's top edge (top target)", () => {
       /translate\(\[0, -width\/2, 0\]\) cube\(\[thickness, width, leg_b\]\);/,
     );
   }
+});
+test("l_bracket builds the rib gusset when enabled", () => {
+  const bracket = (params) => {
+    const s = read("examples/part-families/l-bracket.basic.json");
+    s.part.parameters = {
+      legLengthA: 40,
+      legLengthB: 30,
+      width: 20,
+      thickness: 4,
+      ...params,
+    };
+    return s;
+  };
+
+  const r = generateOpenScad(bracket({ rib: { enabled: true, thickness: 3 } }));
+  assert.equal(r.supported, true);
+  assert.doesNotMatch(
+    r.warnings.join(" "),
+    /rib requested but not implemented/,
+  );
+  assert.match(
+    r.code,
+    /rib_thickness = 3; rib_size = min\(leg_a, leg_b\) - thickness;/,
+  );
+  assert.match(
+    r.code,
+    /translate\(\[thickness, rib_thickness\/2, thickness\]\) rotate\(\[90, 0, 0\]\) linear_extrude\(rib_thickness\) polygon\(\[\[0, 0\], \[rib_size, 0\], \[0, rib_size\]\]\);/,
+  );
+
+  // rib_thickness defaults to the bracket thickness when omitted.
+  assert.match(
+    generateOpenScad(bracket({ rib: { enabled: true } })).code,
+    /rib_thickness = 4;/,
+  );
+
+  // A disabled rib neither builds nor warns.
+  const off = generateOpenScad(
+    bracket({ rib: { enabled: false, thickness: 3 } }),
+  );
+  assert.doesNotMatch(
+    off.warnings.join(" "),
+    /rib requested but not implemented/,
+  );
+  assert.doesNotMatch(off.code, /rib_size/);
+
+  // No rib key at all: no rib geometry.
+  assert.doesNotMatch(generateOpenScad(bracket({})).code, /rib_size/);
 });
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
