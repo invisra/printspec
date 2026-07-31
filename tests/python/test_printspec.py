@@ -186,6 +186,10 @@ def test_generator_supported_metadata_matches_actual_support():
 def test_warning_behavior():
     s = read(Path("examples/part-families/round-spacer.basic.json"))
     s["part"]["parameters"]["fillet"] = {"radius": 0.25}
+    # CadQuery now builds a whole-part fillet for round_spacer (real OCCT), so it
+    # no longer warns; an unrecognized target would still warn.
+    assert generate_cadquery(s)["warnings"] == []
+    s["part"]["parameters"]["fillet"] = {"radius": 0.25, "target": "middle"}
     assert generate_cadquery(s)["warnings"] == ["fillet requested but not implemented"]
 
 
@@ -1665,14 +1669,17 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
         ("drawer-divider.basic.json", "drawer-divider.schema.json"),
     ]
     # The OpenSCAD generator builds a whole-part chamfer for these families, so
-    # it no longer warns for a (targetless) chamfer on them; CadQuery still does.
+    # it no longer warns for a (targetless) chamfer on them. The CadQuery
+    # generator builds the same whole-part set (via the real OCCT kernel).
     openscad_chamfer_families = {
         "spacer_block",
         "round_spacer",
         "rounded_rectangular_plate",
         "electronics_standoff",
         "drawer_divider",
+        "cable_comb",
     }
+    cadquery_chamfer_families = openscad_chamfer_families
     for file, schema_file in families:
         props = read(Path("schemas") / schema_file)["properties"]["parameters"]["properties"]
         s = read(Path("examples/part-families") / file)
@@ -1694,7 +1701,9 @@ def test_corner_radius_chamfer_fillet_warnings_match_actual_support():
             (generate_cadquery, "cadquery"),
         ):
             w = " ".join(generate(s)["warnings"])
-            chamfer_built = gen_name == "openscad" and part_type in openscad_chamfer_families
+            chamfer_built = (gen_name == "openscad" and part_type in openscad_chamfer_families) or (
+                gen_name == "cadquery" and part_type in cadquery_chamfer_families
+            )
             if expect_chamfer_warning and not chamfer_built:
                 assert "chamfer requested but not implemented" in w, f"{file} {gen_name} chamfer"
             if chamfer_built:
@@ -1726,8 +1735,9 @@ def test_openscad_builds_whole_part_chamfer_for_spacer_and_round_spacer():
     targeted["part"]["parameters"]["chamfer"] = {"distance": 0.5, "target": "inner_edge"}
     assert "chamfer requested but not implemented" in generate_openscad(targeted)["warnings"]
 
-    # CadQuery does not implement chamfer yet, so it still warns.
-    assert "chamfer requested but not implemented" in generate_cadquery(block)["warnings"]
+    # CadQuery now builds the same whole-part chamfer (real OCCT), so it no
+    # longer warns for the targetless request on block.
+    assert "chamfer requested but not implemented" not in generate_cadquery(block)["warnings"]
 
 
 def test_openscad_builds_whole_part_fillet_for_round_spacer():
@@ -1754,8 +1764,9 @@ def test_openscad_builds_whole_part_fillet_for_round_spacer():
     targeted["part"]["parameters"]["fillet"] = {"radius": 0.5, "target": "some_edge"}
     assert "fillet requested but not implemented" in generate_openscad(targeted)["warnings"]
 
-    # CadQuery does not implement fillet yet, so it still warns.
-    assert "fillet requested but not implemented" in generate_cadquery(spacer)["warnings"]
+    # CadQuery now builds the same whole-part fillet (real OCCT), so it no
+    # longer warns for the targetless request.
+    assert "fillet requested but not implemented" not in generate_cadquery(spacer)["warnings"]
 
 
 def test_openscad_builds_chamfer_and_fillet_for_rounded_rectangular_plate():
@@ -1829,8 +1840,9 @@ def test_openscad_builds_fillet_for_spacer_block():
     assert "filleted_box()" in rt["code"]
     assert "linear_extrude(0.001) square([length, width], center = true);" in rt["code"]
 
-    # CadQuery does not implement fillet yet, so it still warns.
-    assert "fillet requested but not implemented" in generate_cadquery(s)["warnings"]
+    # CadQuery now builds the same whole-part fillet (real OCCT), so it no
+    # longer warns.
+    assert "fillet requested but not implemented" not in generate_cadquery(s)["warnings"]
 
 
 def test_openscad_finishes_electronics_standoff():
@@ -1908,6 +1920,308 @@ def test_openscad_finishes_drawer_divider():
     u = generate_openscad(divider(chamfer={"distance": 0.5, "target": "middle"}))
     assert "chamfer requested but not implemented" in u["warnings"]
     assert "module chamfered_box()" not in u["code"]
+
+
+def test_openscad_finishes_cable_comb():
+    def comb(**finish):
+        s = read(Path("examples/part-families/cable-comb.usb.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # A comb is a flat plate with slots, so it finishes via the box-body helpers
+    # with the slots subtracted from the finished plate.
+    ch = generate_openscad(comb(chamfer={"distance": 0.5}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 0.5;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"] and "hull()" in ch["code"]
+    assert "chamfered_box();" in ch["code"]
+    # The slots are still cut from the finished plate.
+    assert "cube([5, 12.2, 4.2]);" in ch["code"]
+
+    fi = generate_openscad(comb(fillet={"radius": 0.5}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+
+    top = generate_openscad(comb(chamfer={"distance": 0.5, "target": "top"}))
+    assert "chamfer requested but not implemented" not in top["warnings"]
+    assert "linear_extrude(height - chamfer) square([length, width]" in top["code"]
+
+    # Unrecognized target isn't built, so it still warns (geometry unchanged).
+    u = generate_openscad(comb(chamfer={"distance": 0.5, "target": "edge"}))
+    assert "chamfer requested but not implemented" in u["warnings"]
+    assert "module chamfered_box()" not in u["code"]
+
+
+def test_openscad_cable_comb_dims_match_typescript_number_formatting():
+    # The comb inlines computed dimensions; they must print like JS Number
+    # (no trailing .0) so the Python and TypeScript OpenSCAD output stay
+    # byte-identical, which the generator parity check assumes.
+    code = generate_openscad(read(Path("examples/part-families/cable-comb.usb.json")))["code"]
+    assert "cube([70, 18, 4]);" in code
+    assert "70.0" not in code and "18.0" not in code
+
+
+def test_openscad_finishes_project_enclosure_tray_bottom_edge_only():
+    def tray(**finish):
+        s = read(Path("examples/part-families/project-enclosure-tray.basic.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # Only the floor's bottom outer edge is a closed, solid perimeter, so only a
+    # bottom target builds; the floor cube becomes a bottom-finished box body of
+    # height floor_thickness, and the walls/holes are unchanged.
+    ch = generate_openscad(tray(chamfer={"distance": 1, "target": "bottom"}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 1;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"]
+    assert "linear_extrude(floor_thickness - chamfer)" in ch["code"]
+    assert "square([outer_width, outer_depth], center = true)" in ch["code"]
+    assert "    chamfered_box();" in ch["code"]
+    # Walls and mount holes are still present.
+    assert "cube([outer_width, wall_thickness, wall_height])" in ch["code"]
+    assert "d = mount_hole_diameter" in ch["code"]
+
+    fi = generate_openscad(tray(fillet={"radius": 1.5, "target": "bottom"}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+    assert "floor_thickness - 0.001" in fi["code"]
+
+    # Whole-part (no target) and top aren't solid perimeters here, so they warn
+    # and the floor stays a plain cube.
+    for unbuilt in ({"distance": 1}, {"distance": 1, "target": "top"}):
+        w = generate_openscad(tray(chamfer=unbuilt))
+        assert "chamfer requested but not implemented" in w["warnings"]
+        assert "module chamfered_box()" not in w["code"]
+        assert (
+            "translate([-outer_width/2, -outer_depth/2, 0]) cube([outer_width, outer_depth, floor_thickness]);"
+            in w["code"]
+        )
+
+
+def test_openscad_finishes_wall_mount_bracket_top_edge_only():
+    def bracket(**finish):
+        s = read(Path("examples/part-families/wall-mount-bracket.basic.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # The plate's top edge is its one closed, solid perimeter away from the foot
+    # tab, so only a top target builds; the plate cube becomes a top-finished
+    # box body, and the tab/screw holes are unchanged.
+    ch = generate_openscad(bracket(chamfer={"distance": 1, "target": "top"}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 1;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"]
+    assert "linear_extrude(height - chamfer) square([width, thickness]" in ch["code"]
+    assert "    chamfered_box();" in ch["code"]
+    # Tab and screw holes remain.
+    assert "cube([width, tab_depth, thickness])" in ch["code"]
+    assert "d = screw_hole_diameter" in ch["code"]
+
+    fi = generate_openscad(bracket(fillet={"radius": 1.5, "target": "top"}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+
+    # Whole-part (no target) and bottom aren't clean here, so they warn and the
+    # plate stays a plain cube.
+    for unbuilt in ({"distance": 1}, {"distance": 1, "target": "bottom"}):
+        w = generate_openscad(bracket(chamfer=unbuilt))
+        assert "chamfer requested but not implemented" in w["warnings"]
+        assert "module chamfered_box()" not in w["code"]
+        assert (
+            "translate([-width/2, -thickness/2, 0]) cube([width, thickness, height]);" in w["code"]
+        )
+
+
+def test_openscad_finishes_cable_clip_base_bottom_edge_only():
+    def clip(**finish):
+        s = read(Path("examples/part-families/cable-clip.basic.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # The base plate's bottom outer edge is its one closed, solid perimeter clear
+    # of the cable arch, so only a bottom target builds; the base cube becomes a
+    # bottom-finished box body, and the bridge/channel/holes are unchanged.
+    ch = generate_openscad(clip(chamfer={"distance": 0.8, "target": "bottom"}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 0.8;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"]
+    assert "linear_extrude(thickness - chamfer) square([base_length, width]" in ch["code"]
+    assert "    chamfered_box();" in ch["code"]
+    # The cable arch bridge and channel remain.
+    assert "cube([base_length*0.65, width, thickness])" in ch["code"]
+    assert "d = cable_diameter + 0.5" in ch["code"]
+    # The existing approximation warning is preserved.
+    assert "Cable arch is approximated as a rectangular bridge." in ch["warnings"]
+
+    fi = generate_openscad(clip(fillet={"radius": 1, "target": "bottom"}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+
+    # Whole-part (no target) and top aren't clean here, so they warn and the base
+    # stays a plain cube.
+    for unbuilt in ({"distance": 0.8}, {"distance": 0.8, "target": "top"}):
+        w = generate_openscad(clip(chamfer=unbuilt))
+        assert "chamfer requested but not implemented" in w["warnings"]
+        assert "module chamfered_box()" not in w["code"]
+        assert (
+            "translate([-base_length/2, -width/2, 0]) cube([base_length, width, thickness]);"
+            in w["code"]
+        )
+
+
+def test_openscad_finishes_l_bracket_standing_leg_top_only():
+    def bracket(**finish):
+        s = read(Path("examples/part-families/l-bracket.basic.json"))
+        s["part"]["parameters"].update(finish)
+        return s
+
+    # The standing leg's top face (leg B, at leg_b) is the one clean, closed
+    # perimeter a convex finish can reuse, so only a top target builds; leg B
+    # becomes a top-finished box body shifted to its corner-origin footprint,
+    # and the flat leg / cuts are unchanged. rib stays a separate feature.
+    ch = generate_openscad(bracket(chamfer={"distance": 1.5, "target": "top"}))
+    assert ch["supported"], ch.get("message")
+    assert "chamfer requested but not implemented" not in ch["warnings"]
+    assert "chamfer = 1.5;" in ch["code"]
+    assert "module chamfered_box()" in ch["code"]
+    assert "linear_extrude(leg_b - chamfer) square([thickness, width]" in ch["code"]
+    assert "translate([thickness/2, 0, 0]) chamfered_box();" in ch["code"]
+    # The flat leg remains.
+    assert "cube([leg_a, width, thickness])" in ch["code"]
+    # rib is a distinct feature; the example enables it, so it is built (not
+    # warned) and coexists with the top finish.
+    assert "rib requested but not implemented" not in ch["warnings"]
+    assert "rib_size = min(leg_a, leg_b) - thickness;" in ch["code"]
+
+    fi = generate_openscad(bracket(fillet={"radius": 2, "target": "top"}))
+    assert "fillet requested but not implemented" not in fi["warnings"]
+    assert "module filleted_box()" in fi["code"]
+
+    # Whole-part (no target) and bottom share the corner / mount face, so they
+    # warn and leg B stays a plain cube.
+    for unbuilt in ({"distance": 1.5}, {"distance": 1.5, "target": "bottom"}):
+        w = generate_openscad(bracket(chamfer=unbuilt))
+        assert "chamfer requested but not implemented" in w["warnings"]
+        assert "module chamfered_box()" not in w["code"]
+        assert "translate([0, -width/2, 0]) cube([thickness, width, leg_b]);" in w["code"]
+
+
+def test_openscad_builds_l_bracket_rib_gusset():
+    def bracket(**params):
+        s = read(Path("examples/part-families/l-bracket.basic.json"))
+        s["part"]["parameters"] = {
+            "legLengthA": 40,
+            "legLengthB": 30,
+            "width": 20,
+            "thickness": 4,
+            **params,
+        }
+        return s
+
+    # An enabled rib builds a symbolic right-triangular gusset in the inner
+    # corner and no longer warns.
+    r = generate_openscad(bracket(rib={"enabled": True, "thickness": 3}))
+    assert r["supported"]
+    assert "rib requested but not implemented" not in r["warnings"]
+    assert "rib_thickness = 3; rib_size = min(leg_a, leg_b) - thickness;" in r["code"]
+    assert (
+        "translate([thickness, rib_thickness/2, thickness]) rotate([90, 0, 0]) "
+        "linear_extrude(rib_thickness) polygon([[0, 0], [rib_size, 0], [0, rib_size]]);"
+        in r["code"]
+    )
+
+    # rib_thickness defaults to the bracket thickness when omitted.
+    assert "rib_thickness = 4;" in generate_openscad(bracket(rib={"enabled": True}))["code"]
+
+    # A disabled rib neither builds nor warns.
+    off = generate_openscad(bracket(rib={"enabled": False, "thickness": 3}))
+    assert "rib requested but not implemented" not in off["warnings"]
+    assert "rib_size" not in off["code"]
+
+    # No rib key at all: unchanged, no rib geometry.
+    assert "rib_size" not in generate_openscad(bracket())["code"]
+
+
+def test_cadquery_builds_chamfer_and_fillet():
+    def part(t, **p):
+        return {
+            "printspecVersion": "0.2.0",
+            "units": "mm",
+            "part": {"type": t, "label": "x", "parameters": p},
+        }
+
+    # Box family: both top and bottom faces for a targetless request.
+    sb = generate_cadquery(
+        part("spacer_block", length=20, width=16, height=10, chamfer={"distance": 1})
+    )
+    assert "chamfer requested but not implemented" not in sb["warnings"]
+    assert 'part = part.faces(">Z").edges().chamfer(1)' in sb["code"]
+    assert 'part = part.faces("<Z").edges().chamfer(1)' in sb["code"]
+
+    # round_spacer finishes the outer rim before the inner bore (order matters).
+    rs = generate_cadquery(
+        part(
+            "round_spacer",
+            outerDiameter=10,
+            height=8,
+            innerDiameter=5,
+            fillet={"radius": 1, "target": "top"},
+        )
+    )
+    assert 'part = part.faces(">Z").edges().fillet(1)' in rs["code"]
+    assert rs["code"].index(".edges().fillet(1)") < rs["code"].index(".hole(inner_diameter)")
+
+    # The plate uses the box+vertical-fillet construction only when finishing.
+    pl = generate_cadquery(
+        part(
+            "rounded_rectangular_plate",
+            length=40,
+            width=30,
+            thickness=4,
+            cornerRadius=5,
+            chamfer={"distance": 1},
+        )
+    )
+    assert '.edges("|Z").fillet(radius)' in pl["code"]
+    assert "chamfer requested but not implemented" not in pl["warnings"]
+    pl_plain = generate_cadquery(
+        part("rounded_rectangular_plate", length=40, width=30, thickness=4, cornerRadius=5)
+    )
+    assert '.edges("|Z").fillet(radius)' not in pl_plain["code"]  # profile-extrude form
+    assert ".circle(radius)" in pl_plain["code"]
+
+    # Single-edge bespoke families: only their one target builds.
+    wall = generate_cadquery(
+        part(
+            "wall_mount_bracket",
+            width=40,
+            height=60,
+            thickness=4,
+            tabDepth=20,
+            screwHoleDiameter=4,
+            screwHoleSpacing=36,
+            chamfer={"distance": 1, "target": "top"},
+        )
+    )
+    assert 'part = part.faces(">Z").edges().chamfer(1)' in wall["code"]
+    wall_warn = generate_cadquery(
+        part(
+            "wall_mount_bracket",
+            width=40,
+            height=60,
+            thickness=4,
+            tabDepth=20,
+            screwHoleDiameter=4,
+            screwHoleSpacing=36,
+            chamfer={"distance": 1},
+        )
+    )
+    assert "chamfer requested but not implemented" in wall_warn["warnings"]
+    assert ".edges().chamfer" not in wall_warn["code"]
 
 
 def test_validate_printspec_narrows_a_recognized_part_type_to_just_its_own_schema():

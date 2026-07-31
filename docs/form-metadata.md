@@ -25,7 +25,7 @@ Python:
 from printspec import get_part_family_form_metadata, list_part_families
 
 print(list_part_families())
-print(get_part_family_form_metadata('rounded_rectangular_plate'))
+print(get_part_family_form_metadata("rounded_rectangular_plate"))
 ```
 
 CLI:

@@ -149,10 +149,9 @@ test("round spacer chamfer is built in OpenSCAD; standoff semantic validation", 
   assert.deepEqual(scad.warnings, []);
   assert.match(scad.code, /rotate_extrude\(\$fn = 64\) polygon/);
   assert.match(scad.code, /chamfer = 0.5;/);
-  // CadQuery does not implement chamfer yet, so it still warns.
-  assert.deepEqual(generateCadQuery(s).warnings, [
-    "chamfer requested but not implemented",
-  ]);
+  // CadQuery now builds the same whole-part chamfer (real OCCT), so it no
+  // longer warns for the targetless request.
+  assert.deepEqual(generateCadQuery(s).warnings, []);
   // An unrecognized chamfer target is not built and still warns in OpenSCAD.
   const targeted = read("examples/part-families/round-spacer.basic.json");
   targeted.part.parameters.chamfer = { distance: 0.5, target: "inner_edge" };
@@ -190,8 +189,9 @@ test("round spacer fillet is built in OpenSCAD via a rotate_extrude arc", () => 
   const rb = generateOpenScad(both);
   assert.deepEqual(rb.warnings, ["fillet requested but not implemented"]);
   assert.doesNotMatch(rb.code, /fillet =/);
-  // CadQuery does not implement fillet yet, so it still warns.
-  assert.match(
+  // CadQuery now builds the same whole-part fillet (real OCCT), so it no
+  // longer warns.
+  assert.doesNotMatch(
     generateCadQuery(s).warnings.join(" "),
     /fillet requested but not implemented/,
   );
@@ -357,6 +357,641 @@ test("drawer_divider finishes its top/bottom edges via the box-body helpers", ()
   );
   assert.match(u.warnings.join(" "), /chamfer requested but not implemented/);
   assert.doesNotMatch(u.code, /module chamfered_box\(\)/);
+});
+test("cable_comb finishes its flat-plate top/bottom edges via the box-body helpers", () => {
+  const comb = (finish) => {
+    const s = read("examples/part-families/cable-comb.usb.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  // The usb example carries a cornerRadius, which still warns; the chamfer/
+  // fillet must not.
+  const ch = generateOpenScad(comb({ chamfer: { distance: 0.5 } }));
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(ch.code, /chamfer = 0\.5;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(ch.code, /chamfered_box\(\);/);
+  // The slots are still cut from the finished plate.
+  assert.match(ch.code, /cube\(\[5, 12\.2, 4\.2\]\);/);
+
+  const fi = generateOpenScad(comb({ fillet: { radius: 0.5 } }));
+  assert.doesNotMatch(
+    fi.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(fi.code, /module filleted_box\(\)/);
+
+  const top = generateOpenScad(
+    comb({ chamfer: { distance: 0.5, target: "top" } }),
+  );
+  assert.doesNotMatch(
+    top.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(
+    top.code,
+    /linear_extrude\(height - chamfer\) square\(\[length, width\]/,
+  );
+
+  const u = generateOpenScad(
+    comb({ chamfer: { distance: 0.5, target: "edge" } }),
+  );
+  assert.match(u.warnings.join(" "), /chamfer requested but not implemented/);
+  assert.doesNotMatch(u.code, /module chamfered_box\(\)/);
+});
+test("cable_comb inlines dimensions like JS numbers (no trailing .0)", () => {
+  // Byte-identity with the Python OpenSCAD generator depends on both inlining
+  // dimensions the same way; JS Number formatting is the shared target.
+  const code = generateOpenScad(
+    read("examples/part-families/cable-comb.usb.json"),
+  ).code;
+  assert.match(code, /cube\(\[70, 18, 4\]\);/);
+  assert.doesNotMatch(code, /70\.0|18\.0/);
+});
+test("project_enclosure_tray finishes only its floor bottom edge (bottom target)", () => {
+  const tray = (finish) => {
+    const s = read("examples/part-families/project-enclosure-tray.basic.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  const ch = generateOpenScad(
+    tray({ chamfer: { distance: 1, target: "bottom" } }),
+  );
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(ch.code, /chamfer = 1;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(ch.code, /linear_extrude\(floor_thickness - chamfer\)/);
+  assert.match(ch.code, / {4}chamfered_box\(\);/);
+  // Walls and mount holes remain.
+  assert.match(ch.code, /cube\(\[outer_width, wall_thickness, wall_height\]\)/);
+  assert.match(ch.code, /d = mount_hole_diameter/);
+
+  const fi = generateOpenScad(
+    tray({ fillet: { radius: 1.5, target: "bottom" } }),
+  );
+  assert.doesNotMatch(
+    fi.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(fi.code, /module filleted_box\(\)/);
+  assert.match(fi.code, /floor_thickness - 0\.001/);
+
+  // Whole-part and top aren't solid perimeters here, so they warn and the floor
+  // stays a plain cube.
+  for (const unbuilt of [{ distance: 1 }, { distance: 1, target: "top" }]) {
+    const w = generateOpenScad(tray({ chamfer: unbuilt }));
+    assert.match(w.warnings.join(" "), /chamfer requested but not implemented/);
+    assert.doesNotMatch(w.code, /module chamfered_box\(\)/);
+    assert.match(
+      w.code,
+      /translate\(\[-outer_width\/2, -outer_depth\/2, 0\]\) cube\(\[outer_width, outer_depth, floor_thickness\]\);/,
+    );
+  }
+});
+test("wall_mount_bracket finishes only its back-plate top edge (top target)", () => {
+  const bracket = (finish) => {
+    const s = read("examples/part-families/wall-mount-bracket.basic.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  const ch = generateOpenScad(
+    bracket({ chamfer: { distance: 1, target: "top" } }),
+  );
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(ch.code, /chamfer = 1;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(
+    ch.code,
+    /linear_extrude\(height - chamfer\) square\(\[width, thickness\]/,
+  );
+  assert.match(ch.code, / {4}chamfered_box\(\);/);
+  // Tab and screw holes remain.
+  assert.match(ch.code, /cube\(\[width, tab_depth, thickness\]\)/);
+  assert.match(ch.code, /d = screw_hole_diameter/);
+
+  const fi = generateOpenScad(
+    bracket({ fillet: { radius: 1.5, target: "top" } }),
+  );
+  assert.doesNotMatch(
+    fi.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(fi.code, /module filleted_box\(\)/);
+
+  // Whole-part and bottom aren't clean here, so they warn and the plate stays a
+  // plain cube.
+  for (const unbuilt of [{ distance: 1 }, { distance: 1, target: "bottom" }]) {
+    const w = generateOpenScad(bracket({ chamfer: unbuilt }));
+    assert.match(w.warnings.join(" "), /chamfer requested but not implemented/);
+    assert.doesNotMatch(w.code, /module chamfered_box\(\)/);
+    assert.match(
+      w.code,
+      /translate\(\[-width\/2, -thickness\/2, 0\]\) cube\(\[width, thickness, height\]\);/,
+    );
+  }
+});
+test("cable_clip finishes only its base-plate bottom edge (bottom target)", () => {
+  const clip = (finish) => {
+    const s = read("examples/part-families/cable-clip.basic.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  const ch = generateOpenScad(
+    clip({ chamfer: { distance: 0.8, target: "bottom" } }),
+  );
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(ch.code, /chamfer = 0\.8;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(
+    ch.code,
+    /linear_extrude\(thickness - chamfer\) square\(\[base_length, width\]/,
+  );
+  assert.match(ch.code, / {4}chamfered_box\(\);/);
+  // The cable arch bridge and channel remain.
+  assert.match(ch.code, /cube\(\[base_length\*0\.65, width, thickness\]\)/);
+  assert.match(ch.code, /d = cable_diameter \+ 0\.5/);
+  // The existing approximation warning is preserved.
+  assert.ok(
+    ch.warnings.includes("Cable arch is approximated as a rectangular bridge."),
+  );
+
+  const fi = generateOpenScad(
+    clip({ fillet: { radius: 1, target: "bottom" } }),
+  );
+  assert.doesNotMatch(
+    fi.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(fi.code, /module filleted_box\(\)/);
+
+  // Whole-part and top aren't clean here, so they warn and the base stays a
+  // plain cube.
+  for (const unbuilt of [{ distance: 0.8 }, { distance: 0.8, target: "top" }]) {
+    const w = generateOpenScad(clip({ chamfer: unbuilt }));
+    assert.match(w.warnings.join(" "), /chamfer requested but not implemented/);
+    assert.doesNotMatch(w.code, /module chamfered_box\(\)/);
+    assert.match(
+      w.code,
+      /translate\(\[-base_length\/2, -width\/2, 0\]\) cube\(\[base_length, width, thickness\]\);/,
+    );
+  }
+});
+test("l_bracket finishes only the standing leg's top edge (top target)", () => {
+  const bracket = (finish) => {
+    const s = read("examples/part-families/l-bracket.basic.json");
+    Object.assign(s.part.parameters, finish);
+    return s;
+  };
+
+  const ch = generateOpenScad(
+    bracket({ chamfer: { distance: 1.5, target: "top" } }),
+  );
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(ch.code, /chamfer = 1\.5;/);
+  assert.match(ch.code, /module chamfered_box\(\)/);
+  assert.match(
+    ch.code,
+    /linear_extrude\(leg_b - chamfer\) square\(\[thickness, width\]/,
+  );
+  assert.match(
+    ch.code,
+    /translate\(\[thickness\/2, 0, 0\]\) chamfered_box\(\);/,
+  );
+  // The flat leg remains.
+  assert.match(ch.code, /cube\(\[leg_a, width, thickness\]\)/);
+  // rib is a distinct feature; the example enables it, so it is built (not
+  // warned) and coexists with the top finish.
+  assert.doesNotMatch(
+    ch.warnings.join(" "),
+    /rib requested but not implemented/,
+  );
+  assert.match(ch.code, /rib_size = min\(leg_a, leg_b\) - thickness;/);
+
+  const fi = generateOpenScad(
+    bracket({ fillet: { radius: 2, target: "top" } }),
+  );
+  assert.doesNotMatch(
+    fi.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(fi.code, /module filleted_box\(\)/);
+
+  // Whole-part and bottom share the corner / mount face, so they warn and leg B
+  // stays a plain cube.
+  for (const unbuilt of [
+    { distance: 1.5 },
+    { distance: 1.5, target: "bottom" },
+  ]) {
+    const w = generateOpenScad(bracket({ chamfer: unbuilt }));
+    assert.match(w.warnings.join(" "), /chamfer requested but not implemented/);
+    assert.doesNotMatch(w.code, /module chamfered_box\(\)/);
+    assert.match(
+      w.code,
+      /translate\(\[0, -width\/2, 0\]\) cube\(\[thickness, width, leg_b\]\);/,
+    );
+  }
+});
+test("cadquery builds chamfer/fillet with the same targets, byte-identical to python", () => {
+  const part = (type, params) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: { type, label: "x", parameters: params },
+  });
+  const sb = generateCadQuery(
+    part("spacer_block", {
+      length: 20,
+      width: 16,
+      height: 10,
+      chamfer: { distance: 1 },
+    }),
+  );
+  assert.doesNotMatch(
+    sb.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(sb.code, /part = part\.faces\(">Z"\)\.edges\(\)\.chamfer\(1\)/);
+  assert.match(sb.code, /part = part\.faces\("<Z"\)\.edges\(\)\.chamfer\(1\)/);
+
+  // round_spacer finishes before the inner bore.
+  const rs = generateCadQuery(
+    part("round_spacer", {
+      outerDiameter: 10,
+      height: 8,
+      innerDiameter: 5,
+      fillet: { radius: 1, target: "top" },
+    }),
+  );
+  assert.ok(
+    rs.code.indexOf(".edges().fillet(1)") <
+      rs.code.indexOf(".hole(inner_diameter)"),
+  );
+
+  // Plate: box+vertical-fillet form only when finishing.
+  const pl = generateCadQuery(
+    part("rounded_rectangular_plate", {
+      length: 40,
+      width: 30,
+      thickness: 4,
+      cornerRadius: 5,
+      chamfer: { distance: 1 },
+    }),
+  );
+  assert.match(pl.code, /\.edges\("\|Z"\)\.fillet\(radius\)/);
+  const plPlain = generateCadQuery(
+    part("rounded_rectangular_plate", {
+      length: 40,
+      width: 30,
+      thickness: 4,
+      cornerRadius: 5,
+    }),
+  );
+  assert.doesNotMatch(plPlain.code, /\.edges\("\|Z"\)\.fillet\(radius\)/);
+
+  // Single-edge bespoke family: only its one target builds.
+  const wall = generateCadQuery(
+    part("wall_mount_bracket", {
+      width: 40,
+      height: 60,
+      thickness: 4,
+      tabDepth: 20,
+      screwHoleDiameter: 4,
+      screwHoleSpacing: 36,
+      chamfer: { distance: 1, target: "top" },
+    }),
+  );
+  assert.match(
+    wall.code,
+    /part = part\.faces\(">Z"\)\.edges\(\)\.chamfer\(1\)/,
+  );
+  const wallWarn = generateCadQuery(
+    part("wall_mount_bracket", {
+      width: 40,
+      height: 60,
+      thickness: 4,
+      tabDepth: 20,
+      screwHoleDiameter: 4,
+      screwHoleSpacing: 36,
+      chamfer: { distance: 1 },
+    }),
+  );
+  assert.match(
+    wallWarn.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.doesNotMatch(wallWarn.code, /\.edges\(\)\.chamfer/);
+});
+test("brepjs finishes the bespoke families on their one clean edge only", () => {
+  const spec = (type, params) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: { type, label: "x", parameters: params },
+  });
+  const cases = [
+    {
+      type: "cable_clip",
+      base: {
+        baseLength: 30,
+        baseWidth: 14,
+        baseThickness: 3,
+        clipInnerDiameter: 8,
+        clipWallThickness: 2,
+      },
+      allowed: "bottom",
+      other: "top",
+      point: "[0, 0, 0]",
+    },
+    {
+      type: "wall_mount_bracket",
+      base: {
+        width: 40,
+        height: 60,
+        thickness: 4,
+        tabDepth: 20,
+        screwHoleDiameter: 4,
+        screwHoleSpacing: 36,
+      },
+      allowed: "top",
+      other: "bottom",
+      point: "[0, 0, height]",
+    },
+    {
+      type: "l_bracket",
+      base: { legLengthA: 40, legLengthB: 30, width: 20, thickness: 4 },
+      allowed: "top",
+      other: "bottom",
+      point: "[thickness / 2, 0, legLengthB]",
+    },
+    {
+      type: "project_enclosure_tray",
+      base: {
+        outerWidth: 80,
+        outerDepth: 50,
+        wallHeight: 15,
+        wallThickness: 3,
+        floorThickness: 3,
+      },
+      allowed: "bottom",
+      other: "top",
+      point: "[0, 0, 0]",
+    },
+  ];
+  for (const c of cases) {
+    // The allowed target builds (no warning) and finishes the named face.
+    const built = generateBrepJs(
+      spec(c.type, {
+        ...c.base,
+        chamfer: { distance: 0.8, target: c.allowed },
+      }),
+    );
+    assert.doesNotMatch(
+      built.warnings.join(" "),
+      /chamfer requested but not implemented/,
+      `${c.type} ${c.allowed}`,
+    );
+    assert.ok(
+      built.code.includes(
+        `.chamfer(edgesOfFace(unwrap(faceFinder().atDistance(0, ${c.point})`,
+      ),
+      `${c.type} finishes ${c.point}`,
+    );
+    // The other target, and a whole-part (targetless) request, still warn.
+    for (const bad of [{ distance: 0.8, target: c.other }, { distance: 0.8 }]) {
+      const w = generateBrepJs(spec(c.type, { ...c.base, chamfer: bad }));
+      assert.match(
+        w.warnings.join(" "),
+        /chamfer requested but not implemented/,
+        `${c.type} ${JSON.stringify(bad)}`,
+      );
+      assert.doesNotMatch(
+        w.code,
+        /faceFinder/,
+        `${c.type} unbuilt has no finish`,
+      );
+    }
+  }
+});
+test("brepjs builds chamfer/fillet for the box families before their cuts", () => {
+  const spec = (type, params) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: { type, label: "x", parameters: params },
+  });
+  // spacer_block: top/bottom face finish, both faces for a targetless request.
+  const sb = generateBrepJs(
+    spec("spacer_block", {
+      length: 20,
+      width: 16,
+      height: 10,
+      chamfer: { distance: 1 },
+    }),
+  );
+  assert.doesNotMatch(
+    sb.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(sb.code, /faceFinder, edgesOfFace, unwrap/);
+  assert.match(sb.code, /\.chamfer\(edgesOfFace\(.*\[0, 0, height\]/);
+  assert.match(sb.code, /\.chamfer\(edgesOfFace\(.*\[0, 0, 0\]/);
+
+  // rounded_rectangular_plate: finish stacks after the cornerRadius vertical
+  // fillet (fillet call appears before the top/bottom finish call).
+  const pl = generateBrepJs(
+    spec("rounded_rectangular_plate", {
+      length: 40,
+      width: 30,
+      thickness: 4,
+      cornerRadius: 5,
+      fillet: { radius: 1, target: "top" },
+    }),
+  );
+  assert.doesNotMatch(
+    pl.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.ok(
+    pl.code.indexOf("inDirection('Z')") < pl.code.indexOf("[0, 0, thickness]"),
+    "cornerRadius fillet must precede the top-face finish",
+  );
+
+  // drawer_divider finishes before notches are cut; cable_comb before slots.
+  const dd = generateBrepJs(
+    spec("drawer_divider", {
+      length: 120,
+      height: 40,
+      thickness: 3,
+      notchCount: 2,
+      notchWidth: 3,
+      notchDepth: 10,
+      chamfer: { distance: 0.8 },
+    }),
+  );
+  assert.ok(
+    dd.code.indexOf("[0, 0, height]") < dd.code.indexOf("const notches"),
+    "divider finish must precede notch cuts",
+  );
+  const cc = generateBrepJs(
+    spec("cable_comb", {
+      length: 70,
+      width: 18,
+      thickness: 4,
+      slotCount: 5,
+      slotWidth: 5,
+      slotSpacing: 12,
+      slotDepth: 12,
+      fillet: { radius: 1 },
+    }),
+  );
+  assert.ok(
+    cc.code.indexOf(".fillet(edgesOfFace") < cc.code.indexOf(".cutAll("),
+    "comb finish must precede slot cuts",
+  );
+});
+test("brepjs builds chamfer/fillet for round_spacer and electronics_standoff", () => {
+  const rs = (extra) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: {
+      type: "round_spacer",
+      label: "x",
+      parameters: { outerDiameter: 10, height: 8, ...extra },
+    },
+  });
+  // round_spacer: finish the outer rim(s) before the inner bore is cut, so the
+  // bore rim stays sharp. Uses the real-kernel face-finder edge technique.
+  const rsCh = generateBrepJs(rs({ chamfer: { distance: 0.8 } }));
+  assert.doesNotMatch(
+    rsCh.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(rsCh.code, /faceFinder, edgesOfFace, unwrap/);
+  assert.match(rsCh.code, /\.chamfer\(edgesOfFace\(/);
+  assert.match(rsCh.code, /atDistance\(0, \[0, 0, height\]\)/);
+  assert.match(rsCh.code, /atDistance\(0, \[0, 0, 0\]\)/);
+  // top-only omits the bottom-face finish.
+  const rsTop = generateBrepJs(
+    rs({ chamfer: { distance: 0.8, target: "top" } }),
+  );
+  assert.match(rsTop.code, /atDistance\(0, \[0, 0, height\]\)/);
+  assert.doesNotMatch(rsTop.code, /atDistance\(0, \[0, 0, 0\]\)/);
+  // fillet uses .fillet; an unrecognized target still warns and is not built.
+  assert.match(
+    generateBrepJs(rs({ fillet: { radius: 1 } })).code,
+    /\.fillet\(edgesOfFace\(/,
+  );
+  assert.match(
+    generateBrepJs(
+      rs({ chamfer: { distance: 0.8, target: "side" } }),
+    ).warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  // A plain spacer keeps the minimal import (no finishing symbols).
+  assert.doesNotMatch(generateBrepJs(rs({})).code, /faceFinder/);
+
+  const so = (extra) => ({
+    printspecVersion: "0.2.0",
+    units: "mm",
+    part: {
+      type: "electronics_standoff",
+      label: "x",
+      parameters: { outerDiameter: 6, height: 10, holeDiameter: 3, ...extra },
+    },
+  });
+  // Based standoff: top → shaft top rim, bottom → base bottom rim.
+  const soTop = generateBrepJs(
+    so({
+      baseDiameter: 10,
+      baseHeight: 2,
+      chamfer: { distance: 0.5, target: "top" },
+    }),
+  );
+  assert.doesNotMatch(
+    soTop.warnings.join(" "),
+    /chamfer requested but not implemented/,
+  );
+  assert.match(soTop.code, /atDistance\(0, \[0, 0, baseHeight \+ height\]\)/);
+  assert.doesNotMatch(soTop.code, /atDistance\(0, \[0, 0, 0\]\)/);
+  const soBottom = generateBrepJs(
+    so({
+      baseDiameter: 10,
+      baseHeight: 2,
+      chamfer: { distance: 0.5, target: "bottom" },
+    }),
+  );
+  assert.match(soBottom.code, /atDistance\(0, \[0, 0, 0\]\)/);
+  assert.doesNotMatch(soBottom.code, /baseHeight \+ height\]/);
+  // Base-less standoff finishes its own top/bottom rims.
+  const soBaseless = generateBrepJs(so({ fillet: { radius: 0.5 } }));
+  assert.doesNotMatch(
+    soBaseless.warnings.join(" "),
+    /fillet requested but not implemented/,
+  );
+  assert.match(soBaseless.code, /atDistance\(0, \[0, 0, height\]\)/);
+});
+test("l_bracket builds the rib gusset when enabled", () => {
+  const bracket = (params) => {
+    const s = read("examples/part-families/l-bracket.basic.json");
+    s.part.parameters = {
+      legLengthA: 40,
+      legLengthB: 30,
+      width: 20,
+      thickness: 4,
+      ...params,
+    };
+    return s;
+  };
+
+  const r = generateOpenScad(bracket({ rib: { enabled: true, thickness: 3 } }));
+  assert.equal(r.supported, true);
+  assert.doesNotMatch(
+    r.warnings.join(" "),
+    /rib requested but not implemented/,
+  );
+  assert.match(
+    r.code,
+    /rib_thickness = 3; rib_size = min\(leg_a, leg_b\) - thickness;/,
+  );
+  assert.match(
+    r.code,
+    /translate\(\[thickness, rib_thickness\/2, thickness\]\) rotate\(\[90, 0, 0\]\) linear_extrude\(rib_thickness\) polygon\(\[\[0, 0\], \[rib_size, 0\], \[0, rib_size\]\]\);/,
+  );
+
+  // rib_thickness defaults to the bracket thickness when omitted.
+  assert.match(
+    generateOpenScad(bracket({ rib: { enabled: true } })).code,
+    /rib_thickness = 4;/,
+  );
+
+  // A disabled rib neither builds nor warns.
+  const off = generateOpenScad(
+    bracket({ rib: { enabled: false, thickness: 3 } }),
+  );
+  assert.doesNotMatch(
+    off.warnings.join(" "),
+    /rib requested but not implemented/,
+  );
+  assert.doesNotMatch(off.code, /rib_size/);
+
+  // No rib key at all: no rib geometry.
+  assert.doesNotMatch(generateOpenScad(bracket({})).code, /rib_size/);
 });
 test("l_bracket cuts holes and slots on both legs via the schema's holes/slots arrays", () => {
   const s = read("examples/part-families/l-bracket.holes-and-slots.json");
@@ -4151,7 +4786,21 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
     "rounded_rectangular_plate",
     "electronics_standoff",
     "drawer_divider",
+    "cable_comb",
   ]);
+  // The BRepJS generator builds a whole-part chamfer for these families (real
+  // OCCT kernel), so it no longer warns for a (targetless) chamfer on them.
+  const brepjsChamferFamilies = new Set([
+    "round_spacer",
+    "electronics_standoff",
+    "spacer_block",
+    "rounded_rectangular_plate",
+    "drawer_divider",
+    "cable_comb",
+  ]);
+  // The CadQuery generator builds the same whole-part set via the real OCCT
+  // kernel (identical volumes to brepjs).
+  const cadqueryChamferFamilies = brepjsChamferFamilies;
   for (const [file, schemaFile] of families) {
     const props = read("schemas/" + schemaFile).properties.parameters
       .properties;
@@ -4173,7 +4822,11 @@ test("cornerRadius/chamfer/fillet produce a not-implemented warning everywhere e
     ]) {
       const w = generate(s).warnings.join(" ");
       const chamferBuilt =
-        generate === generateOpenScad && openscadChamferFamilies.has(partType);
+        (generate === generateOpenScad &&
+          openscadChamferFamilies.has(partType)) ||
+        (generate === generateBrepJs && brepjsChamferFamilies.has(partType)) ||
+        (generate === generateCadQuery &&
+          cadqueryChamferFamilies.has(partType));
       if (expectChamferWarning && !chamferBuilt)
         assert.match(
           w,

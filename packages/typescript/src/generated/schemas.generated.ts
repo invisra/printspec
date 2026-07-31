@@ -3913,6 +3913,20 @@ export const bundledSchemas = {
             ],
             "minimum": 0,
             "maximum": 10000
+          },
+          "chamfer": {
+            "$ref": "common.schema.json#/$defs/Chamfer",
+            "title": "Chamfer",
+            "description": "Optional chamfer edge finishing request. Built only for a bottom target (the floor's outer bottom edge).",
+            "x-printspec-control": "number",
+            "x-printspec-priority": "advanced"
+          },
+          "fillet": {
+            "$ref": "common.schema.json#/$defs/Fillet",
+            "title": "Fillet",
+            "description": "Optional fillet edge finishing request. Built only for a bottom target (the floor's outer bottom edge).",
+            "x-printspec-control": "number",
+            "x-printspec-priority": "advanced"
           }
         },
         "additionalProperties": false,
@@ -3925,7 +3939,9 @@ export const bundledSchemas = {
             "floorThickness",
             "cornerRadius",
             "mountHoleDiameter",
-            "mountHoleInset"
+            "mountHoleInset",
+            "chamfer",
+            "fillet"
           ],
           "groups": [
             {
@@ -3940,6 +3956,14 @@ export const bundledSchemas = {
                 "cornerRadius",
                 "mountHoleDiameter",
                 "mountHoleInset"
+              ]
+            },
+            {
+              "id": "finishing",
+              "title": "Finishing",
+              "fields": [
+                "chamfer",
+                "fillet"
               ]
             }
           ]
@@ -5200,6 +5224,20 @@ export const bundledSchemas = {
             ],
             "minimum": 0,
             "maximum": 10000
+          },
+          "chamfer": {
+            "$ref": "common.schema.json#/$defs/Chamfer",
+            "title": "Chamfer",
+            "description": "Optional chamfer edge finishing request. Built only for a top target (the back plate's top edge).",
+            "x-printspec-control": "number",
+            "x-printspec-priority": "advanced"
+          },
+          "fillet": {
+            "$ref": "common.schema.json#/$defs/Fillet",
+            "title": "Fillet",
+            "description": "Optional fillet edge finishing request. Built only for a top target (the back plate's top edge).",
+            "x-printspec-control": "number",
+            "x-printspec-priority": "advanced"
           }
         },
         "additionalProperties": false,
@@ -5211,7 +5249,9 @@ export const bundledSchemas = {
             "tabDepth",
             "screwHoleDiameter",
             "screwHoleSpacing",
-            "cornerRadius"
+            "cornerRadius",
+            "chamfer",
+            "fillet"
           ],
           "groups": [
             {
@@ -5225,6 +5265,14 @@ export const bundledSchemas = {
                 "screwHoleDiameter",
                 "screwHoleSpacing",
                 "cornerRadius"
+              ]
+            },
+            {
+              "id": "finishing",
+              "title": "Finishing",
+              "fields": [
+                "chamfer",
+                "fillet"
               ]
             }
           ]

@@ -39,6 +39,20 @@ export function cadqueryRoundedRectPrism({
   return `length = ${cadqueryNumber(length)}\nwidth = ${cadqueryNumber(width)}\nthickness = ${cadqueryNumber(thickness)}\nradius = ${cadqueryNumber(radius)}\n\nradius = max(0.0, min(radius, length / 2.0, width / 2.0))\n\nif radius <= 0:\n    part = cq.Workplane("XY").box(length, width, thickness, centered=(True, True, False))\nelse:\n    profile = (\n        cq.Workplane("XY")\n        .rect(length - 2 * radius, width)\n        .rect(length, width - 2 * radius)\n        .vertices()\n        .circle(radius)\n    )\n    part = profile.extrude(thickness)\n`;
 }
 
+export function cadqueryRoundedRectPrismFilletable({
+  length,
+  width,
+  thickness,
+  radius,
+}: {
+  length: unknown;
+  width: unknown;
+  thickness: unknown;
+  radius: unknown;
+}) {
+  return `length = ${cadqueryNumber(length)}\nwidth = ${cadqueryNumber(width)}\nthickness = ${cadqueryNumber(thickness)}\nradius = ${cadqueryNumber(radius)}\n\nradius = max(0.0, min(radius, length / 2.0, width / 2.0))\n\nif radius <= 0:\n    part = cq.Workplane("XY").box(length, width, thickness, centered=(True, True, False))\nelse:\n    part = cq.Workplane("XY").box(length, width, thickness, centered=(True, True, False)).edges("|Z").fillet(radius)\n`;
+}
+
 export function cadqueryApplyZHoles({ holes }: { holes?: any[] }) {
   return (holes ?? [])
     .map(
@@ -69,14 +83,59 @@ function invalid(validatePrintSpec: ValidatePrintSpec, spec: PrintSpec) {
 // don't implement. Rather than silently drop them, report a warning so
 // callers know the request was ignored. Pass cornerRadius: false for the one
 // family (rounded_rectangular_plate) that actually implements cornerRadius.
-function warnings(a: any, opts: { cornerRadius?: boolean } = {}) {
+function warnings(
+  a: any,
+  opts: { cornerRadius?: boolean; chamfer?: boolean; fillet?: boolean } = {},
+) {
   const w: string[] = [];
-  if (a.chamfer != null) w.push("chamfer requested but not implemented");
-  if (a.fillet != null) w.push("fillet requested but not implemented");
+  if (opts.chamfer !== false && a.chamfer != null)
+    w.push("chamfer requested but not implemented");
+  if (opts.fillet !== false && a.fillet != null)
+    w.push("fillet requested but not implemented");
   if (a.rib?.enabled) w.push("rib requested but not implemented");
   if (opts.cornerRadius !== false && a.cornerRadius != null)
     w.push("cornerRadius requested but not implemented");
   return w;
+}
+
+// A chamfer/fillet request parses to [size, edges] or null (same target
+// vocabulary as OpenSCAD/brepjs).
+type CqFinish = [number, "both" | "top" | "bottom"] | null;
+function cqParse(feature: any, sizeKey: string): CqFinish {
+  if (feature == null) return null;
+  const t = feature.target;
+  if (t == null) return [Number(feature[sizeKey]), "both"];
+  if (t === "top" || t === "bottom") return [Number(feature[sizeKey]), t];
+  return null;
+}
+
+// Emit CadQuery `.faces(sel).edges().chamfer/fillet(amount)` line(s) using the
+// >Z/<Z face selectors (the same OCCT edge finishing brepjs uses). `allowed`
+// limits which targets a family builds. Returns the code plus the warning flags
+// to pass to warnings() (true = still warn because not built).
+function cqFinish(
+  a: any,
+  topSel: string = '">Z"',
+  bottomSel: string = '"<Z"',
+  allowed: string[] = ["both", "top", "bottom"],
+) {
+  const ch = cqParse(a.chamfer, "distance");
+  const fi = ch == null ? cqParse(a.fillet, "radius") : null;
+  const fin = ch ?? fi;
+  const op = ch != null ? "chamfer" : "fillet";
+  let lines = "";
+  const built = fin != null && allowed.includes(fin[1]);
+  if (built && fin != null) {
+    if (fin[1] === "both" || fin[1] === "top")
+      lines += `part = part.faces(${topSel}).edges().${op}(${n(fin[0])})\n`;
+    if (fin[1] === "both" || fin[1] === "bottom")
+      lines += `part = part.faces(${bottomSel}).edges().${op}(${n(fin[0])})\n`;
+  }
+  return {
+    lines,
+    chamfer: !(ch != null && built),
+    fillet: !(fi != null && built),
+  };
 }
 
 // l_bracket has two legs on different axes (leg A flat, thin along Z; leg B
@@ -160,32 +219,63 @@ export function generateCadQueryWithValidator(
       message: `isolate is only supported for composable_part specs, not "${p.type}".`,
       warnings: [],
     };
-  if (p.type === "rounded_rectangular_plate")
+  if (p.type === "rounded_rectangular_plate") {
+    // A finish needs the box+vertical-fillet construction; the no-finish plate
+    // keeps the profile-extrude form unchanged.
+    const f = cqFinish(a);
+    const prism = f.lines
+      ? cadqueryRoundedRectPrismFilletable({
+          length: a.length,
+          width: a.width,
+          thickness: a.thickness,
+          radius: a.cornerRadius,
+        })
+      : cadqueryRoundedRectPrism({
+          length: a.length,
+          width: a.width,
+          thickness: a.thickness,
+          radius: a.cornerRadius,
+        });
     return {
       supported: true,
-      warnings: warnings(a, { cornerRadius: false }),
-      code: `${header()}${cadqueryRoundedRectPrism({ length: a.length, width: a.width, thickness: a.thickness, radius: a.cornerRadius })}${cadqueryApplyZHoles({ holes: a.holes })}\n`,
+      warnings: warnings(a, {
+        cornerRadius: false,
+        chamfer: f.chamfer,
+        fillet: f.fillet,
+      }),
+      code: `${header()}${prism}${f.lines}${cadqueryApplyZHoles({ holes: a.holes })}\n`,
     };
-  if (p.type === "spacer_block")
+  }
+  if (p.type === "spacer_block") {
+    const f = cqFinish(a);
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header()}length = ${n(a.length)}\nwidth = ${n(a.width)}\nheight = ${n(a.height)}\n\npart = cq.Workplane("XY").box(length, width, height, centered=(True, True, False))\n${cadqueryApplyZHoles({ holes: a.holes })}\n`,
+      warnings: warnings(a, { chamfer: f.chamfer, fillet: f.fillet }),
+      code: `${header()}length = ${n(a.length)}\nwidth = ${n(a.width)}\nheight = ${n(a.height)}\n\npart = cq.Workplane("XY").box(length, width, height, centered=(True, True, False))\n${f.lines}${cadqueryApplyZHoles({ holes: a.holes })}\n`,
     };
+  }
   if (p.type === "round_spacer") {
-    const w = warnings(a);
+    const inner = a.innerDiameter != null;
+    const f = cqFinish(a);
+    let body = `part = cq.Workplane("XY").circle(outer_diameter / 2).extrude(height)\n${f.lines}`;
+    if (inner)
+      body += `part = part.faces(">Z").workplane().hole(inner_diameter)\n`;
     return {
       supported: true,
-      warnings: w,
-      code: `${header()}outer_diameter = ${n(a.outerDiameter)}\nheight = ${n(a.height)}${a.innerDiameter != null ? `\ninner_diameter = ${n(a.innerDiameter)}` : ""}\n\npart = cq.Workplane("XY").circle(outer_diameter / 2).extrude(height)${a.innerDiameter != null ? '\npart = part.faces(">Z").workplane().hole(inner_diameter)' : ""}\n`,
+      warnings: warnings(a, { chamfer: f.chamfer, fillet: f.fillet }),
+      code: `${header()}outer_diameter = ${n(a.outerDiameter)}\nheight = ${n(a.height)}${inner ? `\ninner_diameter = ${n(a.innerDiameter)}` : ""}\n\n${body}`,
     };
   }
   if (p.type === "electronics_standoff") {
     const hasBase = a.baseDiameter != null && a.baseHeight != null;
+    const f = cqFinish(a);
+    const body = hasBase
+      ? `base = cq.Workplane("XY").circle(base_diameter / 2).extrude(base_height)\nstandoff = cq.Workplane("XY").workplane(offset=base_height).circle(outer_diameter / 2).extrude(height)\npart = base.union(standoff)`
+      : `part = cq.Workplane("XY").circle(outer_diameter / 2).extrude(height)`;
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header()}outer_diameter = ${n(a.outerDiameter)}\nheight = ${n(a.height)}\nhole_diameter = ${n(a.holeDiameter)}${hasBase ? `\nbase_diameter = ${n(a.baseDiameter)}\nbase_height = ${n(a.baseHeight)}` : ""}\n\n${hasBase ? `base = cq.Workplane("XY").circle(base_diameter / 2).extrude(base_height)\nstandoff = cq.Workplane("XY").workplane(offset=base_height).circle(outer_diameter / 2).extrude(height)\npart = base.union(standoff)` : `part = cq.Workplane("XY").circle(outer_diameter / 2).extrude(height)`}\npart = part.faces(">Z").workplane().hole(hole_diameter)\n`,
+      warnings: warnings(a, { chamfer: f.chamfer, fillet: f.fillet }),
+      code: `${header()}outer_diameter = ${n(a.outerDiameter)}\nheight = ${n(a.height)}\nhole_diameter = ${n(a.holeDiameter)}${hasBase ? `\nbase_diameter = ${n(a.baseDiameter)}\nbase_height = ${n(a.baseHeight)}` : ""}\n\n${body}\n${f.lines}part = part.faces(">Z").workplane().hole(hole_diameter)\n`,
     };
   }
 
@@ -197,7 +287,8 @@ export function generateCadQueryWithValidator(
       th = Number(a.baseThickness ?? a.thickness ?? 3),
       len = Number(a.length ?? count * sw + (count + 1) * tw),
       wid = Number(a.width ?? sd + tw);
-    let code = `${header()}${cadqueryComment("Part family: cable_comb")}${params(a)}part = cq.Workplane("XY").box(${n(len)}, ${n(wid)}, ${n(th)}, centered=(True, True, False))\n`;
+    const f = cqFinish(a);
+    let code = `${header()}${cadqueryComment("Part family: cable_comb")}${params(a)}part = cq.Workplane("XY").box(${n(len)}, ${n(wid)}, ${n(th)}, centered=(True, True, False))\n${f.lines}`;
     for (let i = 0; i < count; i++)
       code += `part = part.cut(cq.Workplane("XY").center(${n(-len / 2 + tw + sw / 2 + i * (sw + tw))}, ${n(wid / 2 - sd / 2)}).box(${n(sw)}, ${n(sd + 0.2)}, ${n(th + 0.2)}, centered=(True, True, False)))\n`;
     const hd = Number(a.mountHoleDiameter ?? 0);
@@ -205,7 +296,11 @@ export function generateCadQueryWithValidator(
       const sp = Number(a.mountHoleSpacing ?? 40);
       code += `part = part.faces(">Z").workplane().pushPoints([(${n(-sp / 2)}, 0), (${n(sp / 2)}, 0)]).hole(${n(hd)})\n`;
     }
-    return { supported: true, warnings: warnings(a), code };
+    return {
+      supported: true,
+      warnings: warnings(a, { chamfer: f.chamfer, fillet: f.fillet }),
+      code,
+    };
   }
   if (p.type === "cable_clip") {
     const mountHoles = (a.mountingHoles ?? [])
@@ -214,47 +309,55 @@ export function generateCadQueryWithValidator(
           `part = part.cut(cq.Workplane("XY").center(${n(h.x)}, ${n(h.y)}).circle(${n(h.diameter)} / 2).extrude(${n(a.thickness ?? a.baseThickness ?? 3)} + 0.2))`,
       )
       .join("\n");
+    const f = cqFinish(a, '">Z"', '"<Z"', ["bottom"]);
     return {
       supported: true,
       warnings: [
         "Cable arch is approximated as a rectangular bridge.",
-        ...warnings(a),
+        ...warnings(a, { chamfer: f.chamfer, fillet: f.fillet }),
       ],
-      code: `${header()}${cadqueryComment("Part family: cable_clip")}${params(a)}base = cq.Workplane("XY").box(${n(a.baseLength ?? 28)}, ${n(a.width ?? a.baseWidth ?? 12)}, ${n(a.thickness ?? a.baseThickness ?? 3)}, centered=(True, True, False))\nbridge = cq.Workplane("XY").workplane(offset=${n(a.thickness ?? a.baseThickness ?? 3)}+(${n(a.cableDiameter ?? a.clipInnerDiameter ?? 6)}+${n(a.clearance ?? 0.5)})/2).box(${n((a.baseLength ?? 28) * 0.65)}, ${n(a.width ?? a.baseWidth ?? 12)}, ${n(a.thickness ?? a.baseThickness ?? 3)}, centered=(True, True, False))\npart = base.union(bridge)\n${mountHoles}\n`,
+      code: `${header()}${cadqueryComment("Part family: cable_clip")}${params(a)}base = cq.Workplane("XY").box(${n(a.baseLength ?? 28)}, ${n(a.width ?? a.baseWidth ?? 12)}, ${n(a.thickness ?? a.baseThickness ?? 3)}, centered=(True, True, False))\nbridge = cq.Workplane("XY").workplane(offset=${n(a.thickness ?? a.baseThickness ?? 3)}+(${n(a.cableDiameter ?? a.clipInnerDiameter ?? 6)}+${n(a.clearance ?? 0.5)})/2).box(${n((a.baseLength ?? 28) * 0.65)}, ${n(a.width ?? a.baseWidth ?? 12)}, ${n(a.thickness ?? a.baseThickness ?? 3)}, centered=(True, True, False))\npart = base.union(bridge)\n${f.lines}${mountHoles}\n`,
     };
   }
-  if (p.type === "wall_mount_bracket")
+  if (p.type === "wall_mount_bracket") {
+    const f = cqFinish(a, '">Z"', '"<Z"', ["top"]);
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header()}${cadqueryComment("Part family: wall_mount_bracket")}${params(a)}plate = cq.Workplane("XY").box(${n(a.width)}, ${n(a.thickness)}, ${n(a.height)}, centered=(True, True, False))\ntab = cq.Workplane("XY").center(0, ${n(a.tabDepth / 2)}).box(${n(a.width)}, ${n(a.tabDepth)}, ${n(a.thickness)}, centered=(True, True, False))\npart = plate.union(tab)\npart = part.faces("<Y").workplane().pushPoints([(0, ${n(a.height / 2 - a.screwHoleSpacing / 2)}), (0, ${n(a.height / 2 + a.screwHoleSpacing / 2)})]).hole(${n(a.screwHoleDiameter)})\n`,
+      warnings: warnings(a, { chamfer: f.chamfer, fillet: f.fillet }),
+      code: `${header()}${cadqueryComment("Part family: wall_mount_bracket")}${params(a)}plate = cq.Workplane("XY").box(${n(a.width)}, ${n(a.thickness)}, ${n(a.height)}, centered=(True, True, False))\ntab = cq.Workplane("XY").center(0, ${n(a.tabDepth / 2)}).box(${n(a.width)}, ${n(a.tabDepth)}, ${n(a.thickness)}, centered=(True, True, False))\npart = plate.union(tab)\n${f.lines}part = part.faces("<Y").workplane().pushPoints([(0, ${n(a.height / 2 - a.screwHoleSpacing / 2)}), (0, ${n(a.height / 2 + a.screwHoleSpacing / 2)})]).hole(${n(a.screwHoleDiameter)})\n`,
     };
+  }
   if (p.type === "l_bracket") {
     const cuts = cadqueryLBracketCuts(a.holes, a.slots, a.thickness, a.width);
+    const f = cqFinish(a, '">Z"', '"<Z"', ["top"]);
     const w = [
       "Light-duty/non-structural bracket; review before use.",
-      ...warnings(a),
+      ...warnings(a, { chamfer: f.chamfer, fillet: f.fillet }),
     ];
     if (cuts.unsupportedAxis)
       w.push("hole/slot with axis 'y' is not implemented for l_bracket");
     return {
       supported: true,
       warnings: w,
-      code: `${header()}${cadqueryComment("Part family: l_bracket")}${params(a)}leg_a = cq.Workplane("XY").box(${n(a.legLengthA)}, ${n(a.width)}, ${n(a.thickness)}, centered=(False, True, False))\nleg_b = cq.Workplane("XY").box(${n(a.thickness)}, ${n(a.width)}, ${n(a.legLengthB)}, centered=(False, True, False))\npart = leg_a.union(leg_b)\n${cuts.code}\n`,
+      code: `${header()}${cadqueryComment("Part family: l_bracket")}${params(a)}leg_a = cq.Workplane("XY").box(${n(a.legLengthA)}, ${n(a.width)}, ${n(a.thickness)}, centered=(False, True, False))\nleg_b = cq.Workplane("XY").box(${n(a.thickness)}, ${n(a.width)}, ${n(a.legLengthB)}, centered=(False, True, False))\npart = leg_a.union(leg_b)\n${f.lines}${cuts.code}\n`,
     };
   }
-  if (p.type === "drawer_divider")
+  if (p.type === "drawer_divider") {
+    const f = cqFinish(a);
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header()}${cadqueryComment("Part family: drawer_divider")}${params(a)}part = cq.Workplane("XY").box(${n(a.length)}, ${n(a.thickness)}, ${n(a.height)}, centered=(True, True, False))\nfor i in range(1, int(${n(a.notchCount ?? 0)}) + 1):\n    x = -${n(a.length)}/2 + i * ${n(a.length)} / (int(${n(a.notchCount ?? 0)}) + 1)\n    notch = cq.Workplane("XY").center(x, 0).box(${n(a.notchWidth)}, ${n(Number(a.thickness) + 0.2)}, ${n(a.notchDepth)}, centered=(True, True, False)).translate((0, 0, ${n(Number(a.height) - Number(a.notchDepth))}))\n    part = part.cut(notch)\n`,
+      warnings: warnings(a, { chamfer: f.chamfer, fillet: f.fillet }),
+      code: `${header()}${cadqueryComment("Part family: drawer_divider")}${params(a)}part = cq.Workplane("XY").box(${n(a.length)}, ${n(a.thickness)}, ${n(a.height)}, centered=(True, True, False))\n${f.lines}for i in range(1, int(${n(a.notchCount ?? 0)}) + 1):\n    x = -${n(a.length)}/2 + i * ${n(a.length)} / (int(${n(a.notchCount ?? 0)}) + 1)\n    notch = cq.Workplane("XY").center(x, 0).box(${n(a.notchWidth)}, ${n(Number(a.thickness) + 0.2)}, ${n(a.notchDepth)}, centered=(True, True, False)).translate((0, 0, ${n(Number(a.height) - Number(a.notchDepth))}))\n    part = part.cut(notch)\n`,
     };
-  if (p.type === "project_enclosure_tray")
+  }
+  if (p.type === "project_enclosure_tray") {
+    const f = cqFinish(a, '">Z"', '"<Z"', ["bottom"]);
     return {
       supported: true,
-      warnings: warnings(a),
-      code: `${header()}${cadqueryComment("Part family: project_enclosure_tray")}${params(a)}floor = cq.Workplane("XY").box(${n(a.outerWidth)}, ${n(a.outerDepth)}, ${n(a.floorThickness)}, centered=(True, True, False))\nfront = cq.Workplane("XY").center(0, ${n(-a.outerDepth / 2 + a.wallThickness / 2)}).box(${n(a.outerWidth)}, ${n(a.wallThickness)}, ${n(a.wallHeight)}, centered=(True, True, False)).translate((0, 0, ${n(a.floorThickness)}))\nback = cq.Workplane("XY").center(0, ${n(a.outerDepth / 2 - a.wallThickness / 2)}).box(${n(a.outerWidth)}, ${n(a.wallThickness)}, ${n(a.wallHeight)}, centered=(True, True, False)).translate((0, 0, ${n(a.floorThickness)}))\nleft = cq.Workplane("XY").center(${n(-a.outerWidth / 2 + a.wallThickness / 2)}, 0).box(${n(a.wallThickness)}, ${n(a.outerDepth)}, ${n(a.wallHeight)}, centered=(True, True, False)).translate((0, 0, ${n(a.floorThickness)}))\nright = cq.Workplane("XY").center(${n(a.outerWidth / 2 - a.wallThickness / 2)}, 0).box(${n(a.wallThickness)}, ${n(a.outerDepth)}, ${n(a.wallHeight)}, centered=(True, True, False)).translate((0, 0, ${n(a.floorThickness)}))\npart = floor.union(front).union(back).union(left).union(right)\n`,
+      warnings: warnings(a, { chamfer: f.chamfer, fillet: f.fillet }),
+      code: `${header()}${cadqueryComment("Part family: project_enclosure_tray")}${params(a)}floor = cq.Workplane("XY").box(${n(a.outerWidth)}, ${n(a.outerDepth)}, ${n(a.floorThickness)}, centered=(True, True, False))\nfront = cq.Workplane("XY").center(0, ${n(-a.outerDepth / 2 + a.wallThickness / 2)}).box(${n(a.outerWidth)}, ${n(a.wallThickness)}, ${n(a.wallHeight)}, centered=(True, True, False)).translate((0, 0, ${n(a.floorThickness)}))\nback = cq.Workplane("XY").center(0, ${n(a.outerDepth / 2 - a.wallThickness / 2)}).box(${n(a.outerWidth)}, ${n(a.wallThickness)}, ${n(a.wallHeight)}, centered=(True, True, False)).translate((0, 0, ${n(a.floorThickness)}))\nleft = cq.Workplane("XY").center(${n(-a.outerWidth / 2 + a.wallThickness / 2)}, 0).box(${n(a.wallThickness)}, ${n(a.outerDepth)}, ${n(a.wallHeight)}, centered=(True, True, False)).translate((0, 0, ${n(a.floorThickness)}))\nright = cq.Workplane("XY").center(${n(a.outerWidth / 2 - a.wallThickness / 2)}, 0).box(${n(a.wallThickness)}, ${n(a.outerDepth)}, ${n(a.wallHeight)}, centered=(True, True, False)).translate((0, 0, ${n(a.floorThickness)}))\npart = floor.union(front).union(back).union(left).union(right)\n${f.lines}`,
     };
+  }
   return {
     supported: false,
     code: "",
