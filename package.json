@@ -6,6 +6,9 @@
     "packages/typescript"
   ],
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "build": "npm run build:schema-site && npm --workspace @invisra/printspec run build",
     "test": "npm run build:schema-site && npm run test:ts && npm run smoke:browser-import-graph && node tests/schema-site.test.mjs && node tests/schema-validator.test.mjs",
