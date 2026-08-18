@@ -21,14 +21,19 @@ test("schema site pages include pinned Invisra brand assets and dark theme", () 
     const html = readFileSync(page, "utf8");
     assert.match(
       html,
-      /https:\/\/assets\.invisra\.ai\/brand\/v2\/brand\.min\.css/,
+      /https:\/\/assets\.invisra\.ai\/brand\/v4\/brand\.min\.css/,
       page,
     );
     assert.match(
       html,
-      /https:\/\/assets\.invisra\.ai\/brand\/v2\/favicon\.svg/,
+      /https:\/\/assets\.invisra\.ai\/brand\/v4\/favicon\.svg/,
       page,
     );
+    // The wordmark is a published asset from brand v3 on; the live-text
+    // .invisra-logo-wordmark class it replaced no longer exists in the CSS, so
+    // a page still using it would render an unstyled bare word.
+    assert.match(html, /class="invisra-wordmark"/, page);
+    assert.doesNotMatch(html, /invisra-logo-wordmark/, page);
     assert.match(html, /data-theme="dark"/, page);
     assert.match(html, /Invisra/, page);
     assert.match(html, /printspec/, page);
