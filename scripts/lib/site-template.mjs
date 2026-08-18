@@ -22,7 +22,7 @@ function analyticsSnippet() {
   return `\n<script>\n  window.va =\n    window.va ||\n    function () {\n      (window.vaq = window.vaq || []).push(arguments);\n    };\n</script>\n<script defer src="/_vercel/insights/script.js"></script>`;
 }
 
-const BRAND_BASE = "https://assets.invisra.ai/brand/v2";
+const BRAND_BASE = "https://assets.invisra.ai/brand/v4";
 
 function brandHead() {
   return `  <link rel="stylesheet" href="${BRAND_BASE}/brand.min.css">\n  <link rel="icon" href="${BRAND_BASE}/favicon.svg" type="image/svg+xml">\n  <link rel="icon" href="${BRAND_BASE}/favicon-32.png" sizes="32x32" type="image/png">\n  <link rel="icon" href="${BRAND_BASE}/favicon-16.png" sizes="16x16" type="image/png">\n  <link rel="apple-touch-icon" href="${BRAND_BASE}/apple-touch-icon.png">\n  <meta name="theme-color" content="#020617">`;
@@ -65,7 +65,7 @@ function themeScript() {
 function logoMarkup() {
   return `<a class="invisra-logo-lockup" href="/${PROJECT_NAME}/" aria-label="printspec home">
       <svg class="invisra-logo-mark invisra-logo-mark-sm" viewBox="0 0 160 380" role="img" aria-hidden="true" focusable="false"><path fill="currentColor" d="M80 6 8 222 38 256 80 356 122 256 152 222Z M80 118 112 214 80 248 48 214Z"></path></svg>
-      <span class="invisra-logo-wordmark">Invisra</span>
+      <span class="invisra-wordmark" role="img" aria-label="Invisra"></span>
       <span class="invisra-text-muted">/ printspec</span>
     </a>`;
 }
