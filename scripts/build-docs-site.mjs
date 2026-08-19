@@ -191,13 +191,29 @@ function extractDescription(markdown) {
   return "";
 }
 
+// Strips HTML tags to a fixpoint. A single pass of the multi-character tag
+// pattern can leave a residual `<tag` behind (e.g. `<<b>script>` -> `<script`),
+// which CodeQL flags as incomplete sanitization
+// (js/incomplete-multi-character-sanitization); repeating until the string
+// stops changing guarantees no partial tag survives. For well-formed markup a
+// single pass already reaches the fixpoint, so slug output is unchanged.
+function stripHtmlTags(html) {
+  let out = html;
+  let previous;
+  do {
+    previous = out;
+    out = out.replace(/<[^>]+>/g, "");
+  } while (out !== previous);
+  return out;
+}
+
 // Assigns a stable `id` to every rendered heading (slugified from its text)
 // so doc pages support deep links, even though no current cross-doc link
 // relies on one yet.
 function addHeadingIds(html) {
   const seen = new Set();
   return html.replace(/<(h[1-6])>([\s\S]*?)<\/\1>/g, (whole, tag, inner) => {
-    const plain = inner.replace(/<[^>]+>/g, "").toLowerCase();
+    const plain = stripHtmlTags(inner).toLowerCase();
     const base =
       plain.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "section";
     let id = base;

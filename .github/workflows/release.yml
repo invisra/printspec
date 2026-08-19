@@ -15,6 +15,11 @@ on:
         required: true
         default: true
         type: boolean
+      publish_pypi:
+        description: 'Also publish to PyPI (leave off until the invisra PyPI org / trusted publisher is approved)'
+        required: true
+        default: false
+        type: boolean
 jobs:
   release-checks:
     runs-on: ubuntu-latest
@@ -79,14 +84,54 @@ jobs:
       - run: npm --workspace @invisra/printspec pack --dry-run
       - run: echo "Release dry-run complete for npm ${{ inputs.npm_version }} and schema/Python ${{ inputs.schema_version }}. Publishing remains disabled while dry_run=${{ inputs.dry_run }}."
 
-  # Future npm trusted publishing can be added as a separate job guarded by:
-  # if: ${{ inputs.dry_run == false }}
-  # environment: release
-  # permissions: { id-token: write, contents: read }
-  # Do not add npm tokens to the repository.
+  # npm trusted publishing (OIDC). Runs only on a real release (dry_run=false),
+  # after every release-checks step (including the Python build) has passed.
+  # No npm token is stored: npm exchanges the GitHub OIDC token for a
+  # short-lived registry credential via the trusted publisher configured on
+  # npmjs.com for @invisra/printspec, and attaches build provenance.
+  publish-npm:
+    needs: release-checks
+    if: ${{ inputs.dry_run == false }}
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+      # Trusted publishing needs npm >= 11.5.1; the npm bundled with Node 24 can
+      # be older, so upgrade the CLI before publishing.
+      - run: npm install -g npm@latest
+      - run: npm ci
+      # Populate packages/typescript/schemas before packing (mirrors release:node).
+      - run: npm run sync:schemas
+      - run: npm publish --workspace @invisra/printspec --provenance --access public
 
-  # Future PyPI trusted publishing can be added as a separate job guarded by:
-  # if: ${{ inputs.dry_run == false }}
-  # environment: release
-  # permissions: { id-token: write, contents: read }
-  # Do not add PyPI tokens to the repository.
+  # PyPI trusted publishing (OIDC). Dormant until the invisra PyPI org and its
+  # trusted publisher are approved -- guarded by the separate publish_pypi input
+  # (default false) so npm releases are not blocked in the meantime. Once
+  # approved, run the workflow with dry_run=false and publish_pypi=true. No PyPI
+  # token is stored: the OIDC identity authenticates the upload.
+  publish-pypi:
+    needs: release-checks
+    if: ${{ inputs.dry_run == false && inputs.publish_pypi }}
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build packages/python
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/python/dist/
