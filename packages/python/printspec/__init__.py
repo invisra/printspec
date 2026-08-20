@@ -11,6 +11,7 @@ from .safety import (
 from .validate import (
     validate_composable_part_spec,
     validate_part_family_spec,
+    validate_partfacts,
     validate_printspec,
     validate_project_spec,
 )
@@ -30,6 +31,7 @@ __all__ = [
     "normalize_printspec",
     "validate_composable_part_spec",
     "validate_part_family_spec",
+    "validate_partfacts",
     "validate_printspec",
     "validate_project_spec",
     "validate_safe_metadata",

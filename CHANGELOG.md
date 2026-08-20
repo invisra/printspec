@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+Feature (PartFacts schema, new independently versioned artifact):
+- Add `schemas/partfacts/0.1.0/partfacts.schema.json` (`$id` `https://schemas.invisra.ai/printspec/partfacts/0.1.0/partfacts.schema.json`), the canonical schema for **PartFacts**: the measured output of executing a printspec on a real CAD kernel. It defines `provenance` (printspec version, generator + version, kernel + version, container image digest, optional spec digest/timestamp), `topology` (solid/shell/face/edge/vertex counts, closed/manifold/valid flags and optional itemized BRepCheck-style `checks` and `genus`), `massProperties` (volume, surface area, center of mass, axis-aligned bounding box, and a six-component inertia tensor), a `featureInventory` (cylindrical faces with axis/radius/extent/through-or-blind, and planar faces with normal/area) so downstream checks can find holes and walls, and an extensible, namespaced `extensions` map for later tiers. Every numeric field documents its unit and a precision note, and the top-level `units` object records the unit system explicitly. Uses `x-printspec-*` metadata where useful and is `additionalProperties: false` throughout (except `extensions`).
+- PartFacts is versioned on its **own track**, independent of the printspec document schema (currently `0.2.0`), and is hosted under a dedicated `printspec/partfacts/<version>/` namespace — keeping its `0.1.0` clear of the document schema's own already-released, immutable `0.1.0` directory. The schema is self-contained (no `$ref` into the document schemas), so it validates standalone and fully offline.
+- Offline validation added to **both** packages, mirroring `validatePrintSpec`: `validatePartFacts` (TypeScript — exported from both the Node and `@invisra/printspec/browser` entrypoints, backed by a bundled generated schema module so it needs no filesystem or network) and `validate_partfacts` (Python — loads the bundled package schema). Both return the same `{ valid, errors }` shape; there is no semantic layer in `0.1.0` (structural validation only). A `PartFacts` TypeScript type is exported for consumers.
+- Tooling: `scripts/sync-schemas.mjs` now syncs the PartFacts schema into the TypeScript/Python package data and the public hosted tree under `printspec/partfacts/<version>/`, generates `packages/typescript/src/generated/partfacts.generated.ts`, and emits PartFacts artifact + version manifests plus an `artifacts` entry in the project manifest. `scripts/check-version-consistency.mjs` verifies the PartFacts `$id`/version, that every synced copy matches source, and the manifests. No CAD kernel dependency is added anywhere — this change only defines and validates the shape of the data.
+- Docs: add `docs/partfacts.md` and cross-reference it from `docs/validation.md`.
+
 ## 0.4.0
 
 Feature:

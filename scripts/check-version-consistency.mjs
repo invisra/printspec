@@ -105,6 +105,72 @@ function walk(dir) {
   }
 }
 walk("examples");
+// PartFacts is an independently versioned output-artifact schema under
+// schemas/partfacts/<version>/ (its own track, not schemaVersion). Verify its
+// $id carries its own directory version and that every synced copy matches the
+// source, mirroring the flat-schema checks above without conflating the two
+// version tracks.
+const partFactsSourceDir = path.join(root, "schemas", "partfacts");
+if (statSync(partFactsSourceDir, { throwIfNoEntry: false })?.isDirectory()) {
+  const partFactsVersions = readdirSync(partFactsSourceDir).filter(
+    (entry) =>
+      /^\d+\.\d+\.\d+$/.test(entry) &&
+      statSync(path.join(partFactsSourceDir, entry)).isDirectory(),
+  );
+  const partFactsDestRoots = [
+    "schemas/partfacts",
+    "packages/typescript/schemas/partfacts",
+    "packages/python/printspec/schemas/partfacts",
+    "public/printspec/partfacts",
+  ];
+  for (const version of partFactsVersions) {
+    const file = "partfacts.schema.json";
+    const expectedId = `https://schemas.invisra.ai/printspec/partfacts/${version}/${file}`;
+    const sourceRel = `schemas/partfacts/${version}/${file}`;
+    const sourceText = readFileSync(path.join(root, sourceRel), "utf8");
+    const sourceSchema = JSON.parse(sourceText);
+    check(
+      sourceSchema.$id === expectedId,
+      `${sourceRel} $id must be ${expectedId}, got ${sourceSchema.$id}`,
+    );
+    check(
+      sourceSchema.properties?.partfactsVersion?.const === version,
+      `${sourceRel} partfactsVersion const must be ${version}`,
+    );
+    for (const destRoot of partFactsDestRoots) {
+      const destRel = `${destRoot}/${version}/${file}`;
+      const destPath = path.join(root, destRel);
+      const present = statSync(destPath, { throwIfNoEntry: false })?.isFile();
+      check(present, `${destRel} is missing; run \`npm run sync:schemas\``);
+      if (present)
+        check(
+          readFileSync(destPath, "utf8") === sourceText,
+          `${destRel} is stale; run \`npm run sync:schemas\``,
+        );
+    }
+  }
+  const partFactsManifest = readJson(
+    "public/printspec/partfacts/manifest.json",
+  );
+  check(
+    partFactsManifest.artifact === "partfacts",
+    "public/printspec/partfacts/manifest.json must name the partfacts artifact",
+  );
+  const listedVersions = (partFactsManifest.versions ?? []).map(
+    (v) => v.version,
+  );
+  for (const version of partFactsVersions)
+    check(
+      listedVersions.includes(version),
+      `public/printspec/partfacts/manifest.json must include version ${version}`,
+    );
+  const projectArtifacts = projectManifest.artifacts ?? [];
+  check(
+    projectArtifacts.some((a) => a.name === "partfacts"),
+    "public/printspec/manifest.json must list the partfacts artifact",
+  );
+}
+
 if (errors.length) {
   console.error(errors.map((e) => `- ${e}`).join("\n"));
   process.exit(1);

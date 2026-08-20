@@ -21,6 +21,18 @@ The schemas use stable, public-looking `$id` values such as `https://schemas.inv
 
 Validation must not fetch schemas from `schemas.invisra.ai` or any other remote host. Schema tests also meta-validate every `schemas/*.schema.json` file against Draft 2020-12 so schema authoring mistakes fail before fixture validation. The schemas are experimental until printspec 1.0, and the `$id` URLs are served publicly for documentation, tooling, and cross-package references.
 
+## Validating PartFacts
+
+The same offline, bundled-schema approach validates [PartFacts](./partfacts.md)
+documents — the canonical output of executing a printspec on a real CAD kernel —
+via `validatePartFacts` (TypeScript, Node and browser entrypoints) and
+`validate_partfacts` (Python), which return the same `{ valid, errors }` shape.
+PartFacts is versioned independently of the document schema and its schema is
+self-contained, so it validates with a standalone validator and, like the
+document schemas, never fetches from the network. There is no semantic layer for
+PartFacts in `0.1.0`; validation is structural only. See
+[PartFacts](./partfacts.md) for the document shape.
+
 ## Hosted schema references
 
 The repository-level `schemas/` directory is the source of truth. `npm run sync:schemas` creates synchronized artifacts in `public/printspec/0.2.0/` for static hosting and `packages/python/printspec/schemas/` for Python package data, and `packages/typescript/schemas/` for TypeScript package data; do not manually maintain divergent copies in either destination. Vercel serves the synchronized JSON Schema files from `https://schemas.invisra.ai/printspec/0.2.0/` with schema JSON content-type, permissive CORS, and immutable caching headers.

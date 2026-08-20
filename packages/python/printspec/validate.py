@@ -164,6 +164,53 @@ def validate_project_spec(project):
     return _validate("project.schema.json", project)
 
 
+_PARTFACTS_NAME = "partfacts"
+_PARTFACTS_VERSION = "0.1.0"
+_PARTFACTS_SCHEMA_FILE = "partfacts.schema.json"
+
+
+def _partfacts_schema_path() -> Path:
+    """Locate the bundled PartFacts schema without network access.
+
+    PartFacts is an independently versioned output-artifact schema living under
+    ``schemas/partfacts/<version>/`` (not the flat, monolithically versioned
+    printspec-document schema set), so it is loaded separately from
+    :data:`SCHEMAS`. Prefers the package-local copy synchronized by
+    ``npm run sync:schemas``; source checkouts fall back to the repository-level
+    ``schemas/`` directory.
+    """
+    rel = Path(_PARTFACTS_NAME) / _PARTFACTS_VERSION / _PARTFACTS_SCHEMA_FILE
+    packaged = Path(__file__).resolve().parent / "schemas" / rel
+    if packaged.is_file():
+        return packaged
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "schemas" / rel
+        if candidate.is_file():
+            return candidate
+    raise RuntimeError("Unable to locate local PartFacts schema")
+
+
+PARTFACTS_SCHEMA = json.loads(_partfacts_schema_path().read_text(encoding="utf8"))
+PARTFACTS_SCHEMA_VERSION = _PARTFACTS_VERSION
+
+# PartFacts validates against its own bundled schema with a dedicated
+# validator. The schema is self-contained (no ``$ref`` to the document
+# schemas), so no shared registry is needed and validation stays offline.
+_PARTFACTS_VALIDATOR = Draft202012Validator(PARTFACTS_SCHEMA, format_checker=_FORMAT_CHECKER)
+
+
+def validate_partfacts(facts):
+    """Validate a PartFacts document (the canonical output of executing a
+    printspec on a real CAD kernel) against the bundled PartFacts JSON Schema,
+    offline. Mirrors :func:`validate_printspec`'s result shape; there is no
+    semantic layer for PartFacts in 0.1.0."""
+    errors = [
+        _format_error(error)
+        for error in _iter_errors(_PARTFACTS_VALIDATOR, facts, _PARTFACTS_SCHEMA_FILE)
+    ]
+    return {"valid": not errors, "errors": errors}
+
+
 def validate_printspec(spec, semantic=True):
     part = spec.get("part") if isinstance(spec, dict) else None
     part_type = part.get("type") if isinstance(part, dict) else None

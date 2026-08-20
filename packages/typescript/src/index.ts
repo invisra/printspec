@@ -1,5 +1,6 @@
 export * from "./types.js";
 export * from "./validate.js";
+export * from "./partfacts.js";
 export * from "./normalize.js";
 export * from "./bom.js";
 export * from "./safety.js";
