@@ -73,6 +73,13 @@
       "description": "Part Family schema for printspec documents."
     },
     {
+      "filename": "partfacts.schema.json",
+      "url": "/printspec/0.2.0/partfacts.schema.json",
+      "id": "https://schemas.invisra.ai/printspec/0.2.0/partfacts.schema.json",
+      "title": "PartFacts",
+      "description": "Kernel-measured facts about a solid produced from a printspec part. PartFacts are the comparable, provenance-carrying output of a geometry kernel (OCP/OCCT, brepjs, ...). They are compared for equality by rounding within a tolerance, never by hashing geometry bytes, because OCCT is not bit-reproducible."
+    },
+    {
       "filename": "project-enclosure-tray.schema.json",
       "url": "/printspec/0.2.0/project-enclosure-tray.schema.json",
       "id": "https://schemas.invisra.ai/printspec/0.2.0/project-enclosure-tray.schema.json",

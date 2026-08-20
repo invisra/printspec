@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.invisra.ai/printspec/0.2.0/partfacts.schema.json",
+  "title": "PartFacts",
+  "description": "Kernel-measured facts about a solid produced from a printspec part. PartFacts are the comparable, provenance-carrying output of a geometry kernel (OCP/OCCT, brepjs, ...). They are compared for equality by rounding within a tolerance, never by hashing geometry bytes, because OCCT is not bit-reproducible.",
+  "type": "object",
+  "required": [
+    "printspecVersion",
+    "generator",
+    "generatorVersion",
+    "kernelVersion",
+    "imageDigest",
+    "measurements"
+  ],
+  "properties": {
+    "printspecVersion": {
+      "type": "string",
+      "description": "printspec schema version the source spec was written against.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generator": {
+      "type": "string",
+      "description": "Identifier of the kernel/generator that produced these facts (e.g. 'ocp', 'brepjs').",
+      "minLength": 1
+    },
+    "generatorVersion": {
+      "type": "string",
+      "description": "Version of the generator/worker code that produced these facts.",
+      "minLength": 1
+    },
+    "kernelVersion": {
+      "type": "string",
+      "description": "Exact geometry kernel version string (e.g. the observed OCCT/OCP version). Part of the correctness contract.",
+      "minLength": 1
+    },
+    "imageDigest": {
+      "type": "string",
+      "description": "Content-addressable digest of the container image the kernel ran in (e.g. 'sha256:...'). Pins the kernel build that produced these facts.",
+      "minLength": 1
+    },
+    "specHash": {
+      "type": "string",
+      "description": "Hash of the normalized source spec these facts were measured from. Advisory provenance; not a geometry hash."
+    },
+    "tolerance": {
+      "type": "object",
+      "description": "How the numeric facts were rounded for comparison.",
+      "required": ["decimals"],
+      "properties": {
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "description": "Number of decimal places every measured float was rounded to before being recorded."
+        }
+      },
+      "additionalProperties": false
+    },
+    "measurements": {
+      "type": "object",
+      "description": "The measured geometric facts of the solid.",
+      "required": ["isValid", "volume", "surfaceArea", "boundingBox", "topology"],
+      "properties": {
+        "isValid": {
+          "type": "boolean",
+          "description": "Kernel validity check (BRepCheck_Analyzer for OCP)."
+        },
+        "volume": {
+          "type": "number",
+          "description": "Solid volume in mm^3.",
+          "minimum": 0
+        },
+        "surfaceArea": {
+          "type": "number",
+          "description": "Total surface area in mm^2.",
+          "minimum": 0
+        },
+        "centerOfMass": {
+          "type": "array",
+          "description": "Centre of mass [x, y, z] in mm.",
+          "items": { "type": "number" },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "boundingBox": {
+          "type": "object",
+          "description": "Axis-aligned bounding box in mm.",
+          "required": ["min", "max", "size"],
+          "properties": {
+            "min": {
+              "type": "array",
+              "items": { "type": "number" },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "max": {
+              "type": "array",
+              "items": { "type": "number" },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "size": {
+              "type": "array",
+              "description": "Extent [dx, dy, dz] = max - min.",
+              "items": { "type": "number", "minimum": 0 },
+              "minItems": 3,
+              "maxItems": 3
+            }
+          },
+          "additionalProperties": false
+        },
+        "topology": {
+          "type": "object",
+          "description": "Unique sub-shape counts (counted with a shape map, not an explorer, so shared sub-shapes are not double-counted).",
+          "required": ["solids", "shells", "faces", "edges", "vertices"],
+          "properties": {
+            "solids": { "type": "integer", "minimum": 0 },
+            "shells": { "type": "integer", "minimum": 0 },
+            "faces": { "type": "integer", "minimum": 0 },
+            "edges": { "type": "integer", "minimum": 0 },
+            "vertices": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "warnings": {
+      "type": "array",
+      "description": "Non-fatal warnings emitted while building/measuring the solid.",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

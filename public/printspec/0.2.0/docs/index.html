@@ -98,6 +98,7 @@
     <h2>Reference</h2>
     <ul class="doc-index-list">
       <li><a href="validation.html">Validation</a> &mdash; <span class="invisra-text-muted">printspec v0.2.0 uses JSON Schema as the structural source of truth. The schemas define required fields, known object shapes, numeric ranges, URL formats, allowed enums, and top-level part versus project exclusivity.</span></li>
+      <li><a href="partfacts.html">PartFacts</a> &mdash; <span class="invisra-text-muted">PartFacts are the kernel-measured, provenance-carrying facts about a solid built from a printspec part. They are the comparable output of a geometry kernel — the low-level OpenCascade (OCP/OCCT) build that engines run...</span></li>
       <li><a href="form-metadata.html">Browser/editor form metadata</a> &mdash; <span class="invisra-text-muted">Printspec schemas include lightweight JSON Schema extension metadata for browser editors, AI-assisted tools, and developer utilities that want to render parameter forms. This metadata is descriptive only: printspec do...</span></li>
       <li><a href="units-and-coordinates.html">Units and coordinates</a> &mdash; <span class="invisra-text-muted">printspec 0.2.0 supports millimeters (mm) only. X is length, Y is width/depth, and Z is height/thickness. The origin is generally centered in X/Y, and generated CAD generally places the bottom face at Z = 0. Component...</span></li>
       <li><a href="bundles.html">printspec bundles</a> &mdash; <span class="invisra-text-muted">A printspec bundle is a deterministic source-file export for a single part spec or a project spec. It is intended for review, handoff, source control, and future automation that consumes printspec metadata.</span></li>
@@ -123,7 +124,7 @@
     <h2>Repository</h2>
     <ul class="doc-index-list">
       <li><a href="readme.html">printspec</a> &mdash; <span class="invisra-text-muted">Practical JSON Schemas and offline tooling for parametric 3D-printable parts.</span></li>
-      <li><a href="changelog.html">Changelog</a> &mdash; <span class="invisra-text-muted">CadQuery generator (TypeScript and Python, byte-identical): implement chamfer and fillet for all ten families, bringing every generator (OpenSCAD, brepjs, CadQuery) to finishing parity. Uses CadQuery&#39;s .faces(&quot;&gt;Z&quot;/&quot;&lt;Z...</span></li>
+      <li><a href="changelog.html">Changelog</a> &mdash; <span class="invisra-text-muted">PartFacts schema (schemas/partfacts.schema.json, $id .../printspec/0.2.0/partfacts.schema.json): a new open schema describing the kernel-measured, provenance-carrying facts of a solid built from a printspec part (isVa...</span></li>
       <li><a href="contributing.html">Contributing</a> &mdash; <span class="invisra-text-muted">Use focused pull requests. Keep schemas deterministic, explicit, safe, and browser-editor friendly. Suggested labels: schema, part-family, composable, project, generator, typescript, python, docs, examples, safety, bo...</span></li>
       <li><a href="code-of-conduct.html">Code of Conduct</a> &mdash; <span class="invisra-text-muted">Be respectful, constructive, and inclusive. Harassment or unsafe content is not welcome.</span></li>
       <li><a href="security.html">Security</a> &mdash; <span class="invisra-text-muted">Report vulnerabilities privately to Invisra maintainers. Do not submit unsafe part-family proposals.</span></li>
