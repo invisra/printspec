@@ -3,15 +3,15 @@
   "units": { "length": "mm" },
   "provenance": {
     "printspecVersion": "0.2.0",
-    "generator": { "name": "cadquery", "version": "2.4.0" },
+    "generator": { "name": "brepjs", "version": "0.4.0" },
     "kernel": { "name": "OpenCascade", "version": "7.8.1" }
   },
   "topology": {
     "solidCount": 1,
     "shellCount": 1,
-    "faceCount": 6,
-    "edgeCount": 12,
-    "vertexCount": 8,
+    "faceCount": 4,
+    "edgeCount": 6,
+    "vertexCount": 4,
     "closed": true,
     "manifold": true,
     "valid": true
@@ -24,5 +24,19 @@
       "min": { "x": -5, "y": -5, "z": 0 },
       "max": { "x": 5, "y": 5, "z": 10 }
     }
+  },
+  "featureInventory": {
+    "cylindricalFaces": [
+      {
+        "id": "bore",
+        "radius": 2,
+        "axis": { "x": 0, "y": 0, "z": 1 },
+        "axisPoint": { "x": 0, "y": 0, "z": 0 },
+        "start": { "x": 0, "y": 0, "z": 0 },
+        "end": { "x": 0, "y": 0, "z": 10 },
+        "length": 10,
+        "convex": false
+      }
+    ]
   }
 }

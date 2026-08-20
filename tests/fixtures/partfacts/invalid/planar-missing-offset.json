@@ -1,23 +1,23 @@
 {
-  "partfactsVersion": "0.2.0",
+  "partfactsVersion": "0.1.0",
+  "units": { "length": "mm" },
   "provenance": {
     "printspecVersion": "0.2.0",
-    "generator": { "name": "brepjs", "version": "0.4.0" },
-    "kernel": { "name": "OpenCascade", "version": "7.8.1" },
-    "imageDigest": "not-a-digest"
+    "generator": { "name": "cadquery", "version": "2.4.0" },
+    "kernel": { "name": "OpenCascade", "version": "7.8.1" }
   },
   "topology": {
-    "solidCount": -1,
+    "solidCount": 1,
     "shellCount": 1,
     "faceCount": 6,
     "edgeCount": 12,
     "vertexCount": 8,
-    "closed": "yes",
+    "closed": true,
     "manifold": true,
     "valid": true
   },
   "massProperties": {
-    "volume": -5,
+    "volume": 1000,
     "surfaceArea": 600,
     "centerOfMass": { "x": 0, "y": 0, "z": 5 },
     "boundingBox": {
@@ -25,5 +25,7 @@
       "max": { "x": 5, "y": 5, "z": 10 }
     }
   },
-  "unexpectedTopLevelKey": true
+  "featureInventory": {
+    "planarFaces": [{ "normal": { "x": 0, "y": 0, "z": 1 }, "area": 100 }]
+  }
 }

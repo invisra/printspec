@@ -5,7 +5,11 @@ export {
   validateProjectSpec,
 } from "./validate.browser.js";
 
-export { validatePartFacts, partFactsSchemaVersion } from "./partfacts.js";
+export {
+  validatePartFacts,
+  partFactsSchemaVersion,
+  supportedPartFactsVersions,
+} from "./partfacts.js";
 
 export { normalizePrintSpec } from "./normalize.js";
 export {

@@ -5,7 +5,11 @@ from urllib import request
 
 from jsonschema import Draft202012Validator
 from printspec import validate_partfacts
-from printspec.validate import PARTFACTS_SCHEMA, PARTFACTS_SCHEMA_VERSION
+from printspec.validate import (
+    PARTFACTS_SCHEMA,
+    PARTFACTS_SCHEMA_VERSION,
+    SUPPORTED_PARTFACTS_VERSIONS,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 PARTFACTS_ID = "https://schemas.invisra.ai/printspec/partfacts/0.1.0/partfacts.schema.json"
@@ -64,6 +68,46 @@ def test_wrong_version_is_rejected():
     good = read(ROOT / "tests/fixtures/partfacts/valid/minimal-box.json")
     good["partfactsVersion"] = "9.9.9"
     assert not validate_partfacts(good)["valid"]
+
+
+def test_unsupported_version_gives_clear_dispatch_error():
+    assert "0.1.0" in SUPPORTED_PARTFACTS_VERSIONS
+    good = read(ROOT / "tests/fixtures/partfacts/valid/minimal-box.json")
+    result = validate_partfacts({**good, "partfactsVersion": "0.2.0"})
+    assert not result["valid"]
+    assert len(result["errors"]) == 1
+    assert "unsupported PartFacts version" in result["errors"][0]
+
+
+def test_massproperties_optional_only_when_invalid():
+    good = read(ROOT / "tests/fixtures/partfacts/valid/minimal-box.json")
+    no_mass = {k: v for k, v in good.items() if k != "massProperties"}
+    assert not validate_partfacts(no_mass)["valid"]
+
+    invalid = json.loads(json.dumps(good))
+    invalid["topology"]["valid"] = False
+    invalid["topology"]["checks"] = [{"name": "free-edges", "status": "fail"}]
+    invalid.pop("massProperties")
+    assert validate_partfacts(invalid)["valid"]
+
+
+def test_counterbore_and_split_hole_group_faces():
+    cb = read(ROOT / "tests/fixtures/partfacts/valid/counterbore.json")
+    assert validate_partfacts(cb)["valid"]
+    face_ids = {f["featureId"] for f in cb["featureInventory"]["cylindricalFaces"]}
+    assert len(face_ids) == 1
+    segments = cb["featureInventory"]["holes"][0]["segments"]
+    assert [s["radius"] for s in segments] == [2, 5]
+
+    sh = read(ROOT / "tests/fixtures/partfacts/valid/split-hole.json")
+    assert validate_partfacts(sh)["valid"]
+    assert sh["featureInventory"]["holes"][0]["through"] is True
+
+
+def test_multi_solid_document_validates():
+    ms = read(ROOT / "tests/fixtures/partfacts/valid/multi-solid.json")
+    assert validate_partfacts(ms)["valid"]
+    assert ms["topology"]["solidCount"] == len(ms["solids"])
 
 
 def test_additional_top_level_property_is_rejected():

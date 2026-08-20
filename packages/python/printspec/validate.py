@@ -165,12 +165,11 @@ def validate_project_spec(project):
 
 
 _PARTFACTS_NAME = "partfacts"
-_PARTFACTS_VERSION = "0.1.0"
 _PARTFACTS_SCHEMA_FILE = "partfacts.schema.json"
 
 
-def _partfacts_schema_path() -> Path:
-    """Locate the bundled PartFacts schema without network access.
+def _partfacts_schema_root() -> Path:
+    """Locate the bundled PartFacts schema tree without network access.
 
     PartFacts is an independently versioned output-artifact schema living under
     ``schemas/partfacts/<version>/`` (not the flat, monolithically versioned
@@ -179,34 +178,74 @@ def _partfacts_schema_path() -> Path:
     ``npm run sync:schemas``; source checkouts fall back to the repository-level
     ``schemas/`` directory.
     """
-    rel = Path(_PARTFACTS_NAME) / _PARTFACTS_VERSION / _PARTFACTS_SCHEMA_FILE
-    packaged = Path(__file__).resolve().parent / "schemas" / rel
-    if packaged.is_file():
+    packaged = Path(__file__).resolve().parent / "schemas" / _PARTFACTS_NAME
+    if packaged.is_dir():
         return packaged
     for parent in Path(__file__).resolve().parents:
-        candidate = parent / "schemas" / rel
-        if candidate.is_file():
+        candidate = parent / "schemas" / _PARTFACTS_NAME
+        if candidate.is_dir():
             return candidate
-    raise RuntimeError("Unable to locate local PartFacts schema")
+    raise RuntimeError("Unable to locate local PartFacts schema directory")
 
 
-PARTFACTS_SCHEMA = json.loads(_partfacts_schema_path().read_text(encoding="utf8"))
-PARTFACTS_SCHEMA_VERSION = _PARTFACTS_VERSION
+def _load_partfacts_schemas() -> dict[str, dict]:
+    root = _partfacts_schema_root()
+    schemas: dict[str, dict] = {}
+    for version_dir in sorted(p for p in root.iterdir() if p.is_dir()):
+        schema_file = version_dir / _PARTFACTS_SCHEMA_FILE
+        if schema_file.is_file():
+            schemas[version_dir.name] = json.loads(schema_file.read_text(encoding="utf8"))
+    if not schemas:
+        raise RuntimeError("No bundled PartFacts schema versions found")
+    return schemas
 
-# PartFacts validates against its own bundled schema with a dedicated
-# validator. The schema is self-contained (no ``$ref`` to the document
-# schemas), so no shared registry is needed and validation stays offline.
-_PARTFACTS_VALIDATOR = Draft202012Validator(PARTFACTS_SCHEMA, format_checker=_FORMAT_CHECKER)
+
+PARTFACTS_SCHEMAS = _load_partfacts_schemas()
+# Latest bundled version (versions are semver-ish; the last sorted key is newest).
+PARTFACTS_SCHEMA_VERSION = sorted(PARTFACTS_SCHEMAS, key=lambda v: [int(n) for n in v.split(".")])[
+    -1
+]
+PARTFACTS_SCHEMA = PARTFACTS_SCHEMAS[PARTFACTS_SCHEMA_VERSION]
+SUPPORTED_PARTFACTS_VERSIONS = sorted(
+    PARTFACTS_SCHEMAS, key=lambda v: [int(n) for n in v.split(".")]
+)
+
+# Each PartFacts schema validates with its own dedicated validator. The schemas
+# are self-contained (no ``$ref`` to the document schemas), so no shared
+# registry is needed and validation stays offline.
+_PARTFACTS_VALIDATORS = {
+    version: Draft202012Validator(schema, format_checker=_FORMAT_CHECKER)
+    for version, schema in PARTFACTS_SCHEMAS.items()
+}
 
 
 def validate_partfacts(facts):
     """Validate a PartFacts document (the canonical output of executing a
     printspec on a real CAD kernel) against the bundled PartFacts JSON Schema,
     offline. Mirrors :func:`validate_printspec`'s result shape; there is no
-    semantic layer for PartFacts in 0.1.0."""
+    semantic layer for PartFacts in 0.1.0.
+
+    The document's ``partfactsVersion`` is read from the raw object and
+    dispatched to the matching bundled schema BEFORE validation, so an
+    unsupported version yields a clear "unsupported PartFacts version" error
+    instead of a confusing ``const`` mismatch. A document with no
+    ``partfactsVersion`` is validated against the latest schema, which reports
+    the missing required field."""
+    declared = facts.get("partfactsVersion") if isinstance(facts, dict) else None
+    if isinstance(declared, str) and declared not in _PARTFACTS_VALIDATORS:
+        supported = ", ".join(SUPPORTED_PARTFACTS_VERSIONS)
+        return {
+            "valid": False,
+            "errors": [
+                f'/partfactsVersion: unsupported PartFacts version "{declared}" '
+                f"(supported: {supported})"
+            ],
+        }
+    validator = (
+        _PARTFACTS_VALIDATORS.get(declared) or _PARTFACTS_VALIDATORS[PARTFACTS_SCHEMA_VERSION]
+    )
     errors = [
-        _format_error(error)
-        for error in _iter_errors(_PARTFACTS_VALIDATOR, facts, _PARTFACTS_SCHEMA_FILE)
+        _format_error(error) for error in _iter_errors(validator, facts, _PARTFACTS_SCHEMA_FILE)
     ]
     return {"valid": not errors, "errors": errors}
 

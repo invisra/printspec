@@ -1,5 +1,6 @@
 {
   "partfactsVersion": "0.1.0",
+  "units": { "length": "mm" },
   "topology": {
     "solidCount": 1,
     "shellCount": 1,

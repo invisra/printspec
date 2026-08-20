@@ -1,9 +1,9 @@
 {
-  "partfactsVersion": "0.1.0",
+  "partfactsVersion": "0.2.0",
   "units": { "length": "mm" },
   "provenance": {
     "printspecVersion": "0.2.0",
-    "generator": { "name": "cadquery", "version": "2.4.0" },
+    "generator": { "name": "brepjs", "version": "0.4.0" },
     "kernel": { "name": "OpenCascade", "version": "7.8.1" }
   },
   "topology": {

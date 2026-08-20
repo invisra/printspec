@@ -2,25 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.invisra.ai/printspec/partfacts/0.1.0/partfacts.schema.json",
   "title": "PartFacts",
-  "description": "Canonical, kernel-measured facts about a single solid produced by executing a printspec on a real CAD kernel (OpenCascade/OCCT via brepjs or cadquery). PartFacts is an OUTPUT artifact -- it is produced by a closed-source engine that runs geometry; this schema only defines and validates the shape of that output and is versioned independently of the printspec document schema. Every numeric field documents its unit and a precision note describing how the value was measured and to what tolerance it should be trusted.",
+  "description": "Canonical, kernel-measured facts about the geometry produced by executing a printspec on a real CAD kernel (OpenCascade/OCCT via brepjs or cadquery). A part is one or more solids: `topology` and `massProperties` describe the whole result AGGREGATED over every solid (mass properties sum across solids; the bounding box encloses them all), and the optional `solids` array carries the same facts per individual solid when disjoint solids need to be told apart. PartFacts is an OUTPUT artifact produced by a closed-source engine that runs geometry; this schema only defines and validates the shape of that output and is versioned independently of the printspec document schema. Several correctness properties cannot be expressed in JSON Schema and are normative obligations on the engine -- see the \"Engine requirements\" section of docs/partfacts.md. Every numeric field documents its unit and a precision note describing how the value was measured and to what tolerance it should be trusted.",
   "type": "object",
-  "required": [
-    "partfactsVersion",
-    "provenance",
-    "topology",
-    "massProperties"
-  ],
+  "required": ["partfactsVersion", "units", "provenance", "topology"],
   "properties": {
     "partfactsVersion": {
       "const": "0.1.0",
       "title": "PartFacts version",
-      "description": "PartFacts schema version this document conforms to. Tracks the partfacts/<version>/ hosted path and is independent of the printspec document schema version.",
+      "description": "PartFacts schema version this document conforms to. Tracks the partfacts/<version>/ hosted path and is independent of the printspec document schema version. A loader MUST read this field from the raw JSON and dispatch to the matching schema version BEFORE validating, so an unsupported version yields a clear \"unsupported PartFacts version\" error rather than a confusing const mismatch.",
       "x-printspec-priority": "primary"
     },
     "units": {
       "type": "object",
       "title": "Units",
-      "description": "The unit system every numeric field in this document is expressed in. Fixed for 0.1.0 but recorded explicitly so consumers never have to assume.",
+      "description": "The unit system every numeric field in this document is expressed in. Fixed for 0.1.0 but recorded explicitly and required so consumers never have to assume.",
       "required": ["length"],
       "properties": {
         "length": {
@@ -34,8 +29,7 @@
           "description": "Angular unit for any angle-valued field. Degrees only in 0.1.0."
         }
       },
-      "additionalProperties": false,
-      "default": { "length": "mm", "angle": "deg" }
+      "additionalProperties": false
     },
     "provenance": {
       "$ref": "#/$defs/Provenance"
@@ -44,7 +38,15 @@
       "$ref": "#/$defs/Topology"
     },
     "massProperties": {
-      "$ref": "#/$defs/MassProperties"
+      "$ref": "#/$defs/MassProperties",
+      "title": "Mass properties (aggregate)",
+      "description": "Mass properties aggregated over every solid in the result. Required whenever topology.valid is true (see the top-level conditional); when topology.valid is false the shape is geometrically unsound and integrated quantities such as volume and inertia are undefined, so this section MAY be omitted. See MassProperties."
+    },
+    "solids": {
+      "type": "array",
+      "title": "Per-solid facts",
+      "description": "Optional per-solid breakdown, one entry per solid in the result, for when disjoint solids (for example a composable_part that produced more than one body) must be told apart. Each entry carries that single solid's own `topology` and, when meaningful, its own `massProperties`. This is an UNORDERED set: consumers MUST match solids by geometry (for example bounding box within tolerance), never by array index. The top-level `topology`/`massProperties` remain the aggregate source of truth and MUST agree with these entries (counts sum; mass properties sum).",
+      "items": { "$ref": "#/$defs/SolidFacts" }
     },
     "featureInventory": {
       "$ref": "#/$defs/FeatureInventory"
@@ -60,6 +62,22 @@
     }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "title": "massProperties required unless the shape is invalid",
+      "if": {
+        "required": ["topology"],
+        "properties": {
+          "topology": {
+            "required": ["valid"],
+            "properties": { "valid": { "const": false } }
+          }
+        }
+      },
+      "then": {},
+      "else": { "required": ["massProperties"] }
+    }
+  ],
   "$defs": {
     "Vector3": {
       "type": "object",
@@ -144,7 +162,7 @@
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$",
           "title": "Spec digest",
-          "description": "Optional SHA-256 digest of the exact canonicalized printspec document that was executed, formatted as \"sha256:<64 hex>\". Lets a consumer confirm these facts belong to a specific spec.",
+          "description": "Optional digest of the exact printspec document that was executed, formatted \"sha256:<64 hex>\". It MUST be the SHA-256 of the document's RFC 8785 (JSON Canonicalization Scheme) canonical form, so independent TypeScript and Python implementations produce the same digest for the same spec. Lets a consumer confirm these facts belong to a specific spec and use the digest as a stable cache key.",
           "examples": [
             "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
           ]
@@ -203,7 +221,7 @@
     "Topology": {
       "type": "object",
       "title": "Topology",
-      "description": "Boundary-representation (B-rep) topology and validity of the executed shape, from a BRepCheck-style analysis. All counts are exact non-negative integers (unit: count). The flags summarize kernel checks and are the first thing a downstream rule should gate on: mass properties and the feature inventory are only trustworthy when the shape is valid and closed.",
+      "description": "Boundary-representation (B-rep) topology and validity of the shape, from a BRepCheck-style analysis. All counts are exact non-negative integers (unit: count). The flags summarize kernel checks and are the first thing a downstream rule should gate on: mass properties and the feature inventory are only trustworthy when the shape is valid and closed.",
       "required": [
         "solidCount",
         "shellCount",
@@ -219,7 +237,7 @@
           "type": "integer",
           "minimum": 0,
           "title": "Solid count",
-          "description": "Number of solids in the result. Unit: count (exact). A well-formed single part is 1; 0 means the program produced no solid; >1 means a compound of disjoint solids."
+          "description": "Number of solids in the result. Unit: count (exact). A well-formed single part is 1; 0 means the program produced no solid; >1 means a compound of disjoint solids (each described in the optional top-level `solids` array)."
         },
         "shellCount": {
           "type": "integer",
@@ -258,7 +276,7 @@
         "valid": {
           "type": "boolean",
           "title": "Valid",
-          "description": "Overall BRepCheck-style verdict: true only when the kernel's shape analyzer reports no errors across all sub-shapes. A convenience roll-up of checks (a subset of which are itemized in checks)."
+          "description": "Overall BRepCheck-style verdict: true only when the kernel's shape analyzer reports no errors across all sub-shapes. A convenience roll-up of checks (a subset of which are itemized in checks). When false, checks is required so the failure is actionable."
         },
         "genus": {
           "type": "integer",
@@ -266,14 +284,30 @@
           "title": "Genus",
           "description": "Optional topological genus (number of through-handles/holes in the surface) of a closed manifold solid. Unit: count (exact). Omitted when not computed or not well-defined."
         },
+        "maxShapeTolerance": {
+          "type": "number",
+          "minimum": 0,
+          "title": "Max shape tolerance",
+          "description": "Optional health metric: the maximum per-subshape tolerance across all vertices, edges, and faces of the shape. Unit: mm. OCCT per-subshape tolerances balloon after boolean operations; a shape can be valid:true yet geometrically mushy. A typical clean value is ~1e-7 mm; a large value (for example ~1e-2 mm) flags a shape that will tessellate, slice, and compare poorly even though it passed validity. TODO(tolerance): the threshold above which consumers should treat a shape as degraded is not yet fixed."
+        },
         "checks": {
           "type": "array",
           "title": "Validity checks",
-          "description": "Optional itemized BRepCheck-style findings, so a consumer can see which specific checks passed or failed rather than only the rolled-up valid flag.",
+          "description": "Optional itemized BRepCheck-style findings, so a consumer can see which specific checks passed or failed rather than only the rolled-up valid flag. Required when valid is false. This is an UNORDERED set: consumers MUST match findings by their `name`, never by array index.",
           "items": { "$ref": "#/$defs/ValidityCheck" }
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "title": "checks required when the shape is invalid",
+          "if": {
+            "required": ["valid"],
+            "properties": { "valid": { "const": false } }
+          },
+          "then": { "required": ["checks"] }
+        }
+      ]
     },
     "ValidityCheck": {
       "type": "object",
@@ -301,33 +335,57 @@
       },
       "additionalProperties": false
     },
+    "SolidFacts": {
+      "type": "object",
+      "title": "Solid facts",
+      "description": "Facts for a single solid within a multi-solid result. Carries that solid's own topology and, when the solid is geometrically sound, its own mass properties (omitted when that solid's topology.valid is false, mirroring the top-level rule).",
+      "required": ["topology"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Solid id",
+          "description": "Optional within-document identifier for this solid. Like all ids in PartFacts it is NOT portable across kernels; match solids by geometry for cross-kernel comparison."
+        },
+        "topology": {
+          "$ref": "#/$defs/Topology",
+          "title": "Topology",
+          "description": "This single solid's topology (solidCount is 1 for a well-formed entry)."
+        },
+        "massProperties": {
+          "$ref": "#/$defs/MassProperties",
+          "title": "Mass properties",
+          "description": "This single solid's mass properties. Omit when this solid's topology.valid is false."
+        }
+      },
+      "additionalProperties": false
+    },
     "MassProperties": {
       "type": "object",
       "title": "Mass properties",
-      "description": "Geometric mass properties of the solid, computed by the kernel assuming uniform unit density (so \"mass\" is proportional to volume; these are shape properties, not material weights). Only meaningful when topology.closed and topology.valid are true. Precision notes are per field; in general the kernel integrates these numerically and they are exact for planar/prismatic geometry and accurate to a small tolerance for curved geometry.",
+      "description": "Geometric mass properties computed by the kernel assuming uniform unit density (so \"mass\" is proportional to volume; these are shape properties, not material weights). At the top level these AGGREGATE over every solid (volume, surface area, and inertia sum; the center of mass is the volume-weighted centroid; the bounding box encloses all solids). Only meaningful when the corresponding topology.closed and topology.valid are true. Precision notes are per field; in general the kernel integrates these numerically and they are exact for planar/prismatic geometry and accurate to a small tolerance for curved geometry.",
       "required": ["volume", "surfaceArea", "centerOfMass", "boundingBox"],
       "properties": {
         "volume": {
           "type": "number",
           "minimum": 0,
           "title": "Volume",
-          "description": "Enclosed volume of the solid. Unit: mm^3. Precision: kernel volume integration; exact to kernel tolerance (~1e-6 relative) for prismatic geometry, with a small numerical margin for curved surfaces. 0 indicates a degenerate or non-solid result."
+          "description": "Enclosed volume. Unit: mm^3. Precision: kernel volume integration; exact to kernel tolerance (~1e-6 relative) for prismatic geometry, with a small numerical margin for curved surfaces. 0 indicates a degenerate or non-solid result. At the top level this is the sum over all solids."
         },
         "surfaceArea": {
           "type": "number",
           "minimum": 0,
           "title": "Surface area",
-          "description": "Total area of all boundary faces. Unit: mm^2. Precision: kernel surface integration; ~1e-6 relative for planar faces, small numerical margin for curved faces."
+          "description": "Total area of all boundary faces. Unit: mm^2. Precision: kernel surface integration; ~1e-6 relative for planar faces, small numerical margin for curved faces. At the top level this is the sum over all solids."
         },
         "centerOfMass": {
           "$ref": "#/$defs/Vector3",
           "title": "Center of mass",
-          "description": "Centroid of the solid under uniform density, in the part's local frame. Unit: mm. Precision: derived from the same volume integration as volume; ~1e-6 mm for prismatic geometry."
+          "description": "Centroid under uniform density, in the part's local frame. Unit: mm. Precision: derived from the same volume integration as volume; ~1e-6 mm for prismatic geometry. At the top level this is the volume-weighted centroid over all solids."
         },
         "boundingBox": {
           "$ref": "#/$defs/AxisAlignedBoundingBox",
           "title": "Axis-aligned bounding box",
-          "description": "The part's axis-aligned bounding box. See AxisAlignedBoundingBox for unit and precision."
+          "description": "The axis-aligned bounding box. At the top level it encloses every solid. See AxisAlignedBoundingBox for unit and precision."
         },
         "inertiaTensor": {
           "$ref": "#/$defs/InertiaTensor",
@@ -384,19 +442,25 @@
     "FeatureInventory": {
       "type": "object",
       "title": "Feature inventory",
-      "description": "A classified inventory of the boundary faces, so downstream checks can find holes, bosses, and walls without re-running a kernel. 0.1.0 enumerates the two classes that matter most for printed parts -- cylindrical faces (holes, bores, pins) and planar faces (walls, floors, mounting faces). Faces the classifier does not place in a listed class are counted in otherFaceCount. Every geometric field carries mm units and a precision note on its own definition.",
+      "description": "A classified inventory of the boundary faces, so downstream checks can find holes, bosses, and walls without re-running a kernel. 0.1.0 enumerates the two classes that matter most for printed parts -- cylindrical faces (holes, bores, pins) and planar faces (walls, floors, mounting faces) -- plus an optional derived grouping of co-axial cylindrical faces into logical holes. Faces the classifier does not place in a listed class are counted in otherFaceCount. Every geometric field carries mm units and a precision note on its own definition.",
       "properties": {
         "cylindricalFaces": {
           "type": "array",
           "title": "Cylindrical faces",
-          "description": "Every face lying on a cylindrical surface, each described by its axis, radius, and axial extent, plus whether it passes through the part (a through hole) or terminates inside it (a blind hole/pocket). Lets a rule locate holes and check their diameters.",
+          "description": "Every face lying on a cylindrical surface, each described by its axial endpoints, radius, and handedness, plus whether it passes through the part. Lets a rule locate holes and check their diameters. This is the SOURCE OF TRUTH for cylindrical geometry and an UNORDERED set: consumers MUST match faces by geometry (axis + radius + axial extent within tolerance), never by array index. One physical hole can appear as several faces here (a bore through two walls, a counterbore's two radii, or a cylinder split by an intersecting feature); the optional `holes` array groups those into logical features.",
           "items": { "$ref": "#/$defs/CylindricalFace" }
         },
         "planarFaces": {
           "type": "array",
           "title": "Planar faces",
-          "description": "Every planar face, each described by its outward normal and area. Lets a rule find walls, floors, and mounting faces and reason about wall areas.",
+          "description": "Every planar face, each described by its outward normal, signed plane offset, and area. Lets a rule find walls, floors, and mounting faces and reason about wall areas and offsets. This is an UNORDERED set: consumers MUST match faces by geometry (normal + offset + area within tolerance), never by array index.",
           "items": { "$ref": "#/$defs/PlanarFace" }
+        },
+        "holes": {
+          "type": "array",
+          "title": "Logical holes",
+          "description": "Optional derived grouping of co-axial cylindrical faces into logical features, so a \"is there a 6mm through-bore\" or hole-count check gets one answer instead of several half-answers. Each entry merges the faces that share a `featureId` into one feature with ordered radial `segments` (so a counterbore's two radii are representable). This array is DERIVED from cylindricalFaces and MUST agree with it (cylindricalFaces remains the source of truth); it is an UNORDERED set, matched by geometry, not index.",
+          "items": { "$ref": "#/$defs/Hole" }
         },
         "otherFaceCount": {
           "type": "integer",
@@ -410,13 +474,18 @@
     "CylindricalFace": {
       "type": "object",
       "title": "Cylindrical face",
-      "description": "A face on a cylindrical surface -- the wall of a hole, bore, or pin. Handedness (a concave inner bore versus a convex outer boss) is given by convex.",
-      "required": ["radius", "axis", "axisPoint", "length", "through"],
+      "description": "A face on a cylindrical surface -- the wall of a hole, bore, or pin. Located by its two axial endpoints (start, end). Handedness (a concave inner bore versus a convex outer boss) is given by the required `convex` flag, which distinguishes a hole from a pin of the same radius.",
+      "required": ["radius", "axis", "start", "end", "length", "convex"],
       "properties": {
         "id": {
           "type": "string",
           "title": "Face id",
-          "description": "Optional stable identifier for this face within the document (for example a kernel sub-shape index), so other sections or tools can reference it."
+          "description": "Optional within-document identifier for this face (for example a kernel sub-shape index), referenced by hole segments' faceIds. It is a within-document reference ONLY: it is NOT stable across kernels or across kernel versions and MUST NOT be used for cross-kernel matching."
+        },
+        "featureId": {
+          "type": "string",
+          "title": "Feature id",
+          "description": "Optional grouping key: cylindrical faces that belong to the same logical hole (co-axial within tolerance) share this value, and a matching entry appears in featureInventory.holes. Like `id`, this is a within-document reference and is NOT portable across kernels."
         },
         "radius": {
           "type": "number",
@@ -427,28 +496,33 @@
         "axis": {
           "$ref": "#/$defs/UnitVector3",
           "title": "Axis direction",
-          "description": "Direction of the cylinder axis in the local frame. Unit: dimensionless (normalized). Precision: analytic; sign is the surface's stored axis orientation and is not guaranteed to point out of the hole."
+          "description": "Direction of the cylinder axis in the local frame, as a convenience equal to normalize(end - start). Unit: dimensionless (normalized). MUST be consistent with the endpoints within tolerance."
         },
-        "axisPoint": {
+        "start": {
           "$ref": "#/$defs/Vector3",
-          "title": "Axis point",
-          "description": "A point on the cylinder axis (the axis origin), in mm, in the local frame. Precision: analytic (~1e-7 mm). Combined with axis it defines the infinite axis line; combined with length and this point's role as the extent origin it locates the finite hole."
+          "title": "Start point",
+          "description": "One endpoint of the face's axial extent, in mm, in the local frame. Engine requirement: start/end MUST be derived from the face's parametric bounds, not from the cylindrical surface's stored origin (which has no defined relationship to the face and differs between kernels). Precision: ~1e-6 mm."
+        },
+        "end": {
+          "$ref": "#/$defs/Vector3",
+          "title": "End point",
+          "description": "The other endpoint of the face's axial extent, in mm, in the local frame. See start for the parametric-bounds requirement. Precision: ~1e-6 mm."
         },
         "length": {
           "type": "number",
           "exclusiveMinimum": 0,
           "title": "Axial length",
-          "description": "Axial extent of the cylindrical face along axis. Unit: mm. Precision: measured from the face's parametric bounds (~1e-6 mm). For a straight drilled hole this is the hole depth."
+          "description": "Axial extent of the cylindrical face. Unit: mm. Equal to |end - start| and MUST be consistent with the endpoints within tolerance. For a straight drilled hole this is the hole depth."
         },
         "through": {
           "type": "boolean",
           "title": "Through",
-          "description": "True if the hole passes entirely through the part (open at both ends of this face's run), false if it is blind (terminates inside the solid). Determined by the engine from the surrounding topology."
+          "description": "Optional: true if the hole passes entirely through the part (open at both ends of this face's run), false if it is blind (terminates inside the solid). Determined by the engine from the surrounding topology. When ABSENT it means unknown -- a consumer MUST treat an absent value as unknown, never as false."
         },
         "convex": {
           "type": "boolean",
           "title": "Convex",
-          "description": "Optional handedness: true if the material is outside the cylinder (a convex boss/pin), false if the material is outside-in around a void (a concave hole/bore). Omitted when the engine does not classify it."
+          "description": "Required handedness: true if the material is outside the cylinder (a convex boss/pin), false if the material surrounds a void (a concave hole/bore). This distinguishes a 4mm hole from a 4mm pin and is more reliably computable than `through`."
         },
         "blindDepth": {
           "type": "number",
@@ -459,21 +533,104 @@
       },
       "additionalProperties": false
     },
+    "Hole": {
+      "type": "object",
+      "title": "Logical hole",
+      "description": "One logical hole: the merge of all co-axial cylindrical faces sharing a featureId, with its radial profile expressed as ordered segments along the axis. Derived from cylindricalFaces and MUST agree with them.",
+      "required": ["featureId", "axis", "start", "end", "convex", "segments"],
+      "properties": {
+        "featureId": {
+          "type": "string",
+          "minLength": 1,
+          "title": "Feature id",
+          "description": "The shared grouping key; matches the featureId on every cylindrical face that composes this hole. Within-document only; NOT portable across kernels."
+        },
+        "axis": {
+          "$ref": "#/$defs/UnitVector3",
+          "title": "Axis direction",
+          "description": "Direction of the hole axis, equal to normalize(end - start). Unit: dimensionless (normalized)."
+        },
+        "start": {
+          "$ref": "#/$defs/Vector3",
+          "title": "Start point",
+          "description": "Axial start of the whole feature (the extreme endpoint along -axis), in mm."
+        },
+        "end": {
+          "$ref": "#/$defs/Vector3",
+          "title": "End point",
+          "description": "Axial end of the whole feature (the extreme endpoint along +axis), in mm."
+        },
+        "through": {
+          "type": "boolean",
+          "title": "Through",
+          "description": "Optional: true if the merged feature passes entirely through the part. When ABSENT it means unknown; a consumer MUST NOT treat an absent value as false. This resolves the split-face problem where each face alone looked blind."
+        },
+        "convex": {
+          "type": "boolean",
+          "title": "Convex",
+          "description": "Handedness of the feature: false for a concave hole/bore, true for a convex boss/pin. Matches the convex flag of its faces."
+        },
+        "segments": {
+          "type": "array",
+          "title": "Segments",
+          "description": "The hole's radial profile as segments ORDERED along the axis from start to end, so a counterbore (a wide segment then a narrow segment) is representable. Unlike the other arrays, this array's order is significant.",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/HoleSegment" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "HoleSegment": {
+      "type": "object",
+      "title": "Hole segment",
+      "description": "One constant-radius run of a logical hole, referencing the cylindrical face(s) it came from.",
+      "required": ["radius", "start", "end", "faceIds"],
+      "properties": {
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "title": "Radius",
+          "description": "Radius of this run. Unit: mm."
+        },
+        "start": {
+          "$ref": "#/$defs/Vector3",
+          "title": "Start point",
+          "description": "Axial start of this run, in mm."
+        },
+        "end": {
+          "$ref": "#/$defs/Vector3",
+          "title": "End point",
+          "description": "Axial end of this run, in mm."
+        },
+        "faceIds": {
+          "type": "array",
+          "title": "Face ids",
+          "description": "The `id` values of the cylindrical face(s) that make up this run. Within-document references only; NOT portable across kernels.",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
     "PlanarFace": {
       "type": "object",
       "title": "Planar face",
-      "description": "A flat face -- a wall, floor, lid, or mounting surface.",
-      "required": ["normal", "area"],
+      "description": "A flat face -- a wall, floor, lid, or mounting surface. Fully located by its outward normal and signed plane offset.",
+      "required": ["normal", "offset", "area"],
       "properties": {
         "id": {
           "type": "string",
           "title": "Face id",
-          "description": "Optional stable identifier for this face within the document (for example a kernel sub-shape index)."
+          "description": "Optional within-document identifier for this face (for example a kernel sub-shape index). It is a within-document reference ONLY: it is NOT stable across kernels or across kernel versions and MUST NOT be used for cross-kernel matching."
         },
         "normal": {
           "$ref": "#/$defs/UnitVector3",
           "title": "Outward normal",
-          "description": "Outward-pointing surface normal in the local frame. Unit: dimensionless (normalized). Precision: analytic; orientation follows the face's outward sense on the solid."
+          "description": "Outward-pointing surface normal in the local frame. Unit: dimensionless (normalized). Engine requirement: the outward sense MUST account for the face's TopAbs_REVERSED orientation; ignoring it inverts roughly half of all normals (and still passes smoke tests on symmetric parts)."
+        },
+        "offset": {
+          "type": "number",
+          "title": "Plane offset",
+          "description": "Signed distance from the local origin to the face's plane along `normal`. Unit: mm. The supporting plane is { p : dot(normal, p) = offset }. Together with normal this fully locates the plane, so wall-thickness and offset checks are always possible. Precision: ~1e-6 mm."
         },
         "area": {
           "type": "number",
@@ -485,11 +642,6 @@
           "$ref": "#/$defs/Vector3",
           "title": "Centroid",
           "description": "Optional area centroid of the face, in mm, in the local frame. Precision: ~1e-6 mm."
-        },
-        "pointOnPlane": {
-          "$ref": "#/$defs/Vector3",
-          "title": "Point on plane",
-          "description": "Optional point lying on the face's plane, in mm. With normal it defines the supporting plane (useful for offset/wall-distance checks)."
         }
       },
       "additionalProperties": false

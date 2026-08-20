@@ -127,7 +127,21 @@ surface area, inertia) are exact for prismatic geometry and carry a small
 numerical margin for curved geometry. Read the field descriptions in the schema
 for the specifics — they are the authority.</p>
 <h2 id="document-shape">Document shape</h2>
-<p>A PartFacts document has four required sections plus two optional ones.</p>
+<p>A PartFacts document has four required sections — <code>partfactsVersion</code>, <code>units</code>,
+<code>provenance</code>, <code>topology</code> — plus <code>massProperties</code> (required unless the shape is
+invalid; see below) and the optional <code>solids</code>, <code>featureInventory</code>, and
+<code>extensions</code>.</p>
+<p>A part is <strong>one or more solids</strong>. <code>topology</code> and <code>massProperties</code> describe the
+whole result <strong>aggregated over every solid</strong> (counts sum, volume/area/inertia
+sum, the bounding box encloses all solids, the center of mass is the
+volume-weighted centroid). When disjoint solids must be told apart — a
+<code>composable_part</code> can legitimately produce several — the optional <code>solids</code> array
+carries each solid&#39;s own <code>topology</code> and <code>massProperties</code>.</p>
+<h3 id="units-required"><code>units</code> (required)</h3>
+<p><code>{ &quot;length&quot;: &quot;mm&quot; }</code>, optionally <code>&quot;angle&quot;: &quot;deg&quot;</code>. Fixed for <code>0.1.0</code> but recorded
+explicitly and <strong>required</strong> so a consumer never assumes. (JSON Schema <code>default</code>
+is annotation-only and never applied, so a default would be a silent trap — the
+field is required instead.)</p>
 <h3 id="provenance-required"><code>provenance</code> (required)</h3>
 <p>Where the facts came from, so a result is reproducible and auditable:</p>
 <ul>
@@ -138,45 +152,140 @@ for the specifics — they are the authority.</p>
 e.g. <code>OpenCascade</code>).</li>
 <li><code>imageDigest</code> — the content-addressed digest (<code>sha256:…</code>) of the container
 image that executed the kernel, pinning the exact runtime.</li>
-<li><code>specDigest</code>, <code>generatedAt</code> — optional: digest of the exact spec, and a
+<li><code>specDigest</code>, <code>generatedAt</code> — optional: digest of the exact spec (see the
+<a href="#5-spec-digest-canonicalization">RFC 8785 requirement</a> below), and a
 timestamp.</li>
 </ul>
 <h3 id="topology-required"><code>topology</code> (required)</h3>
 <p>B-rep topology and validity from a BRepCheck-style analysis: <code>solidCount</code>,
 <code>shellCount</code>, <code>faceCount</code>, <code>edgeCount</code>, <code>vertexCount</code>, the <code>closed</code>, <code>manifold</code>,
-and <code>valid</code> flags, an optional <code>genus</code>, and an optional itemized <code>checks</code> array.
-The flags are the gate everything else hangs on — mass properties and the feature
-inventory are only trustworthy when the shape is <code>closed</code> and <code>valid</code>.</p>
-<h3 id="massproperties-required"><code>massProperties</code> (required)</h3>
+and <code>valid</code> flags, an optional <code>genus</code>, an optional <code>maxShapeTolerance</code> health
+metric, and a <code>checks</code> array (<strong>required when <code>valid</code> is <code>false</code></strong> so a repair
+loop has something to act on). The flags are the gate everything else hangs on —
+mass properties and the feature inventory are only trustworthy when the shape is
+<code>closed</code> and <code>valid</code>.</p>
+<p><code>maxShapeTolerance</code> (mm, optional) is the largest per-subshape OCCT tolerance in
+the shape. These balloon after boolean operations, so a shape can be <code>valid:true</code>
+yet geometrically <em>mushy</em>; a typical clean value is <code>~1e-7</code>, and a large value
+(e.g. <code>~1e-2</code>) flags a shape that will tessellate and compare poorly. The
+threshold at which a consumer should treat a shape as degraded is a <strong>TODO</strong> (see
+the summary of open tolerance decisions).</p>
+<h3 id="massproperties-required-unless-invalid"><code>massProperties</code> (required unless invalid)</h3>
 <p>Computed under uniform unit density (so these are shape properties, not material
 weights): <code>volume</code>, <code>surfaceArea</code>, <code>centerOfMass</code>, the axis-aligned <code>boundingBox</code>
 (<code>min</code>/<code>max</code>/<code>size</code>), and an optional <code>inertiaTensor</code> (six independent
 components, taken about the center of mass unless a <code>referencePoint</code> says
-otherwise).</p>
+otherwise). At the top level every field aggregates over all solids.</p>
+<p><code>massProperties</code> is required <strong>whenever <code>topology.valid</code> is true</strong>. When
+<code>topology.valid</code> is <code>false</code> the shape is geometrically unsound — volume and
+inertia are undefined over a non-closed or self-intersecting shape — so the
+engine MAY omit the section rather than emit meaningless numbers. Consumers
+should already gate on <code>topology.valid</code> before trusting these figures.</p>
+<h3 id="solids-optional"><code>solids</code> (optional)</h3>
+<p>One entry per solid, each with its own <code>topology</code> and (when that solid is valid)
+<code>massProperties</code>. An <strong>unordered set</strong> — match by geometry, not index. The
+top-level aggregate remains the source of truth and must agree (counts sum, mass
+properties sum).</p>
 <h3 id="featureinventory-optional"><code>featureInventory</code> (optional)</h3>
 <p>A classified inventory of boundary faces so downstream checks can find holes and
 walls without a kernel:</p>
 <ul>
-<li><code>cylindricalFaces</code> — the wall of each hole, bore, or pin: <code>axis</code>, <code>radius</code>,
-axial <code>length</code>, <code>through</code>/blind, and optional <code>convex</code> handedness. This is how
-a rule locates holes and checks their diameters.</li>
-<li><code>planarFaces</code> — each flat wall, floor, or mounting face: outward <code>normal</code> and
-<code>area</code>, with optional <code>centroid</code>/<code>pointOnPlane</code>.</li>
+<li><code>cylindricalFaces</code> — the wall of each hole, bore, or pin, located by its two
+axial endpoints <code>start</code>/<code>end</code> (with <code>axis</code> = <code>normalize(end - start)</code> and
+<code>length</code> = <code>|end - start|</code> as derived conveniences), its <code>radius</code>, the
+<strong>required</strong> <code>convex</code> handedness (material outside the cylinder = a pin;
+material around a void = a hole), and an <strong>optional</strong> <code>through</code> flag. This is
+the <strong>source of truth</strong> for cylindrical geometry.</li>
+<li><code>planarFaces</code> — each flat wall, floor, or mounting face, located by its outward
+<code>normal</code> and a signed plane <code>offset</code> (the plane is <code>{ p : dot(normal, p) = offset }</code>), with its <code>area</code> and an optional <code>centroid</code>.</li>
+<li><code>holes</code> — an optional, <strong>derived</strong> grouping of co-axial cylindrical faces into
+logical features. One physical hole often yields several faces (a bore through
+two walls with a gap, a counterbore&#39;s two radii, a cylinder split by an
+intersecting feature); each <code>holes</code> entry merges the faces sharing a
+<code>featureId</code> into one feature with a <code>through</code> verdict for the whole run and an
+<strong>ordered</strong> <code>segments</code> array (<code>{radius, start, end, faceIds}</code> from <code>start</code> to
+<code>end</code>, so a counterbore is representable). <code>holes</code> MUST agree with
+<code>cylindricalFaces</code>, which stays authoritative.</li>
 <li><code>otherFaceCount</code> — faces that are neither (conical, spherical, spline, …).
 <code>cylindricalFaces + planarFaces + otherFaceCount</code> should equal
 <code>topology.faceCount</code>.</li>
 </ul>
+<p>Why <code>convex</code> is required and <code>through</code> is not: <code>convex</code> distinguishes a 4 mm hole
+from a 4 mm pin — the single most load-bearing bit for a geometric check — and is
+reliably computable, whereas <code>through</code> needs surrounding topology and can be
+genuinely undetermined for a single face. A consumer <strong>MUST treat an absent
+<code>through</code> as unknown, never as <code>false</code></strong>; the grouped <code>holes</code> entry is where a
+reliable through-verdict for a split bore lives.</p>
 <h3 id="extensions-optional"><code>extensions</code> (optional)</h3>
 <p>A forward-compatible, namespaced map for later tiers (manufacturability metrics,
 thin-wall maps, draft analysis, mesh statistics, …). Consumers <strong>must ignore</strong>
 keys they do not recognize, and adding a key here is an additive change that
 never requires a new PartFacts version.</p>
+<h2 id="engine-requirements">Engine requirements</h2>
+<p>Several correctness properties cannot be expressed in JSON Schema and are
+<strong>normative obligations on the engine</strong> (the closed-source service that produces
+PartFacts). They use RFC 2119 keywords. printspec cannot enforce these — a
+document can be schema-valid and still violate them — so they live here.</p>
+<h3 id="1-cylindrical-endpoints-from-parametric-bounds">1. Cylindrical endpoints from parametric bounds</h3>
+<p><code>start</code> and <code>end</code> on a <code>CylindricalFace</code> (and the derived <code>axis</code>/<code>length</code>) MUST
+be computed from the <strong>face&#39;s own parametric bounds</strong>, not from the cylindrical
+surface&#39;s stored origin. In OCCT a cylindrical surface&#39;s origin has no defined
+relationship to the face that lies on it: two kernels report different origins
+for the same hole and both are correct. Deriving endpoints from the surface
+origin therefore makes <code>start</code>/<code>end</code> non-comparable across kernels. <code>axis</code> MUST
+equal <code>normalize(end - start)</code> and <code>length</code> MUST equal <code>|end - start|</code> within
+tolerance.</p>
+<h3 id="2-co-axial-grouping-for-logical-holes">2. Co-axial grouping for logical holes</h3>
+<p>When emitting <code>featureInventory.holes</code>, the engine MUST group cylindrical faces
+by <strong>co-axiality within tolerance — parallel axes AND collinear axis lines</strong> —
+not by radius equality. Radius equality alone wrongly merges two unrelated 3 mm
+holes, and misses a counterbore (whose two segments have different radii but one
+axis). Faces grouped into one hole share a <code>featureId</code>, and the hole&#39;s <code>segments</code>
+are ordered along the axis.</p>
+<h3 id="3-outward-normals-must-honor-topabs-reversed">3. Outward normals must honor <code>TopAbs_REVERSED</code></h3>
+<p>When computing a <code>PlanarFace</code> (or cylindrical) <code>normal</code>, the engine MUST account
+for the face&#39;s <code>TopAbs_REVERSED</code> orientation in the shell. A face&#39;s geometric
+surface normal points in a fixed direction; whether that is the <em>outward</em> normal
+of the solid depends on the face orientation flag. Ignoring it <strong>inverts roughly
+half of all normals</strong> — and, because it inverts them symmetrically, still passes
+smoke tests on symmetric parts, so it is easy to ship undetected.</p>
+<h3 id="4-arrays-are-unordered-ids-are-not-portable">4. Arrays are unordered; ids are not portable</h3>
+<p><code>cylindricalFaces</code>, <code>planarFaces</code>, <code>holes</code>, <code>solids</code>, and <code>topology.checks</code> are
+<strong>unordered sets</strong>. A consumer comparing two documents (e.g. the same part from
+two kernels) MUST match elements <strong>by geometry within tolerance</strong> — axis + radius</p>
+<ul>
+<li>axial extent for cylinders; normal + offset + area for planes; <code>name</code> for
+checks — never by array index. (<code>Hole.segments</code> is the one exception: it is
+<strong>ordered</strong> along the axis.)</li>
+</ul>
+<p>Every <code>id</code> and <code>featureId</code> is a <strong>within-document reference only</strong>. It is NOT
+stable across kernels or across kernel versions and MUST NOT be used for
+cross-kernel matching. <code>faceIds</code> inside a hole segment likewise reference this
+document&#39;s own faces only.</p>
+<h3 id="5-spec-digest-canonicalization">5. Spec-digest canonicalization</h3>
+<p><code>provenance.specDigest</code>, when present, MUST be the SHA-256 of the printspec
+document&#39;s <strong>RFC 8785 (JSON Canonicalization Scheme)</strong> canonical form, formatted
+<code>&quot;sha256:&lt;64 hex&gt;&quot;</code>. &quot;Canonicalized JSON&quot; is otherwise underspecified — two
+implementations produce different bytes for the same logical document, silently
+breaking cache keys and provenance claims. RFC 8785 pins key ordering and number
+formatting so independent implementations agree. Ready-made libraries exist on
+both sides: <a href="https://www.npmjs.com/package/canonicalize"><code>canonicalize</code></a> (npm)
+and <a href="https://pypi.org/project/rfc8785/"><code>rfc8785</code></a> (PyPI). These are engine-side
+dependencies only; the printspec packages take on neither.</p>
 <h2 id="validation">Validation</h2>
 <p>Both packages validate PartFacts <strong>offline</strong> against the bundled schema, exactly
 like <code>validatePrintSpec</code> (see <a href="validation.html">validation</a>). There is no
 semantic layer for PartFacts in <code>0.1.0</code>; validation is structural only. The
 PartFacts schema is self-contained (no <code>$ref</code> into the document schemas), so it
 validates with a standalone validator and never touches the network.</p>
+<p><strong>Version dispatch.</strong> A loader MUST read <code>partfactsVersion</code> from the raw JSON and
+dispatch to the matching schema <strong>before</strong> validating, so an unsupported version
+produces a clear &quot;unsupported PartFacts version&quot; error instead of a confusing
+<code>const</code> mismatch buried in structural errors. <code>validatePartFacts</code> /
+<code>validate_partfacts</code> do this for you: they read <code>partfactsVersion</code>, return the
+clear error for a version they do not bundle, and otherwise validate against the
+matching schema. The bundled set is exposed as <code>supportedPartFactsVersions</code>
+(TypeScript) / <code>SUPPORTED_PARTFACTS_VERSIONS</code> (Python).</p>
 <p>TypeScript (Node and browser entrypoints both export it):</p>
 <pre><code class="language-ts">import { validatePartFacts, partFactsSchemaVersion } from &quot;@invisra/printspec&quot;;
 // or: import { validatePartFacts } from &quot;@invisra/printspec/browser&quot;;
@@ -191,6 +300,7 @@ result = validate_partfacts(facts)  # {&quot;valid&quot;: bool, &quot;errors&quo
 <p>A minimal valid document:</p>
 <pre><code class="language-json">{
   &quot;partfactsVersion&quot;: &quot;0.1.0&quot;,
+  &quot;units&quot;: { &quot;length&quot;: &quot;mm&quot; },
   &quot;provenance&quot;: {
     &quot;printspecVersion&quot;: &quot;0.2.0&quot;,
     &quot;generator&quot;: { &quot;name&quot;: &quot;cadquery&quot;, &quot;version&quot;: &quot;2.4.0&quot; },
@@ -211,6 +321,19 @@ result = validate_partfacts(facts)  # {&quot;valid&quot;: bool, &quot;errors&quo
 <p>Worked examples, including a fuller document with a feature inventory and inertia
 tensor, live under
 <a href="../tests/fixtures/partfacts/"><code>tests/fixtures/partfacts/</code></a>.</p>
+<h2 id="open-tolerance-decisions-todo">Open tolerance decisions (TODO)</h2>
+<p>The schema deliberately does not invent numeric tolerances; these are left for a
+follow-up once real fixtures exist:</p>
+<ul>
+<li><strong>Co-axiality tolerance</strong> for grouping cylindrical faces into <code>holes</code>
+(parallel-axis angular tolerance and collinearity distance).</li>
+<li><strong>Consistency tolerance</strong> for <code>axis</code> ≟ <code>normalize(end - start)</code>, <code>length</code> ≟
+<code>|end - start|</code>, and <code>boundingBox.size</code> ≟ <code>max - min</code>.</li>
+<li><strong>Geometry-match tolerance</strong> for cross-kernel/differential comparison (axis +
+radius + extent for cylinders; normal + offset + area for planes).</li>
+<li><strong><code>maxShapeTolerance</code> threshold</strong> above which a <code>valid:true</code> shape should be
+treated as degraded.</li>
+</ul>
 <h2 id="relationship-to-real-kernel-verification">Relationship to real-kernel verification</h2>
 <p>The developer-only, opt-in scripts under <code>scripts/</code> (<code>verify:brepjs-real-kernel</code>,
 <code>verify:cadquery-real-kernel</code>, and the <code>brep verify</code> inspection in

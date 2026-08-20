@@ -1,6 +1,5 @@
 {
   "partfactsVersion": "0.1.0",
-  "units": { "length": "mm" },
   "provenance": {
     "printspecVersion": "0.2.0",
     "generator": { "name": "cadquery", "version": "2.4.0" },

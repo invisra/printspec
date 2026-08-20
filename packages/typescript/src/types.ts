@@ -40,6 +40,7 @@ export type PartFactsTopology = {
   manifold: boolean;
   valid: boolean;
   genus?: number;
+  maxShapeTolerance?: number;
   checks?: {
     name: string;
     status: "pass" | "warn" | "fail";
@@ -69,32 +70,58 @@ export type PartFactsMassProperties = {
 };
 export type PartFactsCylindricalFace = {
   id?: string;
+  featureId?: string;
   radius: number;
   axis: PartFactsVector3;
-  axisPoint: PartFactsVector3;
+  start: PartFactsVector3;
+  end: PartFactsVector3;
   length: number;
-  through: boolean;
-  convex?: boolean;
+  convex: boolean;
+  through?: boolean;
   blindDepth?: number;
 };
 export type PartFactsPlanarFace = {
   id?: string;
   normal: PartFactsVector3;
+  offset: number;
   area: number;
   centroid?: PartFactsVector3;
-  pointOnPlane?: PartFactsVector3;
+};
+export type PartFactsHoleSegment = {
+  radius: number;
+  start: PartFactsVector3;
+  end: PartFactsVector3;
+  faceIds: string[];
+};
+export type PartFactsHole = {
+  featureId: string;
+  axis: PartFactsVector3;
+  start: PartFactsVector3;
+  end: PartFactsVector3;
+  convex: boolean;
+  through?: boolean;
+  segments: PartFactsHoleSegment[];
 };
 export type PartFactsFeatureInventory = {
   cylindricalFaces?: PartFactsCylindricalFace[];
   planarFaces?: PartFactsPlanarFace[];
+  holes?: PartFactsHole[];
   otherFaceCount?: number;
+};
+export type PartFactsSolidFacts = {
+  id?: string;
+  topology: PartFactsTopology;
+  massProperties?: PartFactsMassProperties;
 };
 export type PartFacts = {
   partfactsVersion: string;
-  units?: { length: "mm"; angle?: "deg" };
+  units: { length: "mm"; angle?: "deg" };
   provenance: PartFactsProvenance;
   topology: PartFactsTopology;
-  massProperties: PartFactsMassProperties;
+  // Required unless topology.valid is false (integrated quantities are
+  // undefined for an invalid shape); see the schema's top-level conditional.
+  massProperties?: PartFactsMassProperties;
+  solids?: PartFactsSolidFacts[];
   featureInventory?: PartFactsFeatureInventory;
   extensions?: Record<string, unknown>;
 };

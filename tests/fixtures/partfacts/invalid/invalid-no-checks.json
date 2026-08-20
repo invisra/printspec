@@ -3,7 +3,7 @@
   "units": { "length": "mm" },
   "provenance": {
     "printspecVersion": "0.2.0",
-    "generator": { "name": "cadquery", "version": "2.4.0" },
+    "generator": { "name": "brepjs", "version": "0.4.0" },
     "kernel": { "name": "OpenCascade", "version": "7.8.1" }
   },
   "topology": {
@@ -12,17 +12,8 @@
     "faceCount": 6,
     "edgeCount": 12,
     "vertexCount": 8,
-    "closed": true,
+    "closed": false,
     "manifold": true,
-    "valid": true
-  },
-  "massProperties": {
-    "volume": 1000,
-    "surfaceArea": 600,
-    "centerOfMass": { "x": 0, "y": 0, "z": 5 },
-    "boundingBox": {
-      "min": { "x": -5, "y": -5, "z": 0 },
-      "max": { "x": 5, "y": 5, "z": 10 }
-    }
+    "valid": false
   }
 }

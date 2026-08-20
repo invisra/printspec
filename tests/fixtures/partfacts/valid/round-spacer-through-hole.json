@@ -19,6 +19,7 @@
     "manifold": true,
     "valid": true,
     "genus": 1,
+    "maxShapeTolerance": 1e-7,
     "checks": [
       { "name": "closed-shell", "status": "pass" },
       { "name": "self-intersection", "status": "pass" },
@@ -47,20 +48,22 @@
     "cylindricalFaces": [
       {
         "id": "face-3",
+        "featureId": "bore",
         "radius": 2,
         "axis": { "x": 0, "y": 0, "z": 1 },
-        "axisPoint": { "x": 0, "y": 0, "z": 0 },
+        "start": { "x": 0, "y": 0, "z": 0 },
+        "end": { "x": 0, "y": 0, "z": 10 },
         "length": 10,
-        "through": true,
-        "convex": false
+        "convex": false,
+        "through": true
       },
       {
         "id": "face-1",
         "radius": 6,
         "axis": { "x": 0, "y": 0, "z": 1 },
-        "axisPoint": { "x": 0, "y": 0, "z": 0 },
+        "start": { "x": 0, "y": 0, "z": 0 },
+        "end": { "x": 0, "y": 0, "z": 10 },
         "length": 10,
-        "through": false,
         "convex": true
       }
     ],
@@ -68,14 +71,33 @@
       {
         "id": "face-0",
         "normal": { "x": 0, "y": 0, "z": 1 },
+        "offset": 10,
         "area": 100.53,
-        "centroid": { "x": 0, "y": 0, "z": 10 },
-        "pointOnPlane": { "x": 0, "y": 0, "z": 10 }
+        "centroid": { "x": 0, "y": 0, "z": 10 }
       },
       {
         "id": "face-2",
         "normal": { "x": 0, "y": 0, "z": -1 },
+        "offset": 0,
         "area": 100.53
+      }
+    ],
+    "holes": [
+      {
+        "featureId": "bore",
+        "axis": { "x": 0, "y": 0, "z": 1 },
+        "start": { "x": 0, "y": 0, "z": 0 },
+        "end": { "x": 0, "y": 0, "z": 10 },
+        "through": true,
+        "convex": false,
+        "segments": [
+          {
+            "radius": 2,
+            "start": { "x": 0, "y": 0, "z": 0 },
+            "end": { "x": 0, "y": 0, "z": 10 },
+            "faceIds": ["face-3"]
+          }
+        ]
       }
     ],
     "otherFaceCount": 0

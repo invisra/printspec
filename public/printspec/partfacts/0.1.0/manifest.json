@@ -8,7 +8,7 @@
       "url": "/printspec/partfacts/0.1.0/partfacts.schema.json",
       "id": "https://schemas.invisra.ai/printspec/partfacts/0.1.0/partfacts.schema.json",
       "title": "PartFacts",
-      "description": "Canonical, kernel-measured facts about a single solid produced by executing a printspec on a real CAD kernel (OpenCascade/OCCT via brepjs or cadquery). PartFacts is an OUTPUT artifact -- it is produced by a closed-source engine that runs geometry; this schema only defines and validates the shape of that output and is versioned independently of the printspec document schema. Every numeric field documents its unit and a precision note describing how the value was measured and to what tolerance it should be trusted."
+      "description": "Canonical, kernel-measured facts about the geometry produced by executing a printspec on a real CAD kernel (OpenCascade/OCCT via brepjs or cadquery). A part is one or more solids: `topology` and `massProperties` describe the whole result AGGREGATED over every solid (mass properties sum across solids; the bounding box encloses them all), and the optional `solids` array carries the same facts per individual solid when disjoint solids need to be told apart. PartFacts is an OUTPUT artifact produced by a closed-source engine that runs geometry; this schema only defines and validates the shape of that output and is versioned independently of the printspec document schema. Several correctness properties cannot be expressed in JSON Schema and are normative obligations on the engine -- see the \"Engine requirements\" section of docs/partfacts.md. Every numeric field documents its unit and a precision note describing how the value was measured and to what tolerance it should be trusted."
     }
   ]
 }

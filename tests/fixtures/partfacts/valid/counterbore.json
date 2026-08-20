@@ -1,0 +1,78 @@
+{
+  "partfactsVersion": "0.1.0",
+  "units": { "length": "mm" },
+  "provenance": {
+    "printspecVersion": "0.2.0",
+    "generator": { "name": "brepjs", "version": "0.4.0" },
+    "kernel": { "name": "OpenCascade", "version": "7.8.1" }
+  },
+  "topology": {
+    "solidCount": 1,
+    "shellCount": 1,
+    "faceCount": 8,
+    "edgeCount": 18,
+    "vertexCount": 12,
+    "closed": true,
+    "manifold": true,
+    "valid": true
+  },
+  "massProperties": {
+    "volume": 4200,
+    "surfaceArea": 2100,
+    "centerOfMass": { "x": 0, "y": 0, "z": 5 },
+    "boundingBox": {
+      "min": { "x": -10, "y": -10, "z": 0 },
+      "max": { "x": 10, "y": 10, "z": 10 }
+    }
+  },
+  "featureInventory": {
+    "cylindricalFaces": [
+      {
+        "id": "cbore-wide",
+        "featureId": "mount-hole",
+        "radius": 5,
+        "axis": { "x": 0, "y": 0, "z": 1 },
+        "start": { "x": 0, "y": 0, "z": 7 },
+        "end": { "x": 0, "y": 0, "z": 10 },
+        "length": 3,
+        "convex": false,
+        "through": false
+      },
+      {
+        "id": "cbore-narrow",
+        "featureId": "mount-hole",
+        "radius": 2,
+        "axis": { "x": 0, "y": 0, "z": 1 },
+        "start": { "x": 0, "y": 0, "z": 0 },
+        "end": { "x": 0, "y": 0, "z": 7 },
+        "length": 7,
+        "convex": false,
+        "through": false
+      }
+    ],
+    "holes": [
+      {
+        "featureId": "mount-hole",
+        "axis": { "x": 0, "y": 0, "z": 1 },
+        "start": { "x": 0, "y": 0, "z": 0 },
+        "end": { "x": 0, "y": 0, "z": 10 },
+        "through": true,
+        "convex": false,
+        "segments": [
+          {
+            "radius": 2,
+            "start": { "x": 0, "y": 0, "z": 0 },
+            "end": { "x": 0, "y": 0, "z": 7 },
+            "faceIds": ["cbore-narrow"]
+          },
+          {
+            "radius": 5,
+            "start": { "x": 0, "y": 0, "z": 7 },
+            "end": { "x": 0, "y": 0, "z": 10 },
+            "faceIds": ["cbore-wide"]
+          }
+        ]
+      }
+    ]
+  }
+}

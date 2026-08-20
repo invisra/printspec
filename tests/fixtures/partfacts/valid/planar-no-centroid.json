@@ -24,5 +24,15 @@
       "min": { "x": -5, "y": -5, "z": 0 },
       "max": { "x": 5, "y": 5, "z": 10 }
     }
+  },
+  "featureInventory": {
+    "planarFaces": [
+      {
+        "id": "top",
+        "normal": { "x": 0, "y": 0, "z": 1 },
+        "offset": 10,
+        "area": 100
+      }
+    ]
   }
 }
