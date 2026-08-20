@@ -49,6 +49,7 @@ const DOC_SOURCES = [
   },
 
   { src: "docs/validation.md", slug: "validation", category: "Reference" },
+  { src: "docs/partfacts.md", slug: "partfacts", category: "Reference" },
   {
     src: "docs/form-metadata.md",
     slug: "form-metadata",

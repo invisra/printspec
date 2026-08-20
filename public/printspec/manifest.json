@@ -12,5 +12,16 @@
       "url": "/printspec/0.2.0/",
       "manifest": "/printspec/0.2.0/manifest.json"
     }
+  ],
+  "artifacts": [
+    {
+      "name": "partfacts",
+      "description": "Canonical kernel-measured facts produced by executing a printspec on a real CAD kernel.",
+      "url": "/printspec/partfacts/",
+      "manifest": "/printspec/partfacts/manifest.json",
+      "versions": [
+        "0.1.0"
+      ]
+    }
   ]
 }

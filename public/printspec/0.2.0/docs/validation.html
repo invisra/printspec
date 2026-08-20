@@ -90,6 +90,16 @@
 </ol>
 <p>The schemas use stable, public-looking <code>$id</code> values such as <code>https://schemas.invisra.ai/printspec/0.2.0/printspec.schema.json</code>. These identifiers are schema resource names, not a network dependency. The Python validator registers every local schema with <code>jsonschema</code>/<code>referencing</code>, and the TypeScript validator registers every local schema with Ajv 2020, so relative <code>$ref</code> values resolve offline.</p>
 <p>Validation must not fetch schemas from <code>schemas.invisra.ai</code> or any other remote host. Schema tests also meta-validate every <code>schemas/*.schema.json</code> file against Draft 2020-12 so schema authoring mistakes fail before fixture validation. The schemas are experimental until printspec 1.0, and the <code>$id</code> URLs are served publicly for documentation, tooling, and cross-package references.</p>
+<h2 id="validating-partfacts">Validating PartFacts</h2>
+<p>The same offline, bundled-schema approach validates <a href="partfacts.html">PartFacts</a>
+documents — the canonical output of executing a printspec on a real CAD kernel —
+via <code>validatePartFacts</code> (TypeScript, Node and browser entrypoints) and
+<code>validate_partfacts</code> (Python), which return the same <code>{ valid, errors }</code> shape.
+PartFacts is versioned independently of the document schema and its schema is
+self-contained, so it validates with a standalone validator and, like the
+document schemas, never fetches from the network. There is no semantic layer for
+PartFacts in <code>0.1.0</code>; validation is structural only. See
+<a href="partfacts.html">PartFacts</a> for the document shape.</p>
 <h2 id="hosted-schema-references">Hosted schema references</h2>
 <p>The repository-level <code>schemas/</code> directory is the source of truth. <code>npm run sync:schemas</code> creates synchronized artifacts in <code>public/printspec/0.2.0/</code> for static hosting and <code>packages/python/printspec/schemas/</code> for Python package data, and <code>packages/typescript/schemas/</code> for TypeScript package data; do not manually maintain divergent copies in either destination. Vercel serves the synchronized JSON Schema files from <code>https://schemas.invisra.ai/printspec/0.2.0/</code> with schema JSON content-type, permissive CORS, and immutable caching headers.</p>
 <p>Hosted schema URLs are public references for documentation and external JSON Schema tooling. They are not required by printspec&#39;s validators: Python validation uses bundled package schemas and TypeScript validation loads bundled package-local schemas first and registers local schemas before validation, so normal validation works offline and must not fetch schemas from the network.</p>

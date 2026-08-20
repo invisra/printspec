@@ -1,0 +1,89 @@
+{
+  "partfactsVersion": "0.1.0",
+  "units": { "length": "mm", "angle": "deg" },
+  "provenance": {
+    "printspecVersion": "0.2.0",
+    "specDigest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "generator": { "name": "brepjs", "version": "0.4.0" },
+    "kernel": { "name": "OpenCascade", "version": "7.8.1" },
+    "imageDigest": "sha256:5b0bcabd1ed22e9fb1310cf6c2dec7cdef19f0ad69efa1f392e94a4333501270",
+    "generatedAt": "2026-08-20T12:00:00Z"
+  },
+  "topology": {
+    "solidCount": 1,
+    "shellCount": 1,
+    "faceCount": 4,
+    "edgeCount": 6,
+    "vertexCount": 4,
+    "closed": true,
+    "manifold": true,
+    "valid": true,
+    "genus": 1,
+    "checks": [
+      { "name": "closed-shell", "status": "pass" },
+      { "name": "self-intersection", "status": "pass" },
+      { "name": "free-edges", "status": "pass" }
+    ]
+  },
+  "massProperties": {
+    "volume": 1005.309649,
+    "surfaceArea": 653.097,
+    "centerOfMass": { "x": 0, "y": 0, "z": 5 },
+    "boundingBox": {
+      "min": { "x": -6, "y": -6, "z": 0 },
+      "max": { "x": 6, "y": 6, "z": 10 },
+      "size": { "x": 12, "y": 12, "z": 10 }
+    },
+    "inertiaTensor": {
+      "ixx": 20000.5,
+      "iyy": 20000.5,
+      "izz": 30000.25,
+      "ixy": 0,
+      "ixz": 0,
+      "iyz": 0
+    }
+  },
+  "featureInventory": {
+    "cylindricalFaces": [
+      {
+        "id": "face-3",
+        "radius": 2,
+        "axis": { "x": 0, "y": 0, "z": 1 },
+        "axisPoint": { "x": 0, "y": 0, "z": 0 },
+        "length": 10,
+        "through": true,
+        "convex": false
+      },
+      {
+        "id": "face-1",
+        "radius": 6,
+        "axis": { "x": 0, "y": 0, "z": 1 },
+        "axisPoint": { "x": 0, "y": 0, "z": 0 },
+        "length": 10,
+        "through": false,
+        "convex": true
+      }
+    ],
+    "planarFaces": [
+      {
+        "id": "face-0",
+        "normal": { "x": 0, "y": 0, "z": 1 },
+        "area": 100.53,
+        "centroid": { "x": 0, "y": 0, "z": 10 },
+        "pointOnPlane": { "x": 0, "y": 0, "z": 10 }
+      },
+      {
+        "id": "face-2",
+        "normal": { "x": 0, "y": 0, "z": -1 },
+        "area": 100.53
+      }
+    ],
+    "otherFaceCount": 0
+  },
+  "extensions": {
+    "printspec.manufacturability:tier1": {
+      "minWallThickness": 2,
+      "notes": "reserved for a later tier"
+    }
+  }
+}

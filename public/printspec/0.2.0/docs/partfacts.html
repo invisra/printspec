@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PartFacts | printspec docs</title>
+  <link rel="stylesheet" href="https://assets.invisra.ai/brand/v4/brand.min.css">
+  <link rel="icon" href="https://assets.invisra.ai/brand/v4/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="https://assets.invisra.ai/brand/v4/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="https://assets.invisra.ai/brand/v4/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="https://assets.invisra.ai/brand/v4/apple-touch-icon.png">
+  <meta name="theme-color" content="#020617">
+  <style>
+    :root{color-scheme:dark light}body.invisra-theme{margin:0;background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.22),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.18),transparent 30rem),var(--invisra-bg,#020617);color:var(--invisra-text,#e5eefb);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.invisra-header{background:color-mix(in srgb,var(--invisra-bg,#020617),transparent 10%);border-bottom:1px solid var(--invisra-border,rgba(148,163,184,.22));box-shadow:none}.invisra-header::before,.invisra-header::after{display:none;background:transparent;box-shadow:none}html[data-theme=light] .invisra-header{background:rgba(255,255,255,.82);border-bottom-color:rgba(15,23,42,.12);box-shadow:0 1px 0 rgba(255,255,255,.78) inset,0 12px 28px rgba(15,23,42,.06)}html[data-theme=light] body.invisra-theme{background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.12),transparent 32rem),radial-gradient(circle at 88% 12%,rgba(99,102,241,.1),transparent 30rem),var(--invisra-bg,#f8fafc)}html[data-theme=light] .invisra-shell,html[data-theme=light] footer{background:transparent;color:var(--invisra-text,#0f172a)}html[data-theme=light] .invisra-header::before,html[data-theme=light] .invisra-header::after{display:none;background:transparent;box-shadow:none}.site-nav{display:flex;align-items:center;justify-content:space-between;gap:1rem}.site-links{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}.site-links a,.card-grid .invisra-card>a,.link-row a:not(.invisra-button),.schema h3 a{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border:1px solid var(--invisra-border,rgba(148,163,184,.24));border-radius:999px;background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 28%);box-shadow:0 10px 24px rgba(15,23,42,.08);color:var(--invisra-text,#e5eefb);text-decoration:none;font-weight:800;line-height:1.1;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}.site-links a{padding:.52rem .78rem;font-size:.94rem}.card-grid .invisra-card>a,.link-row a:not(.invisra-button),.schema h3 a{padding:.62rem .9rem}.site-links a:hover,.card-grid .invisra-card>a:hover,.link-row a:not(.invisra-button):hover,.schema h3 a:hover{border-color:color-mix(in srgb,var(--invisra-accent,#38bdf8),transparent 35%);background:color-mix(in srgb,var(--invisra-accent,#38bdf8),transparent 88%);box-shadow:0 14px 30px rgba(14,165,233,.14);transform:translateY(-1px)}.schema-grid,.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}.card-grid .invisra-card{text-align:center;padding:clamp(1.25rem,3vw,2rem)}.card-grid .invisra-card ul{display:inline-block;text-align:left;margin-left:0;padding-left:1.2rem}.card-grid .link-row{justify-content:center}.card-grid pre{text-align:left}.hero-card{padding:clamp(1.5rem,4vw,3rem);margin:2rem auto;text-align:center}.hero-card .lede{margin-left:auto;margin-right:auto}.hero-card .hero-actions,.hero-card .link-row{justify-content:center}.hero-actions,.link-row{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center}.schema{text-align:center;padding:clamp(1.25rem,3vw,2rem)}.schema h3{margin-left:auto;margin-right:auto}.schema code,.invisra-code{overflow-wrap:anywhere}.muted{color:var(--invisra-muted,#94a3b8)}footer{padding:2rem 0;color:var(--invisra-muted,#94a3b8)}pre.invisra-code{white-space:pre-wrap;padding:1rem;border-radius:1rem}.theme-toggle{padding:.52rem .8rem}@media(max-width:760px){.site-nav{align-items:flex-start;flex-direction:column}.site-links{gap:.6rem}}.doc-body{max-width:52rem}.doc-body h1,.doc-body h2,.doc-body h3{line-height:1.25}.doc-body h2{margin-top:2.5rem;border-top:1px solid var(--invisra-border,rgba(148,163,184,.22));padding-top:1.5rem}.doc-body pre{background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 20%);border:1px solid var(--invisra-border,rgba(148,163,184,.22));border-radius:.75rem;padding:1rem;overflow-x:auto}.doc-body code{background:color-mix(in srgb,var(--invisra-surface,#0f172a),transparent 35%);border-radius:.35rem;padding:.1em .35em;overflow-wrap:anywhere}.doc-body pre code{background:none;padding:0}.doc-body table{border-collapse:collapse;display:block;overflow-x:auto;width:max-content;max-width:100%}.doc-body th,.doc-body td{border:1px solid var(--invisra-border,rgba(148,163,184,.22));padding:.4rem .7rem;text-align:left}.doc-body blockquote{margin:1rem 0;padding:.25rem 1rem;border-left:3px solid var(--invisra-accent,#38bdf8);color:var(--invisra-muted,#94a3b8)}.doc-index-list{list-style:none;margin:0;padding:0;display:grid;gap:.6rem}.doc-index-list a{font-weight:700}
+  </style>
+<script>
+  window.va =
+    window.va ||
+    function () {
+      (window.vaq = window.vaq || []).push(arguments);
+    };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="invisra-theme">
+<script>
+  (function () {
+    var key = 'invisra-theme';
+    var saved = localStorage.getItem(key);
+    var theme = saved === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+
+    function updateThemeButton() {
+      var button = document.querySelector('[data-theme-toggle]');
+      if (button) {
+        button.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        button.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme');
+      }
+    }
+
+    window.toggleInvisraTheme = function () {
+      var current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+      var next = current === 'dark' ? 'light' : 'dark';
+      theme = next;
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem(key, next);
+      updateThemeButton();
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateThemeButton);
+    } else {
+      updateThemeButton();
+    }
+  })();
+</script>
+<header class="invisra-header">
+  <div class="invisra-container site-nav">
+    <a class="invisra-logo-lockup" href="/printspec/" aria-label="printspec home">
+      <svg class="invisra-logo-mark invisra-logo-mark-sm" viewBox="0 0 160 380" role="img" aria-hidden="true" focusable="false"><path fill="currentColor" d="M80 6 8 222 38 256 80 356 122 256 152 222Z M80 118 112 214 80 248 48 214Z"></path></svg>
+      <span class="invisra-wordmark" role="img" aria-label="Invisra"></span>
+      <span class="invisra-text-muted">/ printspec</span>
+    </a>
+    <nav class="site-links" aria-label="Site navigation">
+      <a href="/printspec/">Home</a>
+      <a href="/printspec/0.2.0/docs/">Docs</a>
+      <a href="/printspec/validator/">Validator</a>
+      <a href="/printspec/0.2.0/">Schemas</a>
+      <a href="/llms.txt">llms.txt</a>
+      <a href="https://invisra.ai">Invisra</a>
+      <button type="button" class="invisra-button invisra-button-ghost theme-toggle" data-theme-toggle onclick="window.toggleInvisraTheme()" aria-label="Switch theme">Light</button>
+    </nav>
+  </div>
+</header>
+<main class="invisra-shell">
+  <section class="invisra-container">
+    <p class="link-row"><a href="./">&larr; All docs</a><a href="https://github.com/invisra/printspec/blob/main/docs/partfacts.md">View source on GitHub</a></p>
+    <article class="invisra-card doc-body">
+<h1 id="partfacts">PartFacts</h1>
+<p>PartFacts is the canonical, machine-readable record of what a printspec part
+<em>actually is</em> once a real CAD kernel has built it. Where a printspec document is
+the <strong>input</strong> (a parametric description of a part), a PartFacts document is the
+<strong>output</strong>: the measured topology, mass properties, and feature inventory the
+kernel reports after executing that spec.</p>
+<p>PartFacts lets downstream tooling reason about a built part — &quot;does it have the
+two M3 through-holes the design called for?&quot;, &quot;is the shell watertight?&quot;, &quot;what
+does it weigh?&quot; — without re-running geometry. The measurement is done once, by
+the engine that owns the kernel; everything downstream reads the facts.</p>
+<blockquote>
+<p><strong>Schemas are open; engines are closed.</strong> This repository defines and
+validates the <em>shape</em> of PartFacts. It does <strong>not</strong> execute any CAD kernel and
+takes on no kernel dependency. The engine that measures a real part and emits
+PartFacts lives in a different repository (see
+<a href="design-principles.html">design-principles</a> and <a href="safety.html">safety</a>).</p>
+</blockquote>
+<h2 id="schema-location-and-versioning">Schema location and versioning</h2>
+<ul>
+<li>Source of truth: <a href="../schemas/partfacts/0.1.0/partfacts.schema.json"><code>schemas/partfacts/0.1.0/partfacts.schema.json</code></a></li>
+<li><code>$id</code>: <code>https://schemas.invisra.ai/printspec/partfacts/0.1.0/partfacts.schema.json</code></li>
+<li>Hosted index: <code>https://schemas.invisra.ai/printspec/partfacts/</code></li>
+</ul>
+<p>PartFacts is <strong>versioned independently</strong> of the printspec document schema. The
+document schema currently sits at <code>0.2.0</code>; PartFacts starts at <code>0.1.0</code>. They
+move on separate tracks — an additive PartFacts revision does not bump the
+document schema, and vice-versa — so PartFacts lives under its own
+<code>printspec/partfacts/&lt;version&gt;/</code> hosted namespace rather than the document
+schema&#39;s <code>printspec/&lt;version&gt;/</code> path. (This also keeps PartFacts <code>0.1.0</code> clear
+of the document schema&#39;s own, already-released and immutable, <code>0.1.0</code>
+directory.) Independent version tracks are an established pattern here; see
+<a href="hosted-schemas.html">hosted-schemas</a>.</p>
+<p>Per the version-immutability rule, a breaking change publishes a new
+<code>printspec/partfacts/&lt;version&gt;/</code> directory; the old one stays served. Purely
+additive fields can also go in <a href="#extensions"><code>extensions</code></a> without any version
+bump at all.</p>
+<h2 id="units-and-precision">Units and precision</h2>
+<p>PartFacts uses the same coordinate and unit conventions as printspec: millimeters
+(<code>mm</code>), with X as length, Y as width/depth, Z as height/thickness (see
+<a href="units-and-coordinates.html">units-and-coordinates</a>). The unit system is also
+recorded explicitly in the top-level <code>units</code> object so a consumer never has to
+assume it. Derived units follow: area is <code>mm²</code>, volume is <code>mm³</code>, and the inertia
+tensor is <code>mm⁵</code> (a second moment of <em>volume</em> under uniform unit density).</p>
+<p>Every numeric field in the schema documents both its <strong>unit</strong> and a <strong>precision
+note</strong> describing how the value was measured and how far it should be trusted.
+Analytic quantities read from a surface (a cylinder&#39;s radius, a face&#39;s normal)
+are exact to kernel tolerance (~`1e-7 mm`); integrated quantities (volume,
+surface area, inertia) are exact for prismatic geometry and carry a small
+numerical margin for curved geometry. Read the field descriptions in the schema
+for the specifics — they are the authority.</p>
+<h2 id="document-shape">Document shape</h2>
+<p>A PartFacts document has four required sections plus two optional ones.</p>
+<h3 id="provenance-required"><code>provenance</code> (required)</h3>
+<p>Where the facts came from, so a result is reproducible and auditable:</p>
+<ul>
+<li><code>printspecVersion</code> — the document-schema version of the executed spec.</li>
+<li><code>generator</code> — the printspec generator that emitted the kernel program
+(<code>{ name, version }</code>, e.g. <code>brepjs</code> or <code>cadquery</code>).</li>
+<li><code>kernel</code> — the geometry kernel that ran and measured (<code>{ name, version }</code>,
+e.g. <code>OpenCascade</code>).</li>
+<li><code>imageDigest</code> — the content-addressed digest (<code>sha256:…</code>) of the container
+image that executed the kernel, pinning the exact runtime.</li>
+<li><code>specDigest</code>, <code>generatedAt</code> — optional: digest of the exact spec, and a
+timestamp.</li>
+</ul>
+<h3 id="topology-required"><code>topology</code> (required)</h3>
+<p>B-rep topology and validity from a BRepCheck-style analysis: <code>solidCount</code>,
+<code>shellCount</code>, <code>faceCount</code>, <code>edgeCount</code>, <code>vertexCount</code>, the <code>closed</code>, <code>manifold</code>,
+and <code>valid</code> flags, an optional <code>genus</code>, and an optional itemized <code>checks</code> array.
+The flags are the gate everything else hangs on — mass properties and the feature
+inventory are only trustworthy when the shape is <code>closed</code> and <code>valid</code>.</p>
+<h3 id="massproperties-required"><code>massProperties</code> (required)</h3>
+<p>Computed under uniform unit density (so these are shape properties, not material
+weights): <code>volume</code>, <code>surfaceArea</code>, <code>centerOfMass</code>, the axis-aligned <code>boundingBox</code>
+(<code>min</code>/<code>max</code>/<code>size</code>), and an optional <code>inertiaTensor</code> (six independent
+components, taken about the center of mass unless a <code>referencePoint</code> says
+otherwise).</p>
+<h3 id="featureinventory-optional"><code>featureInventory</code> (optional)</h3>
+<p>A classified inventory of boundary faces so downstream checks can find holes and
+walls without a kernel:</p>
+<ul>
+<li><code>cylindricalFaces</code> — the wall of each hole, bore, or pin: <code>axis</code>, <code>radius</code>,
+axial <code>length</code>, <code>through</code>/blind, and optional <code>convex</code> handedness. This is how
+a rule locates holes and checks their diameters.</li>
+<li><code>planarFaces</code> — each flat wall, floor, or mounting face: outward <code>normal</code> and
+<code>area</code>, with optional <code>centroid</code>/<code>pointOnPlane</code>.</li>
+<li><code>otherFaceCount</code> — faces that are neither (conical, spherical, spline, …).
+<code>cylindricalFaces + planarFaces + otherFaceCount</code> should equal
+<code>topology.faceCount</code>.</li>
+</ul>
+<h3 id="extensions-optional"><code>extensions</code> (optional)</h3>
+<p>A forward-compatible, namespaced map for later tiers (manufacturability metrics,
+thin-wall maps, draft analysis, mesh statistics, …). Consumers <strong>must ignore</strong>
+keys they do not recognize, and adding a key here is an additive change that
+never requires a new PartFacts version.</p>
+<h2 id="validation">Validation</h2>
+<p>Both packages validate PartFacts <strong>offline</strong> against the bundled schema, exactly
+like <code>validatePrintSpec</code> (see <a href="validation.html">validation</a>). There is no
+semantic layer for PartFacts in <code>0.1.0</code>; validation is structural only. The
+PartFacts schema is self-contained (no <code>$ref</code> into the document schemas), so it
+validates with a standalone validator and never touches the network.</p>
+<p>TypeScript (Node and browser entrypoints both export it):</p>
+<pre><code class="language-ts">import { validatePartFacts, partFactsSchemaVersion } from &quot;@invisra/printspec&quot;;
+// or: import { validatePartFacts } from &quot;@invisra/printspec/browser&quot;;
+
+const result = validatePartFacts(facts); // { valid: boolean, errors: string[] }
+</code></pre>
+<p>Python:</p>
+<pre><code class="language-py">from printspec import validate_partfacts
+
+result = validate_partfacts(facts)  # {&quot;valid&quot;: bool, &quot;errors&quot;: list[str]}
+</code></pre>
+<p>A minimal valid document:</p>
+<pre><code class="language-json">{
+  &quot;partfactsVersion&quot;: &quot;0.1.0&quot;,
+  &quot;provenance&quot;: {
+    &quot;printspecVersion&quot;: &quot;0.2.0&quot;,
+    &quot;generator&quot;: { &quot;name&quot;: &quot;cadquery&quot;, &quot;version&quot;: &quot;2.4.0&quot; },
+    &quot;kernel&quot;: { &quot;name&quot;: &quot;OpenCascade&quot;, &quot;version&quot;: &quot;7.8.1&quot; }
+  },
+  &quot;topology&quot;: {
+    &quot;solidCount&quot;: 1, &quot;shellCount&quot;: 1,
+    &quot;faceCount&quot;: 6, &quot;edgeCount&quot;: 12, &quot;vertexCount&quot;: 8,
+    &quot;closed&quot;: true, &quot;manifold&quot;: true, &quot;valid&quot;: true
+  },
+  &quot;massProperties&quot;: {
+    &quot;volume&quot;: 1000, &quot;surfaceArea&quot;: 600,
+    &quot;centerOfMass&quot;: { &quot;x&quot;: 0, &quot;y&quot;: 0, &quot;z&quot;: 5 },
+    &quot;boundingBox&quot;: { &quot;min&quot;: { &quot;x&quot;: -5, &quot;y&quot;: -5, &quot;z&quot;: 0 }, &quot;max&quot;: { &quot;x&quot;: 5, &quot;y&quot;: 5, &quot;z&quot;: 10 } }
+  }
+}
+</code></pre>
+<p>Worked examples, including a fuller document with a feature inventory and inertia
+tensor, live under
+<a href="../tests/fixtures/partfacts/"><code>tests/fixtures/partfacts/</code></a>.</p>
+<h2 id="relationship-to-real-kernel-verification">Relationship to real-kernel verification</h2>
+<p>The developer-only, opt-in scripts under <code>scripts/</code> (<code>verify:brepjs-real-kernel</code>,
+<code>verify:cadquery-real-kernel</code>, and the <code>brep verify</code> inspection in
+<a href="generators.html">generators</a>) already measure exactly these quantities — valid
+solids, volumes, bounding boxes, centers of mass, solid-count manifold checks —
+against a real OCCT kernel. PartFacts is the standardized, versioned serialization
+of that same class of measurement, so a production engine can emit it and any
+consumer can validate and read it. Those scripts remain opt-in and are never run
+in CI; defining PartFacts adds no kernel dependency to the published packages.</p>
+
+    </article>
+  </section>
+</main>
+</body>
+</html>

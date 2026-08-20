@@ -1,0 +1,11 @@
+{
+  "project": "printspec",
+  "artifact": "partfacts",
+  "versions": [
+    {
+      "version": "0.1.0",
+      "url": "/printspec/partfacts/0.1.0/",
+      "manifest": "/printspec/partfacts/0.1.0/manifest.json"
+    }
+  ]
+}
